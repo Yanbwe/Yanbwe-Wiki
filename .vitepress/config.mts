@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
+  base: '/Yanbwe-Wiki/',
   title: "Yanbwe's Wiki",
   description: '这里有Yanbwe的所有mod的指南',
 
