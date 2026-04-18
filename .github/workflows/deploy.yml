@@ -65,19 +65,17 @@ jobs:
 
         # 安装依赖
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
         # 构建项目
       - name: Build blog project
-        run: |
-          echo ${{ github.workspace }}
-          pnpm docs:build
+        run: pnpm build
 
         # 资源拷贝
       - name: Build with Jekyll
         uses: actions/jekyll-build-pages@v1
         with:
-          source: ./.vitepress/dist
+          source: .vitepress/dist
           destination: ./_site
 
         # 上传 _site 的资源，用于后续部署
