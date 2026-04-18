@@ -14,11 +14,11 @@ hero:
       link: /raritycore/
 
 features:
-  - title: SearchCarefully
+  - title: 仔细搜刮
     details: 仔细搜刮 - 一个为战利品箱添加搜索时间的模组
     link: /scwiki/
     linkText: 查看详情
-  - title: RarityCore
+  - title: 仔细搜刮
     details: 稀有度核心 - 一个为物品添加稀有度属性的模组
     link: /raritycore/
     linkText: 查看详情
