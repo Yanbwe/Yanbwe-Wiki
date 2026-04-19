@@ -42,7 +42,9 @@ resource_pack/
 
 - **文件路径**：`assets/searchcarefully/sounds/`
 - **文件格式**：OGG 格式
-- **文件名**：`search_completion_rarity_1.ogg` 到 `search_completion_rarity_7.ogg`
+- **文件列表**：
+  - `search_progress.ogg` - 搜索过程中的进度音效
+  - `search_completion_rarity_1.ogg` 到 `search_completion_rarity_7.ogg` - 搜索完成音效（按稀有度）
 - **音频格式**：**必须为单声道（Mono）格式**，立体声（Stereo）格式无法应用3D空间定位和距离衰减效果
 
 ### 音效配置
@@ -51,6 +53,16 @@ resource_pack/
 
 ```json
 {
+  "search_progress": {
+    "sounds": [
+      {
+        "name": "searchcarefully:search_progress",
+        "stream": false,
+        "attenuation_distance": 16
+      }
+    ],
+    "subtitle": "sound.searchcarefully.search_progress"
+  },
   "search_completion_rarity_1": {
     "sounds": [
       {
