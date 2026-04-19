@@ -29,7 +29,7 @@ export default defineConfig({
         collapsed: false,
         items: [
           { text: '首页', link: '/raritycore/' },
-          { text: '稀有度配置指南', link: '/raritycore/RarityConfiguration' },
+          { text: '稀有度配置指南', link: '/raritycore/how-to-config-rarity' },
           { text: '客户端配置', link: '/raritycore/ClientConfiguration' },
           { text: '服务端配置', link: '/raritycore/ServerConfiguration' },
           {
@@ -40,9 +40,16 @@ export default defineConfig({
               { text: '物品组件匹配', link: '/raritycore/matching-config/ItemComponentMatching' }
             ]
           },
-          { text: 'API', link: '/raritycore/API' },
+          {
+            text: 'API',
+            collapsed: false,
+            items: [
+              { text: 'API 1.20.1', link: '/raritycore/API/API1201' },
+              { text: 'API 1.21.1', link: '/raritycore/API/API1211' }
+            ]
+          },
           { text: '兼容性问题', link: '/raritycore/Compatibility' },
-          { text: '支持模组', link: '/raritycore/SupportedMods' }
+          { text: '命令参考', link: '/raritycore/CommandReference' }
         ]
       }
     ],
@@ -88,7 +95,87 @@ export default defineConfig({
     en: {
       label: 'English',
       lang: 'en',
-      link: '/en/'
+      link: '/en/',
+      themeConfig: {
+        nav: [
+          { text: 'Home', link: '/en/' },
+          { text: 'SearchCarefully', link: '/en/scwiki/', activeMatch: '/en/scwiki' },
+          { text: 'RarityCore', link: '/en/raritycore/', activeMatch: '/en/raritycore' }
+        ],
+
+        sidebar: [
+          {
+            text: 'SearchCarefully',
+            collapsed: false,
+            items: [
+              { text: 'Home', link: '/en/scwiki/' },
+              { text: 'Comprehensive Guide', link: '/en/scwiki/ComprehensiveGuide' },
+              { text: 'Config Guide', link: '/en/scwiki/ConfigGuide' },
+              { text: 'Resource Pack Guide', link: '/en/scwiki/ResourcePackGuide' },
+              { text: 'API', link: '/en/scwiki/API' }
+            ]
+          },
+          {
+            text: 'RarityCore',
+            collapsed: false,
+            items: [
+              { text: 'Home', link: '/en/raritycore/' },
+              { text: 'Rarity Configuration', link: '/en/raritycore/how-to-config-rarity' },
+              { text: 'Client Configuration', link: '/en/raritycore/ClientConfiguration' },
+              { text: 'Server Configuration', link: '/en/raritycore/ServerConfiguration' },
+              {
+                text: 'Matching Configuration',
+                collapsed: false,
+                items: [
+                  { text: 'NBT Matching', link: '/en/raritycore/matching-config/NBTMatching' },
+                  { text: 'Item Component Matching', link: '/en/raritycore/matching-config/ItemComponentMatching' }
+                ]
+              },
+              {
+                text: 'API',
+                collapsed: false,
+                items: [
+                  { text: 'API 1.20.1', link: '/en/raritycore/API/API1201' },
+                  { text: 'API 1.21.1', link: '/en/raritycore/API/API1211' }
+                ]
+              },
+              { text: 'Compatibility', link: '/en/raritycore/Compatibility' },
+              { text: 'Command Reference', link: '/en/raritycore/CommandReference' }
+            ]
+          }
+        ],
+
+        editLink: {
+          pattern: 'https://github.com/vuejs/vitepress/edit/main/docs/:path',
+          text: 'Edit this page on GitHub'
+        },
+
+        footer: {
+          message: 'Released under the MIT License',
+          copyright: 'Copyright © 2019-present Evan You'
+        },
+
+        docFooter: {
+          prev: 'Previous page',
+          next: 'Next page'
+        },
+
+        outline: {
+          label: 'On this page'
+        },
+
+        lastUpdated: {
+          text: 'Last updated'
+        },
+
+        langMenuLabel: 'Languages',
+        returnToTopLabel: 'Return to top',
+        sidebarMenuLabel: 'Menu',
+        darkModeSwitchLabel: 'Theme',
+        lightModeSwitchTitle: 'Switch to light mode',
+        darkModeSwitchTitle: 'Switch to dark mode',
+        skipToContentLabel: 'Skip to content'
+      }
     }
   }
 })

@@ -6,61 +6,78 @@
 
 ## 配置选项说明
 
-### 1. enableItemBorderRendering
+### enableItemBorderRendering
 
 - **类型**: 布尔值
 - **默认值**: true
 - **说明**: 是否启用物品边框功能
 
-### 2. itemBorderStyle
+### itemBorderStyle
 
 - **类型**: 整数
-- **默认值**: 0
+- **默认值**: 1
 - **说明**: 控制物品边框的样式(仅在未启用纹理边框时生效)
   - `0`: 空心边框
   - `1`: 实心填充
 
-### 3. useTextureBorder
+### useTextureBorder
 
 - **类型**: 布尔值
 - **默认值**: true
 - **说明**: 是否使用纹理边框,启用后将使用自定义纹理渲染边框
 
-### 4. enableItemNameColor
+### enableItemNameColor
 
 - **类型**: 布尔值
 - **默认值**: true
 - **说明**: 是否启用物品名称变色功能,根据物品稀有度改变物品名称颜色
 
-### 5. enableTooltipInsert
+### enableTooltipInsert
 
 - **类型**: 布尔值
 - **默认值**: true
 - **说明**: 是否启用工具提示插入功能,在物品提示中显示稀有度信息
+- **注意**: 如果检测到 ColorTooltips 模组已加载,此功能将被强制禁用
 
-### 6. skipUnconfiguredItems
+### enableTooltipColor
+
+- **类型**: 布尔值
+- **默认值**: true
+- **说明**: 是否启用工具提示稀有度文本变色功能
+
+### skipUnconfiguredItems
 
 - **类型**: 布尔值
 - **默认值**: false
 - **说明**: 是否跳过未配置稀有度的物品渲染,启用后只会显示已配置稀有度的物品
 
-### 7. enableCacheSystem
+### enableCacheSystem
 
 - **类型**: 布尔值
 - **默认值**: true
-- **说明**: 是否启用缓存系统.如果与其他优化模组发生冲突,请禁用此选项
+- **说明**: 是否启用缓存系统,如果与其他优化模组发生冲突,请禁用此选项
 
-### 8. starDisplay(星星显示配置)
+### enableSophisticatedCoreAdapter
+
+- **类型**: 布尔值
+- **默认值**: true
+- **说明**: 是否启用精妙核心(Sophisticated Core)适配器,用于与精妙核心模组兼容
+- **注意**: 该配置项仅1.21.11之后的版本拥有。
+
+### starDisplay
 
 - **类型**: 对象
 - **说明**: 控制稀有度星星的显示方式
 
-  子配置项:
-  - `enabled`: 是否启用星星显示(布尔值,默认 true)
-  - `mode`: 显示模式,可选 "repeat"(重复)或 "custom"(自定义)
-  - `repeat.character`: repeat模式下使用的字符(默认 "★")
-  - `custom.strings`: custom模式下的稀有度字符串映射(1-7 级)
-  - `custom.specialRarityTexts`: 特殊稀有度文本映射(大于 7 级,用户自定义)
+**starDisplay 子配置项:**
+
+| 配置项 | 类型 | 默认值 | 说明 |
+|-------|------|-------|------|
+| `enabled` | 布尔值 | true | 是否启用星星显示 |
+| `mode` | 字符串 | "repeat" | 显示模式:"repeat"(重复)或"custom"(自定义) |
+| `repeat.character` | 字符串 | "⭐" | repeat模式下使用的字符 |
+| `custom.strings` | 对象 | - | custom模式下1-7级稀有度字符串映射 |
+| `custom.specialRarityTexts` | 对象 | - | 大于7级的特殊稀有度文本映射 |
 
 #### starDisplay 配置格式示例
 
@@ -70,7 +87,7 @@
     "enabled": true,
     "mode": "repeat",
     "repeat": {
-      "character": "★"
+      "character": "⭐"
     },
     "custom": {
       "strings": {
@@ -95,35 +112,25 @@
 
 ## 如何应用配置
 
-### 方法 1:重启游戏
-
-修改配置文件后重启游戏.
-
-### 方法 2:使用命令
-
 ```
 /raritycore-client reload
 ```
 
 ## 纹理边框配置
 
-如果启用纹理边框(useTextureBorder=true),需要准备对应的纹理文件:
+如果启用纹理边框(`useTextureBorder=true`),需要准备对应的纹理文件:
 
 - 纹理文件路径:`assets/raritycore/textures/border/`
 - 纹理文件命名:`rarity_1.png` 至 `rarity_7.png`,对应 7 个稀有度等级
 - 纹理尺寸:16x16 像素
 
-## 缓存系统相关信息命令
-
-可以通过以下命令查看缓存系统状态:
+## 缓存系统相关命令
 
 ```
-/raritycore-client cache stats     # 显示缓存统计信息
-/raritycore-client cache clear     # 清空缓存
-/raritycore-client cache health    # 显示缓存健康状态
-/raritycore-client cache smart-optimize  # 触发智能缓存优化
+/raritycore-client cache stats   # 显示缓存统计信息
+/raritycore-client cache clear   # 清空本地缓存
 ```
 
 ## 注意事项
 
-如果配置文件损坏或陈旧,可以把配置文件删了,然后重载配置就可以重新生成一份默认配置
+1. 如果配置文件损坏或陈旧,可以删除配置文件,然后使用 `/raritycore-client reload` 命令重新生成默认配置

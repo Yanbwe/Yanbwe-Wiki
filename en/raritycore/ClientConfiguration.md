@@ -6,61 +6,78 @@ Client configuration file is located at:
 
 ## Configuration Options
 
-### 1. enableItemBorderRendering
+### enableItemBorderRendering
 
 - **Type**: Boolean
 - **Default**: true
 - **Description**: Whether to enable item border feature
 
-### 2. itemBorderStyle
+### itemBorderStyle
 
 - **Type**: Integer
-- **Default**: 0
+- **Default**: 1
 - **Description**: Controls the item border style (only effective when texture border is disabled)
   - `0`: Hollow border
   - `1`: Solid fill
 
-### 3. useTextureBorder
+### useTextureBorder
 
 - **Type**: Boolean
 - **Default**: true
 - **Description**: Whether to use texture borders. When enabled, custom textures will be used for border rendering
 
-### 4. enableItemNameColor
+### enableItemNameColor
 
 - **Type**: Boolean
 - **Default**: true
 - **Description**: Whether to enable item name coloring. Changes item name color based on item rarity
 
-### 5. enableTooltipInsert
+### enableTooltipInsert
 
 - **Type**: Boolean
 - **Default**: true
 - **Description**: Whether to enable tooltip insertion. Displays rarity information in item tooltips
+- **Note**: If ColorTooltips mod is detected to be loaded, this feature will be forcibly disabled
 
-### 6. skipUnconfiguredItems
+### enableTooltipColor
+
+- **Type**: Boolean
+- **Default**: true
+- **Description**: Whether to enable tooltip rarity text coloring
+
+### skipUnconfiguredItems
 
 - **Type**: Boolean
 - **Default**: false
 - **Description**: Whether to skip rendering of items without configured rarity. When enabled, only items with configured rarity will be displayed
 
-### 7. enableCacheSystem
+### enableCacheSystem
 
 - **Type**: Boolean
 - **Default**: true
 - **Description**: Whether to enable the cache system. Disable this option if conflicts with other optimization mods occur
 
-### 8. starDisplay (Star Display Configuration)
+### enableSophisticatedCoreAdapter
+
+- **Type**: Boolean
+- **Default**: true
+- **Description**: Whether to enable the Sophisticated Core adapter for compatibility with the Sophisticated Core mod
+- **Note**: This configuration option is only available in versions after 1.21.11.
+
+### starDisplay
 
 - **Type**: Object
 - **Description**: Controls how rarity stars are displayed
 
-  Sub-options:
-  - `enabled`: Whether to enable star display (Boolean, default: true)
-  - `mode`: Display mode, either "repeat" or "custom"
-  - `repeat.character`: Character used in repeat mode (default: "★")
-  - `custom.strings`: Custom rarity string mapping for custom mode (levels 1-7)
-  - `custom.specialRarityTexts`: Special rarity text mapping (above level 7, user-defined)
+**starDisplay Sub-options:**
+
+| Option | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | Boolean | true | Whether to enable star display |
+| `mode` | String | "repeat" | Display mode: "repeat" or "custom" |
+| `repeat.character` | String | "⭐" | Character used in repeat mode |
+| `custom.strings` | Object | - | Custom rarity string mapping for levels 1-7 in custom mode |
+| `custom.specialRarityTexts` | Object | - | Special rarity text mapping for levels above 7 |
 
 #### starDisplay Configuration Example
 
@@ -70,7 +87,7 @@ Client configuration file is located at:
     "enabled": true,
     "mode": "repeat",
     "repeat": {
-      "character": "★"
+      "character": "⭐"
     },
     "custom": {
       "strings": {
@@ -95,12 +112,6 @@ Client configuration file is located at:
 
 ## How to Apply Configuration
 
-### Method 1: Restart Game
-
-Restart the game after modifying the configuration file.
-
-### Method 2: Use Command
-
 ```
 /raritycore-client reload
 ```
@@ -115,15 +126,11 @@ If texture border is enabled (useTextureBorder=true), corresponding texture file
 
 ## Cache System Related Commands
 
-Cache system status can be viewed using the following commands:
-
 ```
-/raritycore-client cache stats     # Display cache statistics
-/raritycore-client cache clear     # Clear cache
-/raritycore-client cache health    # Display cache health status
-/raritycore-client cache smart-optimize  # Trigger smart cache optimization
+/raritycore-client cache stats   # Display cache statistics
+/raritycore-client cache clear   # Clear local cache
 ```
 
 ## Notes
 
-If the configuration file is corrupted or outdated, you can delete it and reload the configuration to regenerate a default one
+1. If the configuration file is corrupted or outdated, you can delete the configuration file and then use the `/raritycore-client reload` command to regenerate the default configuration

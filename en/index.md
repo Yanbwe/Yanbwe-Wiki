@@ -7,11 +7,8 @@ hero:
   tagline: Complete guides for SearchCarefully and RarityCore
   actions:
     - theme: brand
-      text: SearchCarefully
-      link: /en/scwiki/
-    - theme: alt
-      text: RarityCore
-      link: /en/raritycore/
+      text: 右上角切换语言 / Switch Language in Top Right
+
 
 features:
   - title: SearchCarefully
@@ -23,5 +20,5 @@ features:
     link: /en/raritycore/
     linkText: View Details
   - title: Multi-language Support
-    details: Available in Chinese and English
+    details: 你可以在页面右上角切换语言 / You can switch languages in the top right corner of the page!
 ---

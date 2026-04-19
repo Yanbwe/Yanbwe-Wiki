@@ -12,3 +12,6 @@ This mod addresses that issue by introducing a search time mechanism.
 - **[Resource Pack Guide](ResourcePackGuide)** - Learn how to create resource packs for custom chest textures
 - **[API](API)** - Learn how to use the API for other mods
 - **[Comprehensive Guide](ComprehensiveGuide)** - A detailed guide covering all aspects of the mod
+
+**你可以在页面右上角切换语言！**  
+**You can switch languages in the top right corner of the page!**

@@ -30,42 +30,15 @@ config/raritycore/server.json
 - **Description**: Controls whether to enable getRarity() availability warnings
 - **Effect**: When enabled, warning logs will be output when item calls to getRarity() method are detected
 
-## Configuration File Format
-
-```json
-{
-  "checkVanillaRarity": true,
-  "checkApotheosisRarity": true,
-  "enableGetRarityWarning": true
-}
-```
-
 ## Reloading Server Configuration
-
 ```
-/reload
+/raritycore reload
 ```
 
 This command reloads all server configurations, including rarity data.
 
-## Viewing Configuration Version
-
-```
-/raritycore config version
-```
-
-This command displays current configuration version information.
-
-## Force Configuration Upgrade
-
-```
-/raritycore config upgrade
-```
-
-This command forces all configuration files to upgrade to the latest version.
-
 ## Notes
 
 1. Server configuration only affects server-side behavior; clients do not need to synchronize these settings
-2. It is recommended to use the `/reload` command after modifying configuration to apply changes
-3. If the configuration file is corrupted, deleting it and restarting the server will automatically generate a default configuration
+2. If the configuration file does not exist, reloading the configuration will automatically generate a default configuration file
+3. If the configuration file format is incorrect, configuration items that cannot be parsed will be skipped and default values will be used. If you find that modifying the configuration does not take effect, please check whether the format of the file content is correct.
