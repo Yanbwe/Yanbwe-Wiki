@@ -83,7 +83,32 @@ export default defineConfig({
     darkModeSwitchLabel: '主题',
     lightModeSwitchTitle: '切换到浅色模式',
     darkModeSwitchTitle: '切换到深色模式',
-    skipToContentLabel: '跳转到内容'
+    skipToContentLabel: '跳转到内容',
+
+    search: {
+      provider: 'local',
+      options: {
+        locales: {
+          root: {
+            translations: {
+              button: {
+                buttonText: '搜索文档',
+                buttonAriaLabel: '搜索文档'
+              },
+              modal: {
+                noResultsText: '无法找到相关结果',
+                resetButtonTitle: '清除查询条件',
+                footer: {
+                  selectText: '选择',
+                  navigateText: '切换',
+                  closeText: '关闭'
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   },
 
   locales: {
@@ -174,7 +199,32 @@ export default defineConfig({
         darkModeSwitchLabel: 'Theme',
         lightModeSwitchTitle: 'Switch to light mode',
         darkModeSwitchTitle: 'Switch to dark mode',
-        skipToContentLabel: 'Skip to content'
+        skipToContentLabel: 'Skip to content',
+
+        search: {
+          provider: 'local',
+          options: {
+            locales: {
+              en: {
+                translations: {
+                  button: {
+                    buttonText: 'Search docs',
+                    buttonAriaLabel: 'Search docs'
+                  },
+                  modal: {
+                    noResultsText: 'No results found',
+                    resetButtonTitle: 'Clear search query',
+                    footer: {
+                      selectText: 'select',
+                      navigateText: 'navigate',
+                      closeText: 'close'
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
