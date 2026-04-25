@@ -9,7 +9,8 @@ export default defineConfig({
     nav: [
       { text: '首页', link: '/' },
       { text: '仔细搜刮', link: '/scwiki/', activeMatch: '/scwiki' },
-      { text: '稀有度核心', link: '/raritycore/', activeMatch: '/raritycore' }
+      { text: '稀有度核心', link: '/raritycore/', activeMatch: '/raritycore' },
+      { text: '灵动提示框', link: '/colorTooltips/', activeMatch: '/colorTooltips' }
     ],
 
     sidebar: [
@@ -50,6 +51,14 @@ export default defineConfig({
           },
           { text: '兼容性问题', link: '/raritycore/Compatibility' },
           { text: '命令参考', link: '/raritycore/CommandReference' }
+        ]
+      },
+      {
+        text: '灵动提示框',
+        collapsed: false,
+        items: [
+          { text: '首页', link: '/colorTooltips/' },
+          { text: '配置指南', link: '/colorTooltips/ConfigGuide' }
         ]
       }
     ],
@@ -125,7 +134,8 @@ export default defineConfig({
         nav: [
           { text: 'Home', link: '/en/' },
           { text: 'SearchCarefully', link: '/en/scwiki/', activeMatch: '/en/scwiki' },
-          { text: 'RarityCore', link: '/en/raritycore/', activeMatch: '/en/raritycore' }
+          { text: 'RarityCore', link: '/en/raritycore/', activeMatch: '/en/raritycore' },
+          { text: 'ColorTooltips', link: '/en/colorTooltips/', activeMatch: '/en/colorTooltips' }
         ],
 
         sidebar: [
@@ -166,6 +176,14 @@ export default defineConfig({
               },
               { text: 'Compatibility', link: '/en/raritycore/Compatibility' },
               { text: 'Command Reference', link: '/en/raritycore/CommandReference' }
+            ]
+          },
+          {
+            text: 'ColorTooltips',
+            collapsed: false,
+            items: [
+              { text: 'Home', link: '/en/colorTooltips/' },
+              { text: 'Config Guide', link: '/en/colorTooltips/ConfigGuide' }
             ]
           }
         ],
