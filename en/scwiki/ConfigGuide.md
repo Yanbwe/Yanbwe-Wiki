@@ -141,11 +141,12 @@ The configuration file is located at `.minecraft/config/searchcarefully-common.t
 
 ### Search Progress Sound Configuration
 
-#### `enableSearchProgressSound` (Boolean, default: true)
-- Function: Enable sound during search progress
-- true: Enables search progress sound, plays at intervals during search
-- false: Disables search progress sound
+#### `enableSearchProgressSound` (Boolean, default: false)
+- Function: Enable looping sound during search progress
+- true: Enables search progress looping sound, plays continuously while items are being searched, stops automatically when all items are found
+- false: Disables search progress sound (default)
 
 #### `searchProgressSoundInterval` (Float, range: 0.1-10.0, default: 0.5)
-- Function: Interval between search progress sounds (seconds)
-- Default: 0.5 seconds
+- Function: Interval between search progress sounds (seconds) — only applies to legacy non-looping mode
+- In the current looping sound mode, this config option is ignored
+- Kept only for backward compatibility

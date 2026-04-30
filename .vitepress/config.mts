@@ -21,6 +21,7 @@ export default defineConfig({
           { text: '首页', link: '/scwiki/' },
           { text: '综合指南', link: '/scwiki/ComprehensiveGuide' },
           { text: '配置指南', link: '/scwiki/ConfigGuide' },
+          { text: '搜刮音效教学', link: '/scwiki/SearchProgressSoundGuide' },
           { text: '资源包指南', link: '/scwiki/ResourcePackGuide' },
           { text: 'API', link: '/scwiki/API' }
         ]
@@ -146,6 +147,7 @@ export default defineConfig({
               { text: 'Home', link: '/en/scwiki/' },
               { text: 'Comprehensive Guide', link: '/en/scwiki/ComprehensiveGuide' },
               { text: 'Config Guide', link: '/en/scwiki/ConfigGuide' },
+              { text: 'Search Sound Guide', link: '/en/scwiki/SearchProgressSoundGuide' },
               { text: 'Resource Pack Guide', link: '/en/scwiki/ResourcePackGuide' },
               { text: 'API', link: '/en/scwiki/API' }
             ]
