@@ -2,8 +2,6 @@
 
 Since version `1201.9.0`, SearchCarefully provides a **search progress sound** feature, giving you immersive audio feedback while looting.
 
-This feature is disabled by default, because I'm too lazy to make search sounds.
-
 ## Quick Start
 
 1. Open the config file `.minecraft/config/searchcarefully-common.toml`
