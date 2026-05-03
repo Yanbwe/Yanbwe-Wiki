@@ -30,6 +30,15 @@ config/raritycore/server.json
 - **Description**: Controls whether to enable getRarity() availability warnings
 - **Effect**: When enabled, warning logs will be output when item calls to getRarity() method are detected
 
+### enableNbtRarityControl
+
+- **Type**: Boolean
+- **Default**: `false`
+- **Description**: Controls whether in-game NBT tag rarity control is enabled
+- **Effect**: When enabled, items with `raritycore:data` NBT tag override their rarity display (highest priority)
+
+> **Details**: See [In-Game NBT Tag Rarity Control](/en/raritycore/NbtRarityControl)
+
 ## Reloading Server Configuration
 ```
 /raritycore reload

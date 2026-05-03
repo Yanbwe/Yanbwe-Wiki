@@ -33,7 +33,10 @@ export default defineConfig({
           { text: '首页', link: '/raritycore/' },
           { text: '稀有度配置指南', link: '/raritycore/how-to-config-rarity' },
           { text: '客户端配置', link: '/raritycore/ClientConfiguration' },
+          { text: '客户端稀有度配置', link: '/raritycore/RarityClientConfig' },
           { text: '服务端配置', link: '/raritycore/ServerConfiguration' },
+          { text: 'NBT稀有度控制', link: '/raritycore/NbtRarityControl' },
+          { text: 'KubeJS接口', link: '/raritycore/KubeJS' },
           {
             text: '匹配配置',
             collapsed: false,
@@ -159,7 +162,10 @@ export default defineConfig({
               { text: 'Home', link: '/en/raritycore/' },
               { text: 'Rarity Configuration', link: '/en/raritycore/how-to-config-rarity' },
               { text: 'Client Configuration', link: '/en/raritycore/ClientConfiguration' },
+              { text: 'Client Rarity Config', link: '/en/raritycore/RarityClientConfig' },
               { text: 'Server Configuration', link: '/en/raritycore/ServerConfiguration' },
+              { text: 'NBT Rarity Control', link: '/en/raritycore/NbtRarityControl' },
+              { text: 'KubeJS Integration', link: '/en/raritycore/KubeJS' },
               {
                 text: 'Matching Configuration',
                 collapsed: false,

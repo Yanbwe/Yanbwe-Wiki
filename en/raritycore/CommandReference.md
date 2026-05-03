@@ -27,9 +27,7 @@ All `/raritycore` subcommands require OP permission (permission level 2).
 
 | Command | Description |
 |---------|-------------|
-| `/raritycore reload` | Reloads all rarity configurations |
-| `/raritycore config version` | Displays configuration file version information |
-| `/raritycore config upgrade` | Forces verification and upgrade of configuration files |
+| `/raritycore reload` | Reloads all configurations and rarity data |
 
 ### Data Export
 
@@ -38,10 +36,11 @@ All `/raritycore` subcommands require OP permission (permission level 2).
 | `/raritycore export all` | Exports all rarity data to a single file |
 | `/raritycore export all-mod` | Exports rarity data separately by mod |
 | `/raritycore export mod <modid>` | Exports rarity data for a specified mod |
+| `/raritycore export rarity <level>` | Exports all items of a specific rarity level |
 
 **Export File Description:**
-- Filename format: `export_<type>_<Minecraft version>_<timestamp>.json`
-- Save location: Mod configuration directory
+- Filename: `export_<type>_<MC version>_<timestamp>.json`; for `export rarity`: `export_rarity_<level>_<timestamp>.json`
+- Save location: mod config directory
 
 ### Details
 
@@ -52,21 +51,30 @@ All `/raritycore` subcommands require OP permission (permission level 2).
 
 ### Edit Mode
 
-Edit mode allows real-time preview of rarity changes in-game.
+> **Ver.13 Refactored**: Edit mode is now mode-driven + parameter-driven. See [Rarity Configuration Guide](/en/raritycore/how-to-config-rarity).
+
+**Edit Mode Control:**
 
 | Command | Description |
 |---------|-------------|
-| `/raritycore edit enable` | Enables edit mode |
-| `/raritycore edit disable` | Disables edit mode |
-| `/raritycore edit toggle` | Toggles edit mode |
-| `/raritycore edit status` | Displays current edit mode status |
+| `/raritycore edit toggle <true\|false>` | Enable/disable edit mode |
+| `/raritycore edit mode <normal\|fullmatch>` | Switch edit mode |
 
-### Performance Monitoring
+**Parameter Settings (all parameters can be changed anytime; effectiveness depends on current mode):**
 
-| Command | Description |
-|---------|-------------|
-| `/raritycore perf stats` | Displays performance statistics |
-| `/raritycore perf optimize` | Manually triggers performance optimization |
+| Command | Description | Mode |
+|---------|-------------|------|
+| `/raritycore edit parameter rarity <value>` | Set rarity level (≥0) | All |
+| `/raritycore edit parameter autoReload <true\|false>` | Auto-reload after config generation | FullMatch |
+| `/raritycore edit parameter stringContains <true\|false>` | Use contains matching for string NBT | FullMatch |
+| `/raritycore edit parameter ignore "<aa\|bb\|cc>"` | Exclude NBT tags, separated by `\|` | FullMatch |
+
+**GUI Operations:**
+- When edit mode is active, a floating panel appears in the top-left corner
+- Click the mode name to toggle Normal/FullMatch
+- `[-]` `[+]` buttons adjust rarity level
+- `Ctrl+1`~`Ctrl+7` select level, `Ctrl+0` clear rarity
+- `Ctrl+H` collapse/expand panel
 
 ## Client Commands
 
@@ -74,9 +82,8 @@ Edit mode allows real-time preview of rarity changes in-game.
 
 | Command | Description |
 |---------|-------------|
-| `/raritycore-client reload` | Reloads client configuration |
-| `/raritycore-client texture toggle` | Toggles texture border display |
-| `/raritycore-client cache stats` | Displays cache statistics |
+| `/raritycore-client reload` | Reloads client config (`client.json` and `RarityClientConfig.json`) |
+| `/raritycore-client cache stats` | Shows cache statistics |
 | `/raritycore-client cache clear` | Clears local cache |
 
 ## Permission Requirements

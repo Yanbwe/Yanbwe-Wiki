@@ -8,11 +8,11 @@ Many people misunderstand rarity as representing item quality, which is wrong! *
 
 An item deserves a high rarity if it requires great effort or good luck to obtain, even if the item has no practical use.
 
-On the other hand, an item that can be crafted with just dirt but has effects superior to a golden apple does not deserve a high rarity despite its utility.
+On the other hand, an item that can be crafted from dirt but has effects stronger than golden apples does not deserve a high rarity.
 
 # Regular Rarity Configuration
 
-The most important rarity configuration in RarityCore is based on item ID. First, we need to prepare some JSON files, and in these files, we should write:
+The main rarity configuration in RarityCore is based on item IDs. First, prepare some JSON files with the following format:
 
 ```json
 {
@@ -22,69 +22,122 @@ The most important rarity configuration in RarityCore is based on item ID. First
 }
 ```
 
-List the item rarities one by one like this.
+List item rarities one by one.
 
-After that, RarityCore will read rarity information from the following locations:
+RarityCore reads rarity data from the following locations:
 
 1. `config\raritycore\auto\auto_rarity.json`
 2. (Datapack) `data\<namespace>\rarity\*.json`
 3. `config\raritycore\FinalRarityConfig\*.json`
 4. `config\raritycore\FinalRarity.json`
 
-Write your rarity information in these JSON files, and RarityCore will read them.
+Place your rarity data in these JSON files and RarityCore will load them.
 
-> **Loading Priority Note:**
+> **Loading Priority:**
 >
-> Note that RarityCore loads rarity configurations in the order above, and later-loaded configurations will override earlier-loaded configurations for the same items.
+> RarityCore loads rarity configurations in the order above. Later-loaded configs override earlier ones for the same item.
 
-Manually typing item IDs is too tedious. Is there a faster way? Yes, there is!
+## 0. Auto Rarity Calculation
 
-## 0. Auto Rarity Calculation Feature
+RarityCore's signature feature — automatically evaluates item rarity based on crafting recipes.
 
-The most distinctive feature of RarityCore - automatically calculates item rarity based on crafting recipes without manual operation.
+Run `/raritycore recalculate-auto` to start auto calculation.
 
-Simply run the command `/raritycore recalculate-auto` to start the auto rarity calculation.
+Results are stored in `config\raritycore\auto\auto_rarity.json`.
 
-The calculated rarity is stored in `config\raritycore\auto\auto_rarity.json`.
+If `auto_rarity.json` doesn't exist on server startup, auto calculation runs automatically.
 
-If the `auto_rarity.json` file does not exist after the server starts, the auto rarity calculation will run automatically.
+Limitation: only supports crafting table, furnace, and smithing table recipes — not all items can be calculated, especially in tech modpacks. More recipe types will be supported in the future.
 
-The disadvantage is that it only supports crafting table, furnace, and smithing table recipes, which means not all item rarities can be calculated. This is particularly noticeable in tech integration packs. More recipe types will be supported in the future.
+## 1. Using Game Commands
 
-## 1. Adding via Game Commands
+1. `/raritycore sethand <rarity>` — Set held item rarity
+2. `/raritycore removehand` — Remove held item rarity
+3. `/raritycore setrarity <item> <rarity>` — Set specified item rarity
+4. `/raritycore removerarity <item>` — Remove specified item rarity
 
-1. `/raritycore sethand <rarity>` Sets the rarity of the currently held item
-2. `/raritycore removehand` Removes the rarity configuration of the currently held item
-3. `/raritycore setrarity <item> <rarity>` Sets the rarity of a specified item
-4. `/raritycore removerarity <item>` Removes the rarity configuration of a specified item
-
-Rarities modified using the above methods will be stored in the `config\raritycore\FinalRarity.json` file.
+Changes are saved to `config/raritycore/FinalRarity.json`.
 
 ## 2. Using Edit Mode
 
-If you want to modify item rarity quickly and controllably, you can use edit mode.
+For quick and controllable rarity editing, use edit mode.
 
-`/raritycore edit enable/disable/toggle` Edit mode control
+> **Ver.13 Update**: Edit mode has been refactored with Normal and FullMatch modes.
 
-After that, you can modify item rarity as follows:
+### Edit Mode Commands
 
-1. In any game interface (inventory, chest, crafting table, etc.)
-2. Click on the item whose rarity you want to modify
+```
+/raritycore edit toggle <true|false>
+/raritycore edit mode <normal|fullmatch>
+/raritycore edit parameter rarity <value>
+/raritycore edit parameter autoReload <true|false>
+/raritycore edit parameter stringContains <true|false>
+/raritycore edit parameter ignore "<aa|bb|cc>"
+```
 
-Hold the `Ctrl` key and press the corresponding number key to switch to the specified rarity level. You can also enable delete mode to remove rarity.
+### Normal Mode
 
-- `Ctrl + 1` - Level 1
-- `Ctrl + 2` - Level 2
-- `Ctrl + 3` - Level 3
-- `Ctrl + 4` - Level 4
-- `Ctrl + 5` - Level 5
-- `Ctrl + 6` - Level 6
-- `Ctrl + 7` - Level 7
-- `Ctrl + 0` - Delete Mode
+Writes item rarity to `FinalRarity.json`, same as before.
 
-- Modifications in edit mode will be applied immediately like commands and automatically saved to the `config/raritycore/FinalRarity.json` file;
-- Remember to disable edit mode after completing edits~
+- `rarity=0` means "no rarity" (equivalent to delete)
+- Shortcuts: `Ctrl+1`~`Ctrl+7` select level, `Ctrl+0` clear rarity
 
-## Item Data-Based Configuration
+### FullMatch Mode
 
-If you want to configure rarity based on item NBT data/item components, please refer to [NBT Matching](/raritycore/matching-config/NBTMatching) and [Item Component Matching](/raritycore/matching-config/ItemComponentMatching).
+Creates **NBT match config files** using all of the item's current NBT tags as match conditions.
+
+**Use case**: distinguishing items with the same ID but different NBT sub-tags (potion types, enchantment levels, etc.)
+
+**Behavior**:
+- Clicking an item generates `edit_<itemId>_<N>.json` in `config/raritycore/nbt_matches/`
+- String-type tags use **contains** matching by default; set `stringContains=false` for exact matching
+- Other tag types use exact (equals) matching
+- Tags specified in `ignore` are excluded from matching
+- Default does not auto-reload; set `autoReload=true` for immediate effect
+
+**Parameters:**
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `rarity` | 1 | Rarity level to assign (≥0) |
+| `autoReload` | false | Auto-reload config after generation |
+| `stringContains` | true | Use contains matching for string-type NBT |
+| `ignore` | (empty) | NBT tags to exclude, separated by `\|` |
+
+### GUI Panel
+
+When edit mode is active, a floating panel appears in the top-left corner of all GUIs:
+
+- **Current mode** (Normal/FullMatch) — click to toggle
+- **Rarity level** — `[-]` `[+]` buttons for quick adjustment
+- **FullMatch extra params**: AutoReload, StrContains, Ignore (display only)
+- `Ctrl+H` to collapse/expand the panel
+
+---
+## 3. Tag-Based Batch Rarity Assignment
+
+For modpacks with many mods, configuring each item individually is time-consuming. The TagRarity feature allows batch assignment via Minecraft's Tag system.
+
+Config file: `config/raritycore/TagRarity.json`
+
+Format:
+```json
+{
+  "tag_rules": [
+    { "tag": "forge:ingots/netherite", "rarity": 5 },
+    { "tag": "forge:gems/diamond", "rarity": 4 },
+    { "tag": "minecraft:swords", "rarity": 2 }
+  ]
+}
+```
+
+**Rules:**
+- `tag`: Minecraft TagKey, e.g. `forge:ingots/netherite`, `minecraft:swords`
+- `rarity`: level 1-7
+- Items matching multiple tags get the **highest rarity**
+- Items from any mod automatically inherit rarity if they have the matching tag
+- **Priority**: above auto rarity, below manual config (FinalRarity.json)
+
+## 999. Item Data-Based Configuration
+
+For rarity configuration based on NBT tags/item components, see [NBT Matching](/raritycore/matching-config/NBTMatching) and [Item Component Matching](/raritycore/matching-config/ItemComponentMatching).
