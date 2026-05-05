@@ -2,7 +2,7 @@
 
 **Ver.13 新增功能**
 
-通过给物品添加 `raritycore:data` NBT 标签,可以在游戏内直接控制该物品的稀有度表现。此功能由 `server.json` 中的 `enableNbtRarityControl` 开关控制(**默认关闭**)。
+通过给物品添加 `raritycore` NBT 标签,可以在游戏内直接控制该物品的稀有度表现。此功能由 `server.json` 中的 `enableNbtRarityControl` 开关控制(**默认关闭**)。
 
 ## 开启方式
 
@@ -21,7 +21,7 @@
 物品需要包含以下 NBT 标签:
 
 ```
-raritycore:data
+raritycore
 ├── Level (int)           # 稀有度等级
 ├── Color (string)        # RGB 颜色,如 "#FFAA00"
 ├── Tooltips (bool)       # 是否显示工具提示
@@ -39,7 +39,7 @@ raritycore:data
 使用 `/give` 命令:
 
 ```
-/give @p minecraft:diamond_sword{raritycore:data:{Level:6,Color:"#FF6666"}}
+/give @p minecraft:diamond_sword{raritycore:{Level:6,Color:"#FF6666"}}
 ```
 
 ### 通过其他模组添加
@@ -71,7 +71,7 @@ tag.put("raritycore:data", data);
 
 ## 优先级
 
-物品的 `raritycore:data.Level` > 0 时具有**最高优先级**,覆盖:
+物品的 `raritycore.Level` > 0 时具有**最高优先级**,覆盖:
 
 - NBT 匹配规则
 - FinalRarity.json
