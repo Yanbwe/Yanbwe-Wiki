@@ -65,7 +65,7 @@ tag.put("raritycore:data", data);
 | `Level` 未设置 | 不生效，视为无稀有度，回退到常规查询 |
 | `Level` = 0 | 视为无稀有度，回退到常规查询 |
 | `Level` > 0 | **优先级凌驾一切**（包括 NBT 匹配配置） |
-| `Level` > 7 | 外观与等级 7 相同，但内部记录为实际值 |
+| `Level` > 7 | 如果没有特别设置，则使用与等级7相同的配置 |
 | `Color` 未设置 | 走常规配置（RarityClientConfig 或默认色） |
 | `Tooltips` 等未设置 | 默认启用 |
 

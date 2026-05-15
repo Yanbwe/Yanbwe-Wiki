@@ -136,7 +136,6 @@
 
 **规则:**
 - `tag`: Minecraft TagKey,如 `forge:ingots/netherite`、`minecraft:swords`
-- `rarity`: 1-7 的稀有度等级
 - 物品匹配多个 Tag 时,自动取**最高稀有度**
 - 模组物品只要打上对应标签即自动继承,对整合包极友好
 - **优先级高于**自动稀有度计算,但**低于**手动配置 (FinalRarity.json)
