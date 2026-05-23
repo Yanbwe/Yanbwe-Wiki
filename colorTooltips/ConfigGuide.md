@@ -1,210 +1,129 @@
-# ColorTooltips 配置文件说明
+# 配置指南
 
-配置文件位于：
+ColorTooltips 使用 JSON 配置文件，所有配置文件位于：
 
-`config/colortooltips-client.toml`
+```
+config/colortooltips/
+├── common.json          ← 全局设置 + 样式选择器
+└── styles/
+    ├── Vanilla.json      ← 默认样式
+    ├── RarityCoreStyles.json
+    ├── RGB.json
+    └── VanillaRarity.json
+```
 
-## 配置选项说明
+**热重载**：修改配置文件后，在游戏内使用聊天命令 `/colortooltips reload` 即可立即生效，无需重启。
 
-### 基础选项
+## common.json — 全局配置
 
-#### enabled
-
-- **类型**: 布尔值
-- **默认值**: true
-- **说明**: 是否启用彩色提示框。关闭后将恢复原版提示框样式。
-
-#### customHeaderEnabled
-
-- **类型**: 布尔值
-- **默认值**: true
-- **说明**: 是否启用自定义标题栏（物品图标 + 白色名称 + 稀有度文字）。关闭则保留原版物品名称。未安装 RarityCore 时强制禁用。
-
-#### bgAlpha
-
-- **类型**: 浮点数
-- **范围**: 0.0 ~ 1.0
-- **默认值**: 0.97
-- **说明**: 提示框背景透明度。0.0 为完全透明，1.0 为完全不透明。
-
-#### bgDarken
-
-- **类型**: 浮点数
-- **范围**: 0.0 ~ 1.0
-- **默认值**: 0.7
-- **说明**: 背景颜色暗度。基于稀有度颜色进行暗化处理，值越大背景越暗。
-
-#### borderGradientEnabled
+### smoothColor
 
 - **类型**: 布尔值
-- **默认值**: true
-- **说明**: 是否启用边框渐变效果。
+- **默认**: `true`
+- **说明**: 物品切换时颜色是否平滑过渡（渐变而非跳变）。
 
-#### titlebarGradientEnabled
+### tooltipLock
 
-- **类型**: 布尔值
-- **默认值**: true
-- **说明**: 是否启用标题栏渐变效果。
+提示框锁定功能，按住 `Shift + 鼠标滚轮` 可上下移动提示框。
 
----
+| 字段 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `enabled` | 布尔 | `true` | 是否启用 Shift+滚轮 移动提示框 |
+| `sensitivity` | 浮点数 | `10.0` | 滚轮灵敏度，范围 1.0~20.0 |
 
-### 色彩变化
+### onlyTextTooltips
 
-#### hueVariation
+纯文本提示框（如聊天物品链接悬停、成就提示等）是否也使用 ColorTooltips 样式。
 
-- **类型**: 浮点数
-- **范围**: 0.0 ~ 1.0
-- **默认值**: 0.1
-- **说明**: 色相变化范围。控制颜色流动时色相的偏移幅度，值越大色彩变化越丰富。
+| 字段 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `enabled` | 布尔 | `true` | 关闭后纯文本提示框使用原版样式 |
 
-#### valueVariation
+### styleSelector — 样式选择器
 
-- **类型**: 浮点数
-- **范围**: 0.0 ~ 1.0
-- **默认值**: 0.4
-- **说明**: 明度变化范围。控制颜色流动时明度的偏移幅度。
+决定不同物品使用哪个样式文件。分为两个选择器块：
 
-#### saturationVariation
+- **`common`**：未安装 RarityCore 时使用
+- **`rarityCore`**：安装了 RarityCore 时使用
 
-- **类型**: 浮点数
-- **范围**: 0.0 ~ 1.0
-- **默认值**: 0.1
-- **说明**: 饱和度变化范围。控制颜色流动时饱和度的偏移幅度。
+#### 匹配规则
 
----
+样式按以下优先级依次匹配（命中即返回）：
 
-### 切换动画
+1. **`onlyText`** — 纯文本提示框使用的样式名
+2. **`items`** — 物品注册名精确匹配（如 `"minecraft:diamond_sword": "RGB"`）
+3. **稀有度编号** — RarityCore 稀有度数字匹配（如 `"3": "VanillaRarity"`，仅 rarityCore 块有效）
+4. **原版稀有度名** — `"Common"`、`"Uncommon"`、`"Rare"`、`"Epic"`
+5. **`"*"` 通配符** — 上述全部未命中时的默认样式
+6. **最终降级** — 固定使用 `"Vanilla"`
 
-#### switchTailSegments
+#### 示例
 
-- **类型**: 整数
-- **范围**: 10 ~ 100
-- **默认值**: 50
-- **说明**: 提示框切换位置时拖尾的分段数。值越大拖尾越平滑，但性能开销也越大。
+```json
+{
+  "styleSelector": {
+    "common": {
+      "onlyText": "Vanilla",
+      "Common": "Vanilla",
+      "Uncommon": "VanillaRarity",
+      "Rare": "VanillaRarity",
+      "Epic": "VanillaRarity",
+      "items": {}
+    },
+    "rarityCore": {
+      "onlyText": "Vanilla",
+      "*": "RarityCoreStyles",
+      "items": {
+        "minecraft:diamond_sword": "RGB"
+      }
+    }
+  }
+}
+```
 
-#### switchTailLength
+这个配置的含义：
+- 纯文本提示框 → 使用 `Vanilla` 样式
+- Common(白色)物品 → 使用 `Vanilla`
+- Uncommon/Rare/Epic 物品 → 使用 `VanillaRarity`
+- 如果有 RarityCore → 全部使用 `RarityCoreStyles`，但钻石剑例外使用 `RGB` 彩虹样式
 
-- **类型**: 浮点数
-- **范围**: 0.1 ~ 2.0
-- **默认值**: 1.6
-- **说明**: 拖尾长度因子。控制位置切换动画中拖尾的长度。
+## styles/*.json — 样式文件
 
-#### switchTailAlphaExponent
+每个样式文件控制提示框的所有视觉效果。详见 [样式编写指南](/colorTooltips/StyleGuide)。
 
-- **类型**: 浮点数
-- **范围**: 0.1 ~ 1.0
-- **默认值**: 0.5
-- **说明**: 拖尾透明度衰减指数。值越小，拖尾越明显。
+## 默认配置文件内容
 
-#### fadeOutDelay
-
-- **类型**: 整数
-- **范围**: 0 ~ 1000
-- **默认值**: 100
-- **单位**: 毫秒
-- **说明**: 提示框开始淡出前的延迟时间。
-
-#### fadeInDuration
-
-- **类型**: 整数
-- **范围**: 0 ~ 500
-- **默认值**: 100
-- **单位**: 毫秒
-- **说明**: 提示框淡入动画的时长。
-
-#### switchFlashDuration
-
-- **类型**: 整数
-- **范围**: 0 ~ 1000
-- **默认值**: 500
-- **单位**: 毫秒
-- **说明**: 切换物品时边框闪光动画的时长。
-
-#### itemScaleMin
-
-- **类型**: 浮点数
-- **范围**: 0.1 ~ 1.0
-- **默认值**: 0.5
-- **说明**: 物品图标出现时的最小缩放比例。动画从该值缓动到 1.0。
-
----
-
-### 色彩流动
-
-#### gradientPeriod
-
-- **类型**: 浮点数
-- **范围**: 50.0 ~ 500.0
-- **默认值**: 200.0
-- **说明**: 颜色渐变周期。控制颜色流动动画一个完整周期的时长，值越大颜色变化越慢。
-
-#### scrollSpeed
-
-- **类型**: 浮点数
-- **范围**: 0.01 ~ 0.2
-- **默认值**: 0.05
-- **说明**: 颜色在边框和标题栏上的滚动速度。
-
----
-
-### 提示框锁定
-
-#### lockScrollSensitivity
-
-- **类型**: 浮点数
-- **范围**: 1.0 ~ 20.0
-- **默认值**: 10.0
-- **说明**: 按住 Shift + 鼠标滚轮移动提示框时的灵敏度。值越大，每次滚轮滚动时提示框移动的距离越大。
-
----
-
-### 其他
-
-#### showRarityCoreWarning
-
-- **类型**: 布尔值
-- **默认值**: true
-- **说明**: 未安装 RarityCore 时是否在进入世界前显示警告提示。
-
----
-
-## 配置示例
-
-```toml
-[options]
-    enabled = true
-    customHeaderEnabled = true
-    bgAlpha = 0.97
-    bgDarken = 0.7
-    borderGradientEnabled = true
-    titlebarGradientEnabled = true
-
-[color_variation]
-    hueVariation = 0.1
-    valueVariation = 0.4
-    saturationVariation = 0.1
-
-[switch_animation]
-    switchTailSegments = 50
-    switchTailLength = 1.6
-    switchTailAlphaExponent = 0.5
-    fadeOutDelay = 100
-    fadeInDuration = 100
-    switchFlashDuration = 500
-    itemScaleMin = 0.5
-
-[color_flow]
-    gradientPeriod = 200.0
-    scrollSpeed = 0.05
-
-[tooltip_lock]
-    lockScrollSensitivity = 10.0
-
-showRarityCoreWarning = true
+```json
+{
+  "styleSelector": {
+    "common": {
+      "onlyText": "Vanilla",
+      "Common": "Vanilla",
+      "Uncommon": "VanillaRarity",
+      "Rare": "VanillaRarity",
+      "Epic": "VanillaRarity",
+      "items": {}
+    },
+    "rarityCore": {
+      "onlyText": "Vanilla",
+      "*": "RarityCoreStyles",
+      "items": {}
+    }
+  },
+  "tooltipLock": {
+    "enabled": true,
+    "sensitivity": 10.0
+  },
+  "onlyTextTooltips": {
+    "enabled": true
+  },
+  "smoothColor": true
+}
 ```
 
 ## 注意事项
 
-1. 修改配置文件后需要重启游戏或重载配置才能生效。
-2. `customHeaderEnabled` 选项仅在安装 RarityCore 时生效，未安装时将被强制禁用。
-3. 如果配置文件损坏，可以删除后重新启动游戏以生成默认配置。
+1. 修改任何 JSON 文件后，在游戏内执行 `/colortooltips reload` 即可热重载，无需重启。
+2. 样式选择器的 `items` 字段中，物品注册名格式为 `"命名空间:物品id"`（例如 `"minecraft:diamond"`）。
+3. 可以在 `styles/` 目录下添加自己的 `.json` 文件，文件名即为样式名（不含 `.json` 后缀），然后在 `styleSelector` 中引用。
+4. JSON 文件损坏时，模组会自动使用默认值降级，不会导致游戏崩溃。日志中会记录加载警告。

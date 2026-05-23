@@ -63,7 +63,8 @@ export default defineConfig({
         collapsed: false,
         items: [
           { text: '首页', link: '/colorTooltips/' },
-          { text: '配置指南', link: '/colorTooltips/ConfigGuide' }
+          { text: '配置指南', link: '/colorTooltips/ConfigGuide' },
+          { text: '样式编写指南', link: '/colorTooltips/StyleGuide' }
         ]
       }
     ],
@@ -193,7 +194,8 @@ export default defineConfig({
             collapsed: false,
             items: [
               { text: 'Home', link: '/en/colorTooltips/' },
-              { text: 'Config Guide', link: '/en/colorTooltips/ConfigGuide' }
+              { text: 'Config Guide', link: '/en/colorTooltips/ConfigGuide' },
+              { text: 'Style Guide', link: '/en/colorTooltips/StyleGuide' }
             ]
           }
         ],
