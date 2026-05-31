@@ -10,7 +10,8 @@ export default defineConfig({
       { text: '首页', link: '/' },
       { text: '仔细搜刮', link: '/scwiki/', activeMatch: '/scwiki' },
       { text: '稀有度核心', link: '/raritycore/', activeMatch: '/raritycore' },
-      { text: '灵动提示框', link: '/colorTooltips/', activeMatch: '/colorTooltips' }
+      { text: '灵动提示框', link: '/colorTooltips/', activeMatch: '/colorTooltips' },
+      { text: '别样的伤害跳字', link: '/stylizeddamage/', activeMatch: '/stylizeddamage' }
     ],
 
     sidebar: [
@@ -65,6 +66,18 @@ export default defineConfig({
           { text: '首页', link: '/colorTooltips/' },
           { text: '配置指南', link: '/colorTooltips/ConfigGuide' },
           { text: '样式编写指南', link: '/colorTooltips/StyleGuide' }
+        ]
+      },
+      {
+        text: '别样的伤害跳字',
+        collapsed: false,
+        items: [
+          { text: '首页', link: '/stylizeddamage/' },
+          { text: '配置文件说明', link: '/stylizeddamage/Configuration' },
+          { text: '样式文件说明', link: '/stylizeddamage/StyleConfiguration' },
+          { text: '动画配置指南', link: '/stylizeddamage/AnimationGuide' },
+          { text: '命令参考', link: '/stylizeddamage/CommandReference' },
+          { text: 'API 使用说明', link: '/stylizeddamage/API' }
         ]
       }
     ],
@@ -141,7 +154,8 @@ export default defineConfig({
           { text: 'Home', link: '/en/' },
           { text: 'SearchCarefully', link: '/en/scwiki/', activeMatch: '/en/scwiki' },
           { text: 'RarityCore', link: '/en/raritycore/', activeMatch: '/en/raritycore' },
-          { text: 'ColorTooltips', link: '/en/colorTooltips/', activeMatch: '/en/colorTooltips' }
+          { text: 'ColorTooltips', link: '/en/colorTooltips/', activeMatch: '/en/colorTooltips' },
+          { text: 'StylizedDamage', link: '/en/stylizeddamage/', activeMatch: '/en/stylizeddamage' }
         ],
 
         sidebar: [
@@ -196,6 +210,18 @@ export default defineConfig({
               { text: 'Home', link: '/en/colorTooltips/' },
               { text: 'Config Guide', link: '/en/colorTooltips/ConfigGuide' },
               { text: 'Style Guide', link: '/en/colorTooltips/StyleGuide' }
+            ]
+          },
+          {
+            text: 'StylizedDamage',
+            collapsed: false,
+            items: [
+              { text: 'Home', link: '/en/stylizeddamage/' },
+              { text: 'Configuration', link: '/en/stylizeddamage/Configuration' },
+              { text: 'Style Configuration', link: '/en/stylizeddamage/StyleConfiguration' },
+              { text: 'Animation Guide', link: '/en/stylizeddamage/AnimationGuide' },
+              { text: 'Command Reference', link: '/en/stylizeddamage/CommandReference' },
+              { text: 'API Reference', link: '/en/stylizeddamage/API' }
             ]
           }
         ],
