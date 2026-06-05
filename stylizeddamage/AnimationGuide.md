@@ -155,7 +155,7 @@
 
 ## 明度动画 (brightness)
 
-控制数字颜色的明暗。正值更亮，负值更暗。
+控制数字颜色的明暗。进入阶段从 `startOffset` 变化到 0（原始明度），退出阶段从 0 变化到 `targetOffset`。正值更亮，负值更暗。
 
 ### 进入 (enter)
 
@@ -164,7 +164,7 @@
   "type": "normal",
   "duration": 8,
   "easing": { "in": true, "out": true },
-  "targetOffset": 0.3
+  "startOffset": 0.3
 }
 ```
 

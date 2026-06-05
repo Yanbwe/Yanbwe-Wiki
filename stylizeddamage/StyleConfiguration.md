@@ -342,7 +342,7 @@ config/stylizeddamage/styles/<样式名>.json
         "type": "normal",
         "duration": 8,
         "easing": { "in": true, "out": true },
-        "targetOffset": 0.3
+        "startOffset": 0.3
       },
       "exit": {
         "type": "normal",
