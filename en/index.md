@@ -4,7 +4,7 @@ layout: home
 hero:
   name: "Yanbwe's Wiki"
   text: ""
-  tagline: Complete guides for SearchCarefully, RarityCore and ColorTooltips
+  tagline: Complete guides for SearchCarefully, RarityCore, ColorTooltips and StylizedDamage
   actions:
     - theme: brand
       text: 右上角切换语言 / Switch Language in Top Right
@@ -22,6 +22,10 @@ features:
   - title: ColorTooltips
     details: ColorTooltips - A mod that provides vibrant tooltip styles and dynamic animations
     link: /en/colorTooltips/
+    linkText: View Details
+  - title: StylizedDamage
+    details: StylizedDamage - A highly customizable damage number display mod
+    link: /en/stylizeddamage/
     linkText: View Details
   - title: Multi-language Support
     details: 你可以在页面右上角切换语言 / You can switch languages in the top right corner of the page!
