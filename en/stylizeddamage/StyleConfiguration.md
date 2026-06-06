@@ -8,8 +8,6 @@ config/stylizeddamage/styles/<style_name>.json
 
 Each file defines the visual appearance for a damage number. The filename (without `.json`) is the style name.
 
----
-
 ## Style Properties
 
 | Property | Type | Default | Description |
@@ -32,8 +30,6 @@ Each file defines the visual appearance for a damage number. The filename (witho
 | `animation` | object | — | Animation config |
 | `damageScale` | object | — | Damage-based scaling |
 
----
-
 ## Color Formats
 
 **Solid:**
@@ -46,8 +42,6 @@ Each file defines the visual appearance for a damage number. The filename (witho
 "color": "rainbow:speed:10"
 ```
 
----
-
 ## Font Styles
 
 | Value | Effect |
@@ -57,35 +51,33 @@ Each file defines the visual appearance for a damage number. The filename (witho
 | `"italic"` | Italic |
 | `"bold_italic"` | Bold Italic |
 
----
-
 ## Damage Scale
 
 Automatically scales font size and increases hold time based on damage amount.
 
 ```json
 "damageScale": {
-  "enabled": false,
+  "enabled": true,
   "baseFontSize": 1.0,
   "stepSize": 10,
-  "sizeOffsetPerStep": 0.5,
-  "maxSize": 3.0,
+  "sizeOffsetPerStep": 1,
+  "maxSize": 2.5,
   "holdBase": 0,
-  "holdOffsetPerStep": 40,
-  "holdMax": 200
+  "holdOffsetPerStep": 10,
+  "holdMax": 20
 }
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `enabled` | boolean | `false` | Enable damage scaling |
+| `enabled` | boolean | `true` | Enable damage scaling |
 | `baseFontSize` | float | `1.0` | Base font size at zero damage |
 | `stepSize` | float | `10` | Damage points per scaling step |
-| `sizeOffsetPerStep` | float | `0.5` | Font size added per step |
-| `maxSize` | float | `3.0` | Maximum font size multiplier |
+| `sizeOffsetPerStep` | float | `1` | Font size added per step |
+| `maxSize` | float | `2.5` | Maximum font size multiplier |
 | `holdBase` | float | `0` | Base extra hold ticks |
-| `holdOffsetPerStep` | float | `40` | Extra hold ticks added per step |
-| `holdMax` | float | `200` | Maximum extra hold ticks |
+| `holdOffsetPerStep` | float | `10` | Extra hold ticks added per step |
+| `holdMax` | float | `20` | Maximum extra hold ticks |
 
 ### Formulas
 
@@ -95,7 +87,5 @@ holdExtra = clamp(round((damage / stepSize) × holdOffsetPerStep), 0, holdMax - 
 ```
 
 Total hold time = animation `hold` + holdExtra.
-
----
 
 See [Animation Guide](/en/stylizeddamage/AnimationGuide) for detailed animation configuration.

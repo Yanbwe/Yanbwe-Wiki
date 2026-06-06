@@ -3,8 +3,6 @@
 **模组版本**: 1201.3.0  
 **最后更新**: 2026-03-07
 
----
-
 ## 目录
 
 1. [物品搜索核心](#物品搜索核心)
@@ -16,8 +14,6 @@
 7. [客户端渲染](#客户端渲染)
 8. [命令与管理](#命令与管理)
 9. [数据格式](#数据格式)
-
----
 
 ## 物品搜索核心
 
@@ -83,8 +79,6 @@ List<ItemStack> searchingItems = ItemStackHelper.findAllItemsWithSearchTime(inve
 int clearedCount = ItemStackHelper.clearAllSearchTags(inventoryItems);
 ```
 
----
-
 ### 占位物品系统
 
 **包路径**: `org.yanbwe.searchcarefully.item.SearchPlaceholderItem`
@@ -118,8 +112,6 @@ ItemStack placeholder = SearchPlaceholderItem.createPlaceholder(originalItem, se
 ```
 
 **注意**: 占位物品目前仅实现占位物品的搜索功能，暂未集成到战利品表中。
-
----
 
 ## 玩家属性与增益
 
@@ -165,8 +157,6 @@ if (player.hasEffect(Searchcarefully.SEARCH_SPEED_BOOST.get())) {
 - `SEARCH_SPEED_LESS_POTION_2` (等级 2)
 - 持续时间：12000 ticks (10 分钟)
 
----
-
 ### 处理搜索进度
 
 #### 容器中的物品
@@ -188,8 +178,6 @@ Searchcarefully.handleHotbarSearchProgress(player, hotbarSlotIndex);
 ```
 
 **注意**: 需要配置中启用 (`Config.ENABLE_HOTBAR_SEARCH`)
-
----
 
 ## 配置管理
 
@@ -228,8 +216,6 @@ List<String> chestSegments = Config.CHEST_PATH_SEGMENTS.get();
 | `chestPathSegments` | List\<String\> | ["chest", "chests", "block"] | -    | 箱子路径匹配段 |
 | `enableHotbarSearch` | boolean | false | -    | 是否启用热键栏搜索 |
 
----
-
 ## 网络与同步
 
 ### 初始化网络处理器
@@ -253,8 +239,6 @@ NetworkHandler.INSTANCE.send(...);
 
 // 接收处理 (在 SearchProgressPacket 中实现)
 ```
-
----
 
 ## 战利品表系统
 
@@ -283,9 +267,7 @@ NetworkHandler.INSTANCE.send(...);
 
 1. 通过 JSON 配置文件定义哪些战利品表需要应用修饰符
 2. 自动为生成的物品添加 `SearchTimeRemaining` NBT 标签
-3. 根据物品稀有度计算搜索时间
-
----
+3.4. 根据物品稀有度计算搜索时间
 
 ## 音效与反馈
 

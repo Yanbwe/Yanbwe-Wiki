@@ -2,15 +2,11 @@
 
 StylizedDamage provides a Java API for other mods to register styles and selectors.
 
----
-
 ## Entry Point
 
 ```java
 StylizedDamageAPI api = StylizedDamageAPI.getInstance();
 ```
-
----
 
 ## Style Registration
 
@@ -26,8 +22,6 @@ api.createStyle("my_style")
     .animation(animConfig)
     .register();
 ```
-
----
 
 ## Animation Builder
 
@@ -48,8 +42,6 @@ AnimationConfig anim = api.createAnimation()
     .done();
 ```
 
----
-
 ## Selector Binding
 
 ```java
@@ -61,8 +53,6 @@ api.selectors()
     .register();
 ```
 
----
-
 ## Priority Rules
 
 | Source | Priority |
@@ -70,8 +60,6 @@ api.selectors()
 | API selectors | Highest (inserted before config) |
 | Config selectors | Normal |
 | API styles | Same as config, API overrides on name conflict |
-
----
 
 ## Dependency
 

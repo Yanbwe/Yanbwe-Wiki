@@ -2,8 +2,6 @@
 
 StylizedDamage 提供以下命令，所有命令均以 `/stylizeddamage` 为根。
 
----
-
 ## 命令列表
 
 ### `/stylizeddamage reload`
@@ -16,8 +14,6 @@ StylizedDamage 提供以下命令，所有命令均以 `/stylizeddamage` 为根�
 ```
 /stylizeddamage reload
 ```
-
----
 
 ### `/stylizeddamage test <伤害类型> <数值>`
 
@@ -32,8 +28,6 @@ StylizedDamage 提供以下命令，所有命令均以 `/stylizeddamage` 为根�
 /stylizeddamage test minecraft:in_fire 15
 /stylizeddamage test heal 10
 ```
-
----
 
 ### `/stylizeddamage list`
 
@@ -55,8 +49,6 @@ StylizedDamage 提供以下命令，所有命令均以 `/stylizeddamage` 为根�
 === 选择器绑定 ===
 common/common: * → default
 ```
-
----
 
 ### `/stylizeddamage toggle`
 

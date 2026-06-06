@@ -113,7 +113,6 @@ When edit mode is active, a floating panel appears in the top-left corner of all
 - **FullMatch extra params**: AutoReload, StrContains, Ignore (display only)
 - `Ctrl+H` to collapse/expand the panel
 
----
 ## 3. Tag-Based Batch Rarity Assignment
 
 For modpacks with many mods, configuring each item individually is time-consuming. The TagRarity feature allows batch assignment via Minecraft's Tag system.

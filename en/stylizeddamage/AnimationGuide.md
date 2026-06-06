@@ -8,21 +8,17 @@ The exit phase starts after the **longest enter duration** across all modules, e
 
 > **Distance scaling**: Position animation offsets scale with entity distance (same ratio as font size). Distant entities have smaller movement.
 
----
-
 ## Structure
 
 ```json
 "animation": {
-  "hold": 10,
+  "hold": 5,
   "position": { ... },
   "size": { ... },
   "brightness": { ... },
   "opacity": { ... }
 }
 ```
-
----
 
 ## Common Parameters
 
@@ -41,8 +37,6 @@ The exit phase starts after the **longest enter duration** across all modules, e
 | `{ "in": true, "out": true }` | Ease in-out |
 | `{ "in": false, "out": false }` | Linear |
 
----
-
 ## Random Values
 
 ```json
@@ -55,8 +49,6 @@ The exit phase starts after the **longest enter duration** across all modules, e
 // Base + random (-30% ~ 30%)
 "distance": { "base": 20, "random": [-0.3, 0.3] }
 ```
-
----
 
 ## Position
 
@@ -72,15 +64,11 @@ The exit phase starts after the **longest enter duration** across all modules, e
 
 - `angle` 0° = right, 90° = up, -90° = down
 
----
-
 ## Other Modules
 
 - **Size**: offsets relative to base `fontSize` (0.3 = 30% larger)
 - **Brightness**: positive = brighter, negative = darker
 - **Opacity**: 0.0 = transparent, 1.0 = opaque
-
----
 
 ## Lifecycle Example
 

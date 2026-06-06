@@ -8,8 +8,6 @@ config/stylizeddamage/common.json
 
 如果配置文件不存在，模组首次加载时会自动生成默认配置。
 
----
-
 ## 配置选项
 
 ### selectors — 选择器配置
@@ -101,8 +99,6 @@ config/stylizeddamage/common.json
 }
 ```
 
----
-
 ### displayFilter — 显示过滤器
 
 控制「哪些伤害需要显示跳字」。
@@ -139,8 +135,6 @@ config/stylizeddamage/common.json
 | `mob.passive` | `true` | — |
 | `other` | `true` | — |
 
----
-
 ### displayOpacity — 全局透明度
 
 按**伤害来源**控制跳字透明度（0.0 = 全透明，1.0 = 完全不透明）。
@@ -163,8 +157,6 @@ config/stylizeddamage/common.json
 
 > 这个透明度乘在动画透明度之上。比如动画透明度为 0.8，`mobHostile` 为 0.5，最终渲染 = 0.8 × 0.5 = 0.4。
 
----
-
 ### 伤害显示设置
 
 | 配置项 | 类型 | 默认值 | 说明 |
@@ -173,8 +165,6 @@ config/stylizeddamage/common.json
 | `maxActiveNumbers` | 整数 | `999` | 屏幕上同时显示的最大跳字数 |
 | `showHealing` | 布尔值 | `true` | 是否显示治疗数字 |
 | `showAbsorption` | 布尔值 | `true` | 是否显示吸收数字 |
-
----
 
 ### 距离缩放
 
@@ -196,26 +186,25 @@ config/stylizeddamage/common.json
 - 最小 0.3 倍
 - 超过 64 格不显示
 
----
-
 ### totalDamage — 总伤害面板
 
 | 配置项 | 类型 | 默认值 | 说明 |
 |--------|------|--------|------|
 | `enabled` | 布尔值 | `true` | 是否启用总伤害面板 |
-| `resetTimeout` | 整数 | `200` | 无伤害后重置延迟（tick，20 tick = 1 秒） |
-| `maxTrailCount` | 整数 | `50` | 尾随伤害最大条数 |
+| `resetTimeout` | 整数 | `100` | 无伤害后重置延迟（tick，20 tick = 1 秒） |
+| `maxTrailCount` | 整数 | `20` | 尾随伤害最大条数 |
 | `baseFontSize` | 浮点数 | `2.0` | 基础字体大小倍率 |
 | `sizeOffsetPerThousand` | 浮点数 | `0.5` | 每 100 伤害字体增量 |
 | `sizeOffsetMax` | 浮点数 | `3.0` | 最大字体倍率 |
-| `positionX` | 浮点数 | `0.0` | 水平偏移（像素，正值右移） |
-| `positionY` | 浮点数 | `0.0` | 垂直偏移（像素，正值下移） |
+| `positionX` | 浮点数 | `-0.15` | 水平偏移（窗口宽度的比例，负值左移） |
+| `positionY` | 浮点数 | `0.15` | 垂直偏移（窗口高度的比例，正值下移） |
 | `enableEntryAnimation` | 布尔值 | `true` | 总伤害数字是否播放入场动画 |
 | `enableExitAnimation` | 布尔值 | `true` | 总伤害数字是否播放退场动画 |
 | `enableBounceAnimation` | 布尔值 | `true` | 总伤害数字数值变化时是否弹跳 |
 | `enableTrailEntryAnimation` | 布尔值 | `true` | 尾随条目是否从右侧滑入 |
 | `enableTrailExitAnimation` | 布尔值 | `true` | 尾随条目是否向左滑出 |
 | `bounceScalePeak` | 浮点数 | `1.4` | 弹跳动画峰值缩放（1.4 = 顶峰时放至 140% 大小） |
+| `labelText` | 字符串 | `"Damage"` | 总伤害数字上方显示的标签文本，设为空字符串 `""` 可隐藏 |
 
 字体大小公式：
 ```
@@ -231,8 +220,6 @@ clamp(baseFontSize + floor(总伤害 ÷ 100) × sizeOffsetPerThousand, baseFontS
   "[1000,...]": { "style": "total_insane" }
 }
 ```
-
----
 
 ## 伪伤害类型
 
@@ -258,8 +245,6 @@ clamp(baseFontSize + floor(总伤害 ÷ 100) × sizeOffsetPerThousand, baseFontS
 ```
 
 kill 跳字不会出现在总伤害面板和尾随列表中，仅用于视觉效果。
-
----
 
 ## 重载配置
 

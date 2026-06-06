@@ -10,8 +10,6 @@ config/stylizeddamage/styles/<样式名>.json
 
 模组自带默认样式文件 `styles/default.json`。
 
----
-
 ## 样式属性一览
 
 | 属性 | 类型 | 默认值 | 说明 |
@@ -33,8 +31,6 @@ config/stylizeddamage/styles/<样式名>.json
 | `bypassDisplayOpacity` | 布尔值 | `false` | 为 `true` 时无视全局 `displayOpacity` 配置 |
 | `animation` | 对象 | — | 动画配置（见下文） |
 | `damageScale` | 对象 | — | 伤害大小缩放（见下文） |
-
----
 
 ## 颜色系统
 
@@ -62,8 +58,6 @@ config/stylizeddamage/styles/<样式名>.json
 - 值越大颜色变化越快
 - 每 tick 色相自动偏移，产生流动的彩虹效果
 
----
-
 ## 字体样式
 
 | 值 | 效果 |
@@ -72,8 +66,6 @@ config/stylizeddamage/styles/<样式名>.json
 | `"bold"` | 粗体 |
 | `"italic"` | 斜体 |
 | `"bold_italic"` | 粗斜体 |
-
----
 
 ## 前缀与后缀
 
@@ -102,8 +94,6 @@ config/stylizeddamage/styles/<样式名>.json
 | `iconOffsetX` | 水平微调（正=右移，负=左移） |
 | `iconOffsetY` | 垂直微调（正=下移，负=上移） |
 
----
-
 ## 音效
 
 跳字出现时播放的音效，使用 Minecraft 音效 ID：
@@ -114,35 +104,33 @@ config/stylizeddamage/styles/<样式名>.json
 
 设为 `null` 则不播放音效。
 
----
-
 ## damageScale — 伤害大小缩放
 
 根据伤害数值自动放大字体和延长停留时间，伤害越高字越大、停留越久。
 
 ```json
 "damageScale": {
-  "enabled": false,
+  "enabled": true,
   "baseFontSize": 1.0,
   "stepSize": 10,
-  "sizeOffsetPerStep": 0.5,
-  "maxSize": 3.0,
+  "sizeOffsetPerStep": 1,
+  "maxSize": 2.5,
   "holdBase": 0,
-  "holdOffsetPerStep": 40,
-  "holdMax": 200
+  "holdOffsetPerStep": 10,
+  "holdMax": 20
 }
 ```
 
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `enabled` | 布尔值 | `false` | 是否启用 |
+| `enabled` | 布尔值 | `true` | 是否启用 |
 | `baseFontSize` | 浮点数 | `1.0` | 基础字体大小倍率（伤害为 0 时） |
 | `stepSize` | 浮点数 | `10` | 每步对应多少伤害值 |
-| `sizeOffsetPerStep` | 浮点数 | `0.5` | 每步增加的字体大小 |
-| `maxSize` | 浮点数 | `3.0` | 最大字体大小倍率 |
+| `sizeOffsetPerStep` | 浮点数 | `1` | 每步增加的字体大小 |
+| `maxSize` | 浮点数 | `2.5` | 最大字体大小倍率 |
 | `holdBase` | 浮点数 | `0` | 基础额外停留 tick 数 |
-| `holdOffsetPerStep` | 浮点数 | `40` | 每步增加的停留 tick 数 |
-| `holdMax` | 浮点数 | `200` | 最大额外停留 tick 数 |
+| `holdOffsetPerStep` | 浮点数 | `10` | 每步增加的停留 tick 数 |
+| `holdMax` | 浮点数 | `20` | 最大额外停留 tick 数 |
 
 ### 计算公式
 
@@ -152,8 +140,6 @@ config/stylizeddamage/styles/<样式名>.json
 ```
 
 最终停留时间 = 动画中的 `hold` + 停留增量。
-
----
 
 ## killText — 击杀文字
 
@@ -166,8 +152,6 @@ config/stylizeddamage/styles/<样式名>.json
 设为 `null` 则正常显示伤害数字。
 
 > 关于如何配置 kill 伪伤害类型 → [配置文件说明](/stylizeddamage/Configuration#伪伤害类型)
-
----
 
 ## 完整样式示例
 
@@ -194,18 +178,18 @@ config/stylizeddamage/styles/<样式名>.json
     "enabled": true,
     "baseFontSize": 1.0,
     "stepSize": 10,
-    "sizeOffsetPerStep": 0.5,
-    "maxSize": 3.0,
+    "sizeOffsetPerStep": 1,
+    "maxSize": 2.5,
     "holdBase": 0,
-    "holdOffsetPerStep": 40,
-    "holdMax": 200
+    "holdOffsetPerStep": 10,
+    "holdMax": 20
   },
   "animation": {
-    "hold": 10,
+    "hold": 5,
     "position": {
       "enter": {
         "type": "normal",
-        "duration": 30,
+        "duration": 5,
         "easing": { "in": false, "out": true },
         "startOffset": { "type": "xy", "x": { "base": 2, "random": [-2, 2] }, "y": { "base": 2, "random": [-2, 2] } },
         "targetOffset": { "type": "direction", "angle": { "base": 90, "random": [-1, 1] }, "distance": { "base": 20, "random": [-2, 2] } }
@@ -215,14 +199,14 @@ config/stylizeddamage/styles/<样式名>.json
     "size": {
       "enter": {
         "type": "normal",
-        "duration": 40,
+        "duration": 5,
         "easing": { "in": true, "out": true },
-        "startOffset": 0.3,
+        "startOffset": -0.6,
         "targetOffset": 0
       },
       "exit": {
         "type": "normal",
-        "duration": 40,
+        "duration": 10,
         "easing": { "in": true, "out": false },
         "targetOffset": -1
       }
@@ -234,14 +218,14 @@ config/stylizeddamage/styles/<样式名>.json
     "opacity": {
       "enter": {
         "type": "normal",
-        "duration": 10,
+        "duration": 5,
         "easing": { "in": true, "out": true },
         "startOpacity": 0,
         "targetOpacity": 1
       },
       "exit": {
         "type": "normal",
-        "duration": 40,
+        "duration": 10,
         "easing": { "in": true, "out": false },
         "targetOpacity": 0
       }
@@ -368,4 +352,3 @@ config/stylizeddamage/styles/<样式名>.json
     }
   }
 }
-```

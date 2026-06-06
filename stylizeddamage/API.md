@@ -2,8 +2,6 @@
 
 StylizedDamage 提供 Java API，其他模组可通过硬依赖或软依赖方式编程注册样式和绑定选择器。
 
----
-
 ## 入口点
 
 `StylizedDamageAPI` 是唯一的 API 入口，通过静态方法获取实例：
@@ -11,8 +9,6 @@ StylizedDamage 提供 Java API，其他模组可通过硬依赖或软依赖方�
 ```java
 StylizedDamageAPI api = StylizedDamageAPI.getInstance();
 ```
-
----
 
 ## 注册时机
 
@@ -27,8 +23,6 @@ public void onStylizedDamageRegister(StylizedDamageRegisterEvent event) {
 ```
 
 > **注意**：`StylizedDamageRegisterEvent` 事件总线集成功能在 26.1 版本中暂时通过直接调用方式处理，后续版本将完善事件总线支持。
-
----
 
 ## 样式注册
 
@@ -68,8 +62,6 @@ api.createStyle("my_style")
 | `.damageScale(boolean)` | 开关 | 是否启用伤害大小缩放 |
 | `.register()` | — | 完成注册 |
 
----
-
 ## 动画构建
 
 使用 AnimationBuilder 链式构建：
@@ -102,8 +94,6 @@ AnimationConfig anim = api.createAnimation()
 | `direction(angle, distance)` | 方向偏移 |
 | `xy(x, y)` | XY 绝对值偏移 |
 
----
-
 ## 选择器绑定
 
 ```java
@@ -134,8 +124,6 @@ api.selectors()
 | `.style(String name)` | 指定匹配后使用的样式 |
 | `.register()` | 完成注册 |
 
----
-
 ## 优先级规则
 
 | 来源 | 优先级 |
@@ -143,8 +131,6 @@ api.selectors()
 | **API 注册的选择器** | 最高 — 插入到配置选择器之前 |
 | **配置文件的选择器** | 正常 |
 | **API 注册的样式** | 与配置样式同级，**同名时 API 覆盖配置** |
-
----
 
 ## 依赖方式
 
