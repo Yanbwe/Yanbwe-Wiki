@@ -23,60 +23,42 @@ The configuration file is located at `.minecraft/config/searchcarefully-common.t
 - Greater than 1.0: Increases search speed
 - Less than 1.0: Reduces search speed
 
-### Rarity Base Search Time Configuration
+### Rarity Search Time Configuration
 
-#### `rarity1BaseTime` (Integer, range: 1-1000, default: 10)
-- Function: Base search time for rarity 1 items (game ticks)
-- Corresponds to approximately 0.5 seconds
-
-#### `rarity2BaseTime` (Integer, range: 1-1000, default: 30)
-- Function: Base search time for rarity 2 items (game ticks)
-- Corresponds to approximately 1.5 seconds
-
-#### `rarity3BaseTime` (Integer, range: 1-1000, default: 55)
-- Function: Base search time for rarity 3 items (game ticks)
-- Corresponds to approximately 2.75 seconds
-
-#### `rarity4BaseTime` (Integer, range: 1-1000, default: 85)
-- Function: Base search time for rarity 4 items (game ticks)
-- Corresponds to approximately 4.25 seconds
-
-#### `rarity5BaseTime` (Integer, range: 1-1000, default: 110)
-- Function: Base search time for rarity 5 items (game ticks)
-- Corresponds to approximately 5.5 seconds
-
-#### `rarity6BaseTime` (Integer, range: 1-1000, default: 130)
-- Function: Base search time for rarity 6 items (game ticks)
-- Corresponds to approximately 6.5 seconds
-
-#### `rarity7BaseTime` (Integer, range: 1-1000, default: 140)
-- Function: Base search time for rarity 7 items (game ticks)
-- Corresponds to approximately 7 seconds
-
-### Rarity Random Time Configuration
-
-#### `rarity1RandomTime` (Integer, range: 0-1000, default: 10)
-- Function: Random time addition for rarity 1 items (game ticks)
-- 0: No random addition
-- Greater than 0: Search time increases by random amount up to this value
-
-#### `rarity2RandomTime` (Integer, range: 0-1000, default: 10)
-- Function: Random time addition for rarity 2 items (game ticks)
-
-#### `rarity3RandomTime` (Integer, range: 0-1000, default: 10)
-- Function: Random time addition for rarity 3 items (game ticks)
-
-#### `rarity4RandomTime` (Integer, range: 0-1000, default: 10)
-- Function: Random time addition for rarity 4 items (game ticks)
-
-#### `rarity5RandomTime` (Integer, range: 0-1000, default: 10)
-- Function: Random time addition for rarity 5 items (game ticks)
-
-#### `rarity6RandomTime` (Integer, range: 0-1000, default: 10)
-- Function: Random time addition for rarity 6 items (game ticks)
-
-#### `rarity7RandomTime` (Integer, range: 0-1000, default: 10)
-- Function: Random time addition for rarity 7 items (game ticks)
+#### `raritySearchTimes` (String list, supports any rarity level)
+- Function: Configure search time and completion sound for each rarity level, not limited to 1–7
+- Format: Each entry is `"rarity:baseTime:randomTime[:soundId]"` (colon-separated)
+  - **rarity**: Integer ≥ 1 (e.g. 1, 5, 8, 12, any number)
+  - **baseTime**: Base search time in game ticks, integer ≥ 1
+  - **randomTime**: Random fluctuation range in game ticks, integer ≥ 0. Actual time = baseTime ± random(0, randomTime)
+  - **soundId**: (Optional) Sound to play on completion, format `namespace:path`. Can use vanilla sounds, mod sounds, or any registered sound. If omitted, auto-maps to built-in completion sounds (1–7)
+- Lookup rules:
+  - Exact match: Rarity has a matching entry → use that entry
+  - Closest lower: Rarity not configured → use the largest configured rarity ≤ the requested one (e.g. if only 1, 4, 7 are configured, rarity 5 uses rarity 4's settings)
+  - No match: Requested rarity is smaller than all configured entries → returns 0 (no search)
+- Default values:
+  ```toml
+  raritySearchTimes = [
+      "1:10:10:searchcarefully:search_completion_rarity_1",
+      "2:30:10:searchcarefully:search_completion_rarity_2",
+      "3:55:10:searchcarefully:search_completion_rarity_3",
+      "4:85:10:searchcarefully:search_completion_rarity_4",
+      "5:110:10:searchcarefully:search_completion_rarity_5",
+      "6:130:10:searchcarefully:search_completion_rarity_6",
+      "7:140:10:searchcarefully:search_completion_rarity_7"
+  ]
+  ```
+  Approximate times: Rarity 1 ≈ 0.5s, Rarity 2 ≈ 1.5s, Rarity 3 ≈ 2.8s, Rarity 4 ≈ 4.3s, Rarity 5 ≈ 5.5s, Rarity 6 ≈ 6.5s, Rarity 7 ≈ 7s (excluding random fluctuation)
+- Custom example:
+  ```toml
+  raritySearchTimes = [
+      "1:20:5:searchcarefully:search_completion_rarity_1",   # Faster rarity 1
+      # ... other rarities kept at defaults ...
+      "7:140:10:searchcarefully:search_completion_rarity_7",
+      "8:200:20:minecraft:entity.player.levelup",             # Rarity 8 with vanilla level-up sound
+      "10:400:50"                                              # Rarity 10, sound auto-clamped
+  ]
+  ```
 
 ### Custom Loot Table Paths Configuration
 
@@ -98,7 +80,7 @@ The configuration file is located at `.minecraft/config/searchcarefully-common.t
 #### `chestPathSegments`
 - Function: Define path segments for middle-path matching
 - Format: List of path segment strings
-- Default: `["chest", "chests", "block"]`
+- Default: `["chest", "chests"]`
 - Example:
   ```toml
   chestPathSegments = ["chest", "chests", "treasure", "loot"]
@@ -141,12 +123,7 @@ The configuration file is located at `.minecraft/config/searchcarefully-common.t
 
 ### Search Progress Sound Configuration
 
-#### `enableSearchProgressSound` (Boolean, default: false)
+#### `enableSearchProgressSound` (Boolean, default: true)
 - Function: Enable looping sound during search progress
 - true: Enables search progress looping sound, plays continuously while items are being searched, stops automatically when all items are found
-- false: Disables search progress sound (default)
-
-#### `searchProgressSoundInterval` (Float, range: 0.1-10.0, default: 0.5)
-- Function: Interval between search progress sounds (seconds) — only applies to legacy non-looping mode
-- In the current looping sound mode, this config option is ignored
-- Kept only for backward compatibility
+- false: Disables search progress sound
