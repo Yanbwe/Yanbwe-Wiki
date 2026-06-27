@@ -165,6 +165,9 @@ config/stylizeddamage/common.json
 | `maxActiveNumbers` | 整数 | `999` | 屏幕上同时显示的最大跳字数 |
 | `showHealing` | 布尔值 | `true` | 是否显示治疗数字 |
 | `showAbsorption` | 布尔值 | `true` | 是否显示吸收数字 |
+| `hideFullHealthHeal` | 布尔值 | `true` | 满血生物回血时不显示跳字 |
+| `killOnlyOnMobDeath` | 布尔值 | `false` | 生物被击杀时只显示 kill 文字，不显示具体伤害数字 |
+| `killOnlyFullHealth` | 布尔值 | `false` | 上一项开启时，仅对满血被秒杀的情况生效 |
 
 ### 距离缩放
 

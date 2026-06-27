@@ -79,6 +79,18 @@ Controls damage number opacity based on the **damage source**.
 
 > This multiplies on top of the animation opacity. E.g. animation opacity 0.8 × `mobHostile` 0.5 = final alpha 0.4.
 
+## Display Settings
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `minDamageDisplay` | float | `0.1` | Minimum damage to show a number |
+| `maxActiveNumbers` | int | `999` | Max concurrent floating numbers |
+| `showHealing` | boolean | `true` | Show healing numbers |
+| `showAbsorption` | boolean | `true` | Show absorption numbers |
+| `hideFullHealthHeal` | boolean | `true` | Hide healing numbers when entity is at full HP |
+| `killOnlyOnMobDeath` | boolean | `false` | Only show "kill" text on fatal hits (suppress damage number) |
+| `killOnlyFullHealth` | boolean | `false` | When `killOnlyOnMobDeath` is enabled, only apply to one-shot kills (full-HP targets) |
+
 ## Distance Scale
 
 | Option | Type | Default | Description |
