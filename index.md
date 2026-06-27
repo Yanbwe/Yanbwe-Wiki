@@ -26,6 +26,10 @@ features:
     details: StylizedDamage - 高度可自定义的伤害跳字显示模组
     link: /stylizeddamage/
     linkText: 查看详情
+  - title: 模块化射击
+    details: ModularShoot - 属性驱动、模块化组装的枪械系统框架模组
+    link: /modularshoot/
+    linkText: 查看详情
   - title: 多语言支持
     details: 你可以在页面右上角切换语言 / You can switch languages in the top right corner of the page
 ---

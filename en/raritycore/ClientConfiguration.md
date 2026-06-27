@@ -77,7 +77,7 @@ Client configuration file is located at:
 | `mode` | String | "repeat" | Display mode: "repeat" or "custom" |
 | `repeat.character` | String | "⭐" | Character used in repeat mode |
 | `custom.strings` | Object | - | Custom rarity string mapping for levels 1-7 in custom mode |
-| `custom.specialRarityTexts` | Object | - | Special rarity text mapping for levels above 7 |
+| `custom.specialRarityTexts` | Object | - | Special rarity text mapping for levels above 7. Values starting with `$` are treated as translation keys (define them in your resource pack's lang file), otherwise treated as plain text |
 
 #### starDisplay Configuration Example
 
@@ -102,7 +102,7 @@ Client configuration file is located at:
       },
       "specialRarityTexts": {
         "8": "Mythic",
-        "9": "Genesis",
+        "9": "$rarity.core.special.9",
         "10": "Endless"
       }
     }

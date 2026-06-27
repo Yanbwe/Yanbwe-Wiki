@@ -77,7 +77,7 @@
 | `mode` | 字符串 | "repeat" | 显示模式:"repeat"(重复)或"custom"(自定义) |
 | `repeat.character` | 字符串 | "⭐" | repeat模式下使用的字符 |
 | `custom.strings` | 对象 | - | custom模式下1-7级稀有度字符串映射 |
-| `custom.specialRarityTexts` | 对象 | - | 大于7级的特殊稀有度文本映射 |
+| `custom.specialRarityTexts` | 对象 | - | 大于7级的特殊稀有度文本映射。值以 `$` 开头视为翻译键（需在资源包 lang 文件中定义），否则为纯文本 |
 
 #### starDisplay 配置格式示例
 
@@ -102,7 +102,7 @@
       },
       "specialRarityTexts": {
         "8": "神话",
-        "9": "创世",
+        "9": "$rarity.core.special.9",
         "10": "无尽"
       }
     }

@@ -11,7 +11,8 @@ export default defineConfig({
       { text: '仔细搜刮', link: '/scwiki/', activeMatch: '/scwiki' },
       { text: '稀有度核心', link: '/raritycore/', activeMatch: '/raritycore' },
       { text: '灵动提示框', link: '/colorTooltips/', activeMatch: '/colorTooltips' },
-      { text: '别样的伤害跳字', link: '/stylizeddamage/', activeMatch: '/stylizeddamage' }
+      { text: '别样的伤害跳字', link: '/stylizeddamage/', activeMatch: '/stylizeddamage' },
+      { text: '模块化射击', link: '/modularshoot/', activeMatch: '/modularshoot' }
     ],
 
     sidebar: [
@@ -78,6 +79,18 @@ export default defineConfig({
           { text: '动画配置指南', link: '/stylizeddamage/AnimationGuide' },
           { text: '命令参考', link: '/stylizeddamage/CommandReference' },
           { text: 'API 使用说明', link: '/stylizeddamage/API' }
+        ]
+      },
+      {
+        text: '模块化射击',
+        collapsed: false,
+        items: [
+          { text: '首页', link: '/modularshoot/' },
+          { text: 'API 参考', link: '/modularshoot/API' },
+          { text: '注册指南', link: '/modularshoot/Registry' },
+          { text: '数据包格式', link: '/modularshoot/DataPack' },
+          { text: '命令参考', link: '/modularshoot/CommandReference' },
+          { text: '代码示例', link: '/modularshoot/Examples' }
         ]
       }
     ],
@@ -155,7 +168,8 @@ export default defineConfig({
           { text: 'SearchCarefully', link: '/en/scwiki/', activeMatch: '/en/scwiki' },
           { text: 'RarityCore', link: '/en/raritycore/', activeMatch: '/en/raritycore' },
           { text: 'ColorTooltips', link: '/en/colorTooltips/', activeMatch: '/en/colorTooltips' },
-          { text: 'StylizedDamage', link: '/en/stylizeddamage/', activeMatch: '/en/stylizeddamage' }
+          { text: 'StylizedDamage', link: '/en/stylizeddamage/', activeMatch: '/en/stylizeddamage' },
+          { text: 'ModularShoot', link: '/en/modularshoot/', activeMatch: '/en/modularshoot' }
         ],
 
         sidebar: [
@@ -222,6 +236,18 @@ export default defineConfig({
               { text: 'Animation Guide', link: '/en/stylizeddamage/AnimationGuide' },
               { text: 'Command Reference', link: '/en/stylizeddamage/CommandReference' },
               { text: 'API Reference', link: '/en/stylizeddamage/API' }
+            ]
+          },
+          {
+            text: 'ModularShoot',
+            collapsed: false,
+            items: [
+              { text: 'Home', link: '/en/modularshoot/' },
+              { text: 'API Reference', link: '/en/modularshoot/API' },
+              { text: 'Registry Guide', link: '/en/modularshoot/Registry' },
+              { text: 'Datapack Format', link: '/en/modularshoot/DataPack' },
+              { text: 'Command Reference', link: '/en/modularshoot/CommandReference' },
+              { text: 'Code Examples', link: '/en/modularshoot/Examples' }
             ]
           }
         ],
