@@ -22,20 +22,21 @@ Quick reference for all public static methods in ModularShootAPI. Methods groupe
 
 ## Uninstall API
 
-All uninstall methods automatically refresh the `ATTRIBUTE_MODIFIERS` component on success.
+All uninstall methods automatically refresh the `ATTRIBUTE_MODIFIERS` component on success. `RegistryAccess` is obtained internally via `player.level().registryAccess()` — callers no longer need to pass it manually.
 
 | Method Signature | Parameters | Returns | Description |
 |-----------------|------------|---------|-------------|
-| `uninstallPlugin(ItemStack gun, UUID instanceUuid, Player player, boolean force, boolean returnItems, RegistryAccess registryAccess)` | `gun` — target gun (mutated); `instanceUuid` — plugin instance UUID to remove; `player` — player context (nullable); `force` — ignore lock flag; `returnItems` — return uninstalled plugin as item; `registryAccess` — runtime registry view | `UninstallResult` | Uninstalls a specific plugin by its instance UUID |
-| `uninstallRandomPlugin(ItemStack gun, Player player, boolean force, boolean returnItems, RegistryAccess registryAccess)` | `gun` — target gun; `player` — player context (nullable); `force` — ignore lock; `returnItems` — return item; `registryAccess` — runtime registry view | `UninstallResult` | Randomly uninstalls one uninstallable plugin |
-| `uninstallPluginsByType(ItemStack gun, Player player, ResourceLocation pluginTypeId, boolean force, boolean returnItems, RegistryAccess registryAccess)` | `gun` — target gun; `player` — player context (nullable); `pluginTypeId` — plugin type ID to match; `force` — ignore lock; `returnItems` — return items; `registryAccess` — runtime registry view | `List<UninstallResult>` | Uninstalls all plugins of the specified type. Returns empty list when no match |
-| `uninstallAllPlugins(ItemStack gun, Player player, boolean force, boolean returnItems, RegistryAccess registryAccess)` | `gun` — target gun; `player` — player context (nullable); `force` — ignore lock; `returnItems` — return items; `registryAccess` — runtime registry view | `List<UninstallResult>` | Uninstalls all installed plugins. Returns empty list when none installed |
+| `uninstallPlugin(ItemStack gun, UUID instanceUuid, Player player, boolean force, boolean returnItems)` | `gun` — target gun (mutated); `instanceUuid` — plugin instance UUID to remove; `player` — player context; `force` — ignore lock flag; `returnItems` — return uninstalled plugin as item | `UninstallResult` | Uninstalls a specific plugin by its instance UUID |
+| `uninstallRandomPlugin(ItemStack gun, Player player, boolean force, boolean returnItems)` | `gun` — target gun; `player` — player context; `force` — ignore lock; `returnItems` — return item | `UninstallResult` | Randomly uninstalls one uninstallable plugin |
+| `uninstallPluginsByType(ItemStack gun, Player player, ResourceLocation pluginTypeId, boolean force, boolean returnItems)` | `gun` — target gun; `player` — player context; `pluginTypeId` — plugin type ID to match; `force` — ignore lock; `returnItems` — return items | `List<UninstallResult>` | Uninstalls all plugins of the specified type. Returns empty list when no match |
+| `uninstallAllPlugins(ItemStack gun, Player player, boolean force, boolean returnItems)` | `gun` — target gun; `player` — player context; `force` — ignore lock; `returnItems` — return items | `List<UninstallResult>` | Uninstalls all installed plugins. Returns empty list when none installed |
+
+> **Backward compatibility**: The old signatures with an extra `RegistryAccess` parameter are retained as `@Deprecated` overloads. They still work but the new signatures are recommended — they lower the call barrier by obtaining `RegistryAccess` from `player.level().registryAccess()` automatically.
 
 Parameter details:
-- **`player`**: Player context for the operation, can be `null` (e.g. gun in a chest). When `returnItems` is `true` and `player` is non-null, uninstalled plugins are returned to the player's inventory (dropped if full); otherwise deleted
+- **`player`**: Player context for the operation. When `returnItems` is `true`, uninstalled plugins are returned to the player's inventory (dropped if full); otherwise deleted
 - **`force`**: `true` to force-uninstall (ignores `locked` flag); `false` to skip locked plugins
 - **`returnItems`**: `true` to return the uninstalled plugin as an item to the player; `false` to destroy it
-- **`registryAccess`**: Obtained from `Level.registryAccess()` or event parameters. Needed for modifier refresh after uninstall
 
 ## Lock API
 

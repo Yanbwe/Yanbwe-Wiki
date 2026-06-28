@@ -22,20 +22,21 @@ ModularShootAPI 所有公开静态方法速查。方法按功能分组。
 
 ## 拆卸 API
 
-所有拆卸方法在成功后自动刷新 `ATTRIBUTE_MODIFIERS` 组件。
+所有拆卸方法在成功后自动刷新 `ATTRIBUTE_MODIFIERS` 组件。`RegistryAccess` 通过 `player.level().registryAccess()` 内部获取，调用方无需手动传入。
 
 | 方法签名 | 参数说明 | 返回值 | 说明 |
 |---------|---------|--------|------|
-| `uninstallPlugin(ItemStack gun, UUID instanceUuid, Player player, boolean force, boolean returnItems, RegistryAccess registryAccess)` | `gun` — 目标枪械（会被修改）；`instanceUuid` — 要拆卸的插件实例 UUID；`player` — 玩家上下文（可空）；`force` — 是否忽略锁定标记；`returnItems` — 是否返还拆卸的插件物品；`registryAccess` — 运行时注册表视图 | `UninstallResult` | 按实例 UUID 拆卸指定插件 |
-| `uninstallRandomPlugin(ItemStack gun, Player player, boolean force, boolean returnItems, RegistryAccess registryAccess)` | `gun` — 目标枪械；`player` — 玩家上下文（可空）；`force` — 是否忽略锁定；`returnItems` — 是否返还物品；`registryAccess` — 运行时注册表视图 | `UninstallResult` | 随机拆卸一个可拆卸的插件 |
-| `uninstallPluginsByType(ItemStack gun, Player player, ResourceLocation pluginTypeId, boolean force, boolean returnItems, RegistryAccess registryAccess)` | `gun` — 目标枪械；`player` — 玩家上下文（可空）；`pluginTypeId` — 要拆卸的插件种类 ID；`force` — 是否忽略锁定；`returnItems` — 是否返还物品；`registryAccess` — 运行时注册表视图 | `List<UninstallResult>` | 拆卸所有属于指定种类的插件。无匹配时返回空列表 |
-| `uninstallAllPlugins(ItemStack gun, Player player, boolean force, boolean returnItems, RegistryAccess registryAccess)` | `gun` — 目标枪械；`player` — 玩家上下文（可空）；`force` — 是否忽略锁定；`returnItems` — 是否返还物品；`registryAccess` — 运行时注册表视图 | `List<UninstallResult>` | 拆卸所有已安装插件。无插件时返回空列表 |
+| `uninstallPlugin(ItemStack gun, UUID instanceUuid, Player player, boolean force, boolean returnItems)` | `gun` — 目标枪械（会被修改）；`instanceUuid` — 要拆卸的插件实例 UUID；`player` — 玩家上下文；`force` — 是否忽略锁定标记；`returnItems` — 是否返还拆卸的插件物品 | `UninstallResult` | 按实例 UUID 拆卸指定插件 |
+| `uninstallRandomPlugin(ItemStack gun, Player player, boolean force, boolean returnItems)` | `gun` — 目标枪械；`player` — 玩家上下文；`force` — 是否忽略锁定；`returnItems` — 是否返还物品 | `UninstallResult` | 随机拆卸一个可拆卸的插件 |
+| `uninstallPluginsByType(ItemStack gun, Player player, ResourceLocation pluginTypeId, boolean force, boolean returnItems)` | `gun` — 目标枪械；`player` — 玩家上下文；`pluginTypeId` — 要拆卸的插件种类 ID；`force` — 是否忽略锁定；`returnItems` — 是否返还物品 | `List<UninstallResult>` | 拆卸所有属于指定种类的插件。无匹配时返回空列表 |
+| `uninstallAllPlugins(ItemStack gun, Player player, boolean force, boolean returnItems)` | `gun` — 目标枪械；`player` — 玩家上下文；`force` — 是否忽略锁定；`returnItems` — 是否返还物品 | `List<UninstallResult>` | 拆卸所有已安装插件。无插件时返回空列表 |
+
+> **向后兼容**：上述方法保留了含 `RegistryAccess` 参数的旧签名（`@Deprecated`），旧签名仍可用但不推荐。新签名降低了调用门槛，`RegistryAccess` 从 `player.level().registryAccess()` 自动获取。
 
 参数说明：
-- **`player`**：拆卸操作的玩家上下文，可为 `null`（如枪械在箱子中时）。`returnItems` 为 `true` 且 `player` 不为 `null` 时，返还到玩家物品栏（满则掉落）；否则直接删除
+- **`player`**：拆卸操作的玩家上下文。`returnItems` 为 `true` 时，返还到玩家物品栏（满则掉落）；否则直接删除
 - **`force`**：`true` 强制拆卸（忽略 `locked` 标记）；`false` 跳过锁定插件
 - **`returnItems`**：`true` 返还拆卸的插件物品给玩家；`false` 直接销毁
-- **`registryAccess`**：从 `Level.registryAccess()` 或事件参数获取，用于拆卸后刷新修饰符
 
 ## 锁定 API
 

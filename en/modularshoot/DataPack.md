@@ -272,7 +272,7 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 | JSON Key | Type | Required | Default | Description |
 |----------|------|----------|---------|-------------|
 | `name` | Text string | **Yes** | — | State name in tooltip. Supports `§` and `lang:` |
-| `color` | Text string | **Yes** | — | Name color (e.g. `"#FFAA00"`) |
+| `color` | Text string | No | `""` | Name color (e.g. `"#FFAA00"`). Optional; omitting uses the default tooltip color |
 | `format` | Text string | No | `"{value}"` | Display template, `{value}` placeholder |
 | `priority` | Integer | No | `0` | Display sort order, higher sorts first |
 | `hide_default` | Boolean | No | `false` | Hide the line when value equals default |
