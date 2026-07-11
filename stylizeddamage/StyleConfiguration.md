@@ -29,6 +29,7 @@ config/stylizeddamage/styles/<样式名>.json
 | `iconOffsetY` | 浮点数 | `0` | 图标垂直微调像素偏移 |
 | `killText` | 字符串/null | `null` | kill 型跳字显示的文本（替代伤害数字） |
 | `bypassDisplayOpacity` | 布尔值 | `false` | 为 `true` 时无视全局 `displayOpacity` 配置 |
+| `decimalPlaces` | 整数 | `1` | 伤害数字保留的小数位数；整型伤害（如 `12.0`）仍显示为整数，小数伤害按该位数四舍五入；小于 `0` 时回退为 `1` |
 | `animation` | 对象 | — | 动画配置（见下文） |
 | `damageScale` | 对象 | — | 伤害大小缩放（见下文） |
 
@@ -153,6 +154,19 @@ config/stylizeddamage/styles/<样式名>.json
 
 > 关于如何配置 kill 伪伤害类型 → [配置文件说明](/stylizeddamage/Configuration#伪伤害类型)
 
+## decimalPlaces — 小数位数
+
+控制伤害数字的四舍五入显示精度。
+
+```json
+"decimalPlaces": 1
+```
+
+- 默认值为 `1`，即精确至小数点后一位（如 `12.34` → `12.3`）。
+- 整型伤害（如 `12.0`）始终显示为整数（`12`），不会显示多余的 `.0`。
+- 小数伤害按配置的位数四舍五入（如 `decimalPlaces: 2` 时，`12.345` → `12.35`）。
+- 取值小于 `0` 时回退为默认值 `1`。
+
 ## 完整样式示例
 
 ### 默认样式 (default.json)
@@ -174,6 +188,7 @@ config/stylizeddamage/styles/<样式名>.json
   "iconPosition": "right",
   "iconOffsetX": 0,
   "iconOffsetY": 4,
+  "decimalPlaces": 1,
   "damageScale": {
     "enabled": true,
     "baseFontSize": 1.0,
