@@ -84,7 +84,6 @@ RarityCore.getNoRarityDefaultRarity() // 无稀有度物品兜底等级
 RarityCore.getTooltipContent(5)       // 该等级工具提示内容
 RarityCore.getLevelTranslationKey(5) // 该等级 level 段翻译键
 RarityCore.getLevelFallbackKey(5)    // 该等级 level 段回退键
-RarityCore.getSpecialRarityText(8)    // 该等级大于 MAX_RARITY 的特殊文本
 RarityCore.isBorderUseTexture(5)      // 该等级边框是否使用纹理
 RarityCore.getBorderStyle(5)          // 该等级边框样式 (1=实心, 0=空心)
 RarityCore.getBorderFallback()        // 边框回退纹理
@@ -102,13 +101,12 @@ RarityCore.setTooltipColorEnabled(true)
 RarityCore.setNoRaritySkip(false)
 RarityCore.setNoRarityDefaultRarity(1)
 
-// 逐级边框 / 工具提示 / 星星 / 特殊文本
+// 逐级边框 / 工具提示 / 星星
 RarityCore.setBorderUseTexture(5, true)
 RarityCore.setBorderStyle(5, 1)
 RarityCore.setTooltipContent(5, "[@{level}] @{star}")
 RarityCore.setStarMode(5, "repeat")
 RarityCore.setStarRepeatChar(5, "★")
-RarityCore.setSpecialRarityText(8, "神话之上")
 ```
 
 ## 配置与查询
@@ -136,15 +134,7 @@ let ok = RarityCore.isAvailable()
 
 ## 常量
 
-```js
-RarityCore.COMMON()    // 1
-RarityCore.UNCOMMON()  // 2
-RarityCore.RARE()      // 3
-RarityCore.EPIC()      // 4
-RarityCore.LEGENDARY() // 5
-RarityCore.MYTHICAL()  // 6
-RarityCore.UNIQUE()    // 7
-```
+等级为普通整数，无命名常量方法；最低档位为 `1`，内置预置档位数为 `7`（非稀有度上限）。
 
 ## 事件
 

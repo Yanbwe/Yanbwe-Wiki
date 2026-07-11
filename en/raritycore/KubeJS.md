@@ -76,7 +76,6 @@ RarityCore.getNoRarityDefaultRarity() // fallback rarity for unconfigured items
 RarityCore.getTooltipContent(5)       // tooltip content for this level
 RarityCore.getLevelTranslationKey(5) // level segment translation key
 RarityCore.getLevelFallbackKey(5)    // level segment fallback key
-RarityCore.getSpecialRarityText(8)    // special text for rarity > MAX_RARITY
 RarityCore.isBorderUseTexture(5)      // whether this level uses texture border
 RarityCore.getBorderStyle(5)          // border style for this level (1=solid, 0=hollow)
 RarityCore.getBorderFallback()        // border fallback texture
@@ -100,7 +99,6 @@ RarityCore.setBorderStyle(5, 1)
 RarityCore.setTooltipContent(5, "[@{level}] @{star}")
 RarityCore.setStarMode(5, "repeat")
 RarityCore.setStarRepeatChar(5, "★")
-RarityCore.setSpecialRarityText(8, "Above Mythic")
 ```
 
 ## Config & Query
@@ -128,15 +126,7 @@ let ok = RarityCore.isAvailable()
 
 ## Constants
 
-```js
-RarityCore.COMMON()    // 1
-RarityCore.UNCOMMON()  // 2
-RarityCore.RARE()      // 3
-RarityCore.EPIC()      // 4
-RarityCore.LEGENDARY() // 5
-RarityCore.MYTHICAL()  // 6
-RarityCore.UNIQUE()    // 7
-```
+Rarity levels are plain integers with no named constants; the lowest tier is `1` and the number of built-in preset tiers is `7` (not a rarity cap).
 
 ## Events
 

@@ -39,8 +39,7 @@ config/raritycore/RarityStyle.json
         "mode": "repeat",
         "repeatChar": "★",
         "custom": ""
-      },
-      "specialRarityTexts": {}
+      }
     },
     "itemNameColor": true,
     "noRarity": {
@@ -85,11 +84,11 @@ config/raritycore/RarityStyle.json
 | `defaultTexture` | 字符串 | `raritycore:textures/border/rarity_{level}.png` | 纹理路径，`{level}` 替换为等级数字（旧 `rarity_1.png` 等约定） |
 | `style` | 整数 | `1` | `1`=实心填充，`0`=空心（旧 `itemBorderStyle`） |
 | `show` | 布尔 | `true` | 是否显示边框（旧 `renderer` 总开关） |
-| `fallback` | 字符串 | `"inherit"` | 大于 7 级的边框纹理回退策略 |
+| `fallback` | 字符串 | `"inherit"` | 未显式配置边框纹理的等级（通常为 8 级及以上）的边框纹理回退策略 |
 
 `border.fallback` 取值：
-- `"inherit"`：大于 7 级的边框沿用 7 级纹理（默认行为）。
-- 其它路径字符串：作为大于 7 级的统一纹理，支持 `{level}` 占位符，例如 `"raritycore:textures/border/rarity_special.png"`。
+- `"inherit"`：未显式配置边框纹理的等级沿用最高已配置档位（默认 7 级）纹理。
+- 其它路径字符串：作为未显式配置边框纹理等级的统一纹理，支持 `{level}` 占位符，例如 `"raritycore:textures/border/rarity_special.png"`。
 
 ### tooltip：工具提示
 | 字段 | 类型 | 默认 | 说明 |
@@ -181,4 +180,4 @@ rarity.core.7 = Unique   / 唯一
 若使用纹理边框（`border.useTexture=true`），需在资源包准备 16x16 的 PNG：
 
 - 路径：`assets/raritycore/textures/border/`
-- 命名：默认 `rarity_1.png` ~ `rarity_7.png`（由 `defaultTexture` 的 `{level}` 决定）；大于 7 级按 `border.fallback` 指定的路径（或沿用 7 级）。
+- 命名：默认 `rarity_1.png` ~ `rarity_7.png`（由 `defaultTexture` 的 `{level}` 决定）；未显式配置边框纹理的等级（8 级及以上）按 `border.fallback` 指定的路径（或沿用 7 级）。

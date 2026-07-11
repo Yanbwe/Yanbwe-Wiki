@@ -39,8 +39,7 @@ This file manages all rarity visual appearance — colors, borders, tooltips, st
         "mode": "repeat",
         "repeatChar": "★",
         "custom": ""
-      },
-      "specialRarityTexts": {}
+      }
     },
     "itemNameColor": true,
     "noRarity": {
@@ -85,11 +84,11 @@ This file manages all rarity visual appearance — colors, borders, tooltips, st
 | `defaultTexture` | String | `raritycore:textures/border/rarity_{level}.png` | Texture path; `{level}` replaced by the level number (old `rarity_1.png` convention) |
 | `style` | Integer | `1` | `1`=solid fill, `0`=hollow (old `itemBorderStyle`) |
 | `show` | Boolean | `true` | Whether to show the border (old `renderer` master switch) |
-| `fallback` | String | `"inherit"` | Border texture fallback strategy for levels above 7 |
+| `fallback` | String | `"inherit"` | Border texture fallback strategy for levels that have no texture explicitly configured (typically level 8 and above) |
 
 `border.fallback` values:
-- `"inherit"`: levels above 7 reuse the level 7 texture (default behavior).
-- Any other path string: used as a uniform texture for levels above 7; supports `{level}` placeholder, e.g. `"raritycore:textures/border/rarity_special.png"`.
+- `"inherit"`: levels without an explicitly configured texture reuse the highest configured tier (level 7 by default) texture.
+- Any other path string: used as a uniform texture for levels without an explicitly configured texture; supports `{level}` placeholder, e.g. `"raritycore:textures/border/rarity_special.png"`.
 
 ### tooltip
 | Field | Type | Default | Description |
@@ -181,4 +180,4 @@ This command reloads `RarityStyle.json` and refreshes the cache. If the file is 
 If texture borders are enabled (`border.useTexture=true`), prepare 16x16 PNGs in a resource pack:
 
 - Path: `assets/raritycore/textures/border/`
-- Naming: default `rarity_1.png` ~ `rarity_7.png` (determined by `{level}` in `defaultTexture`); levels above 7 follow the path specified by `border.fallback` (or reuse level 7).
+- Naming: default `rarity_1.png` ~ `rarity_7.png` (determined by `{level}` in `defaultTexture`); levels without an explicitly configured texture (level 8 and above) follow the path specified by `border.fallback` (or reuse level 7).
