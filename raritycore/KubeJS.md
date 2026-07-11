@@ -66,6 +66,74 @@ RarityCore.isRendererEnabled(5)  // 该等级是否渲染边框
 RarityCore.isTooltipEnabled(5)   // 该等级是否显示工具提示
 ```
 
+## V14 视觉表现接口
+
+### 查询
+
+```js
+// 主开关
+RarityCore.isTooltipColorEnabled()  // 工具提示是否染色
+RarityCore.isBorderEnabled()        // 是否渲染物品边框
+RarityCore.isTooltipInsertEnabled() // 是否插入工具提示
+
+// 无稀有度回退
+RarityCore.isNoRaritySkip()          // 无稀有度物品是否跳过渲染
+RarityCore.getNoRarityDefaultRarity() // 无稀有度物品兜底等级
+
+// 逐级查询
+RarityCore.getTooltipContent(5)       // 该等级工具提示内容
+RarityCore.getLevelTranslationKey(5) // 该等级 level 段翻译键
+RarityCore.getLevelFallbackKey(5)    // 该等级 level 段回退键
+RarityCore.getSpecialRarityText(8)    // 该等级大于 MAX_RARITY 的特殊文本
+RarityCore.isBorderUseTexture(5)      // 该等级边框是否使用纹理
+RarityCore.getBorderStyle(5)          // 该等级边框样式 (1=实心, 0=空心)
+RarityCore.getBorderFallback()        // 边框回退纹理
+```
+
+### 写入 (即时保存至 RarityStyle.json)
+
+```js
+// 主开关
+RarityCore.setBorderEnabled(true)
+RarityCore.setTooltipEnabled(true)
+RarityCore.setTooltipColorEnabled(true)
+
+// 无稀有度回退
+RarityCore.setNoRaritySkip(false)
+RarityCore.setNoRarityDefaultRarity(1)
+
+// 逐级边框 / 工具提示 / 星星 / 特殊文本
+RarityCore.setBorderUseTexture(5, true)
+RarityCore.setBorderStyle(5, 1)
+RarityCore.setTooltipContent(5, "[@{level}] @{star}")
+RarityCore.setStarMode(5, "repeat")
+RarityCore.setStarRepeatChar(5, "★")
+RarityCore.setSpecialRarityText(8, "神话之上")
+```
+
+## 配置与查询
+
+```js
+// 触发完整配置重载
+RarityCore.reloadConfigs()
+
+// 返回该稀有度等级的全部物品 ID
+let ids = RarityCore.getItemsByRarity(5)
+// 返回当前出现过的稀有度等级集合
+let rarities = RarityCore.getConfiguredRarities()
+// 返回匹配任一指定等级的全部物品 ID
+let ids2 = RarityCore.getItemsByRarities([5, 6])
+// 返回该等级的物品数量
+let count = RarityCore.getRarityCount(5)
+// 返回全部已解析稀有度等级快照
+let all = RarityCore.getAllRarityEntries()
+// 版本与可用性
+let apiVer = RarityCore.getApiVersion()
+let ver = RarityCore.getModVersion()
+let cfgVer = RarityCore.getConfigVersion()
+let ok = RarityCore.isAvailable()
+```
+
 ## 常量
 
 ```js

@@ -1,6 +1,8 @@
-# Client Rarity Configuration
+# Client Rarity Configuration (Legacy · Pre-V14)
 
 **New in Ver.13**
+
+> This page documents the pre-V14 configuration (`RarityClientConfig.json`). Since V14, this file is deprecated and auto-deleted; its settings are consolidated into a single `RarityStyle.json`. See the [RarityStyle Configuration Guide](/en/raritycore/RarityStyleConfiguration). This page is retained for historical reference only.
 
 `RarityClientConfig.json` allows you to customize per-rarity-level visual appearance — color, texture, and feature toggles.
 

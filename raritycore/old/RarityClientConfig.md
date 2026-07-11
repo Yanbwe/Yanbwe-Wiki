@@ -1,6 +1,8 @@
-# 客户端稀有度配置说明
+# 客户端稀有度配置说明（旧版 · V14 之前）
 
 **Ver.13 新增功能**
+
+> 本页描述 V14 之前的旧配置（`RarityClientConfig.json`）。V14 起该文件已废弃并自动删除，相关配置已整合为单一的 `RarityStyle.json`，请参考[RarityStyle 配置指南](/raritycore/RarityStyleConfiguration)。本页仅作历史参考保留。
 
 `RarityClientConfig.json` 允许你按稀有度等级逐级自定义客户端的视觉表现——颜色、纹理、以及各项功能的开关。
 

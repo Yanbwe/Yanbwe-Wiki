@@ -56,7 +56,7 @@ config/stylizeddamage/common.json
 - 支持标签：`"#minecraft:is_fire"`、`"#minecraft:bypasses_armor"`（启动时自动展开为具体伤害类型）
 - 支持伪伤害类型：`"heal"`（治疗）、`"absorption"`（吸收）、`"kill"`（击杀）
 - 支持暴击：`"critical"`
-- 通配符：`"*"` 匹配所有
+- 通配符：`"*"` 匹配所有真实伤害类型，但不匹配伪伤害类型（`heal`、`absorption`、`kill`）。伪类型需通过显式规则单独匹配；配置文件省略对应伪类型规则时，该伪类型跳字被完全抑制
 
 #### 完整示例
 

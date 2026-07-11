@@ -1,4 +1,6 @@
-# 客户端配置说明
+# 客户端配置说明（旧版 · V14 之前）
+
+> 本页描述 V14 之前的旧配置（`client.json`）。V14 起相关配置已整合为单一的 `RarityStyle.json`，请参考[RarityStyle 配置指南](/raritycore/RarityStyleConfiguration)。本页仅作历史参考保留。
 
 客户端配置文件位于:
 

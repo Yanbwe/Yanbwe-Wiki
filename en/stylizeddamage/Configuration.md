@@ -46,7 +46,7 @@ Selectors determine which style is used for each damage event. Three-layer match
 - Supports tags: `"#minecraft:bypasses_armor"`, `"#minecraft:is_fire"` (auto-expanded at startup)
 - Supports pseudo types: `"heal"`, `"absorption"`, `"kill"`
 - Supports critical hits: `"critical"`
-- Wildcard: `"*"`
+- Wildcard: `"*"` matches all real damage types, but not pseudo types (`heal`, `absorption`, `kill`). Pseudo types must be matched by explicit rules; omitting a pseudo type's rule suppresses that pseudo type's popup entirely
 
 ## Display Filter
 

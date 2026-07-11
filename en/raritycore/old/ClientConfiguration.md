@@ -1,4 +1,6 @@
-# Client Configuration Guide
+# Client Configuration Guide (Legacy · Pre-V14)
+
+> This page documents the pre-V14 configuration (`client.json`). Since V14, these settings are consolidated into a single `RarityStyle.json`. See the [RarityStyle Configuration Guide](/en/raritycore/RarityStyleConfiguration). This page is retained for historical reference only.
 
 Client configuration file is located at:
 

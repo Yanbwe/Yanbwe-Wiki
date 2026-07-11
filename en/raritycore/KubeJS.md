@@ -58,6 +58,74 @@ RarityCore.isRendererEnabled(5)
 RarityCore.isTooltipEnabled(5)
 ```
 
+## V14 Visual Style Interface
+
+### Queries
+
+```js
+// Master switches
+RarityCore.isTooltipColorEnabled()  // whether tooltips are colored
+RarityCore.isBorderEnabled()        // whether item borders are rendered
+RarityCore.isTooltipInsertEnabled() // whether tooltips are inserted
+
+// No-rarity fallback
+RarityCore.isNoRaritySkip()          // skip rendering for unconfigured items
+RarityCore.getNoRarityDefaultRarity() // fallback rarity for unconfigured items
+
+// Per-level queries
+RarityCore.getTooltipContent(5)       // tooltip content for this level
+RarityCore.getLevelTranslationKey(5) // level segment translation key
+RarityCore.getLevelFallbackKey(5)    // level segment fallback key
+RarityCore.getSpecialRarityText(8)    // special text for rarity > MAX_RARITY
+RarityCore.isBorderUseTexture(5)      // whether this level uses texture border
+RarityCore.getBorderStyle(5)          // border style for this level (1=solid, 0=hollow)
+RarityCore.getBorderFallback()        // border fallback texture
+```
+
+### Writes (persisted immediately to RarityStyle.json)
+
+```js
+// Master switches
+RarityCore.setBorderEnabled(true)
+RarityCore.setTooltipEnabled(true)
+RarityCore.setTooltipColorEnabled(true)
+
+// No-rarity fallback
+RarityCore.setNoRaritySkip(false)
+RarityCore.setNoRarityDefaultRarity(1)
+
+// Per-level border / tooltip / star / special text
+RarityCore.setBorderUseTexture(5, true)
+RarityCore.setBorderStyle(5, 1)
+RarityCore.setTooltipContent(5, "[@{level}] @{star}")
+RarityCore.setStarMode(5, "repeat")
+RarityCore.setStarRepeatChar(5, "★")
+RarityCore.setSpecialRarityText(8, "Above Mythic")
+```
+
+## Config & Query
+
+```js
+// Trigger a full config reload
+RarityCore.reloadConfigs()
+
+// All item IDs resolved to the given level
+let ids = RarityCore.getItemsByRarity(5)
+// Distinct rarity levels currently present
+let rarities = RarityCore.getConfiguredRarities()
+// All item IDs resolved to any of the given levels
+let ids2 = RarityCore.getItemsByRarities([5, 6])
+// Count of items resolved to the given level
+let count = RarityCore.getRarityCount(5)
+// Snapshot of all resolved rarity levels
+let all = RarityCore.getAllRarityEntries()
+// Version & availability
+let apiVer = RarityCore.getApiVersion()
+let ver = RarityCore.getModVersion()
+let cfgVer = RarityCore.getConfigVersion()
+let ok = RarityCore.isAvailable()
+```
+
 ## Constants
 
 ```js

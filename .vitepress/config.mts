@@ -34,8 +34,9 @@ export default defineConfig({
         items: [
           { text: '首页', link: '/raritycore/' },
           { text: '稀有度配置指南', link: '/raritycore/how-to-config-rarity' },
-          { text: '客户端配置', link: '/raritycore/ClientConfiguration' },
-          { text: '客户端稀有度配置', link: '/raritycore/RarityClientConfig' },
+          { text: 'RarityStyle 配置', link: '/raritycore/RarityStyleConfiguration' },
+          { text: '客户端配置（旧版）', link: '/raritycore/old/ClientConfiguration' },
+          { text: '客户端稀有度配置（旧版）', link: '/raritycore/old/RarityClientConfig' },
           { text: '服务端配置', link: '/raritycore/ServerConfiguration' },
           { text: 'NBT稀有度控制', link: '/raritycore/NbtRarityControl' },
           { text: '组件稀有度控制 (1.21.1)', link: '/raritycore/ComponentRarityControl' },
@@ -53,6 +54,7 @@ export default defineConfig({
             collapsed: false,
             items: [
               { text: 'API 1.20.1', link: '/raritycore/API/API1201' },
+              { text: 'API 1.20.1（旧版）', link: '/raritycore/API/old/API1201' },
               { text: 'API 1.21.1', link: '/raritycore/API/API1211' }
             ]
           },
@@ -191,8 +193,9 @@ export default defineConfig({
             items: [
               { text: 'Home', link: '/en/raritycore/' },
               { text: 'Rarity Configuration', link: '/en/raritycore/how-to-config-rarity' },
-              { text: 'Client Configuration', link: '/en/raritycore/ClientConfiguration' },
-              { text: 'Client Rarity Config', link: '/en/raritycore/RarityClientConfig' },
+              { text: 'RarityStyle Configuration', link: '/en/raritycore/RarityStyleConfiguration' },
+              { text: 'Client Configuration (Legacy)', link: '/en/raritycore/old/ClientConfiguration' },
+              { text: 'Client Rarity Config (Legacy)', link: '/en/raritycore/old/RarityClientConfig' },
               { text: 'Server Configuration', link: '/en/raritycore/ServerConfiguration' },
               { text: 'NBT Rarity Control', link: '/en/raritycore/NbtRarityControl' },
               { text: 'Component Rarity Control (1.21.1)', link: '/en/raritycore/ComponentRarityControl' },
@@ -210,6 +213,7 @@ export default defineConfig({
                 collapsed: false,
                 items: [
                   { text: 'API 1.20.1', link: '/en/raritycore/API/API1201' },
+                  { text: 'API 1.20.1 (Legacy)', link: '/en/raritycore/API/old/API1201' },
                   { text: 'API 1.21.1', link: '/en/raritycore/API/API1211' }
                 ]
               },
