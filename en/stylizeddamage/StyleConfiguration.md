@@ -23,8 +23,10 @@ Each file defines the visual appearance for a damage number. The filename (witho
 | `suffix` | string | `""` | Text suffix |
 | `icon` | string/null | `null` | Icon texture path |
 | `iconPosition` | string | `"left"` | Icon position: `"left"` or `"right"` |
-| `iconOffsetX` | float | `0` | Horizontal icon offset in pixels |
-| `iconOffsetY` | float | `0` | Vertical icon offset in pixels |
+| `iconOffsetX` | float | `0` | Horizontal damage-number icon offset in pixels |
+| `iconOffsetY` | float | `0` | Vertical damage-number icon offset in pixels |
+| `hudIconOffsetX` | float | `0` | Horizontal total-damage HUD icon offset in pixels (independent of `iconOffsetX`) |
+| `hudIconOffsetY` | float | `0` | Vertical total-damage HUD icon offset in pixels (independent of `iconOffsetY`) |
 | `killText` | string/null | `null` | Text for kill-type numbers (replaces damage value) |
 | `bypassDisplayOpacity` | boolean | `false` | When `true`, ignores global `displayOpacity` config |
 | `animation` | object | — | Animation config |

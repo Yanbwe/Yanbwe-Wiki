@@ -57,6 +57,11 @@ api.createStyle("my_style")
 | `.prefix(String)` | 字符串 | 文字前缀 |
 | `.suffix(String)` | 字符串 | 文字后缀 |
 | `.icon(String)` | 路径 | 图标纹理路径 |
+| `.iconPosition(String)` | 字符串 | 图标位置：`"left"` 或 `"right"` |
+| `.iconOffsetX(double)` | 像素 | 跳字图标水平偏移（正=右移，负=左移） |
+| `.iconOffsetY(double)` | 像素 | 跳字图标垂直偏移（正=下移，负=上移） |
+| `.hudIconOffsetX(double)` | 像素 | 总伤害 HUD 图标水平偏移，独立于 `iconOffsetX` |
+| `.hudIconOffsetY(double)` | 像素 | 总伤害 HUD 图标垂直偏移，独立于 `iconOffsetY` |
 | `.sound(String)` | 音效ID | 跳字出现音效 |
 | `.animation(AnimationConfig)` | 动画对象 | 动画配置 |
 | `.damageScale(boolean)` | 开关 | 是否启用伤害大小缩放 |

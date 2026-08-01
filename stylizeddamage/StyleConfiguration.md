@@ -25,8 +25,10 @@ config/stylizeddamage/styles/<样式名>.json
 | `suffix` | 字符串 | `""` | 文字后缀 |
 | `icon` | 字符串/null | `null` | 图标纹理路径 |
 | `iconPosition` | 字符串 | `"left"` | 图标位置：`"left"` 或 `"right"` |
-| `iconOffsetX` | 浮点数 | `0` | 图标水平微调像素偏移 |
-| `iconOffsetY` | 浮点数 | `0` | 图标垂直微调像素偏移 |
+| `iconOffsetX` | 浮点数 | `0` | 跳字图标水平微调像素偏移 |
+| `iconOffsetY` | 浮点数 | `0` | 跳字图标垂直微调像素偏移 |
+| `hudIconOffsetX` | 浮点数 | `0` | 总伤害 HUD 图标水平微调像素偏移（独立于 `iconOffsetX`） |
+| `hudIconOffsetY` | 浮点数 | `0` | 总伤害 HUD 图标垂直微调像素偏移（独立于 `iconOffsetY`） |
 | `killText` | 字符串/null | `null` | kill 型跳字显示的文本（替代伤害数字） |
 | `bypassDisplayOpacity` | 布尔值 | `false` | 为 `true` 时无视全局 `displayOpacity` 配置 |
 | `decimalPlaces` | 整数 | `1` | 伤害数字保留的小数位数；整型伤害（如 `12.0`）仍显示为整数，小数伤害按该位数四舍五入；小于 `0` 时回退为 `1` |
@@ -85,15 +87,23 @@ config/stylizeddamage/styles/<样式名>.json
 "icon": "minecraft:textures/particle/angry.png",
 "iconPosition": "right",
 "iconOffsetX": 0,
-"iconOffsetY": 4
+"iconOffsetY": 4,
+"hudIconOffsetX": 0,
+"hudIconOffsetY": 4
 ```
 
 | 参数 | 说明 |
 |------|------|
 | `icon` | 纹理路径，格式 `命名空间:textures/...` |
 | `iconPosition` | `"left"`（文字左边）或 `"right"`（文字右边） |
-| `iconOffsetX` | 水平微调（正=右移，负=左移） |
-| `iconOffsetY` | 垂直微调（正=下移，负=上移） |
+| `iconOffsetX` | 跳字图标水平微调（正=右移，负=左移） |
+| `iconOffsetY` | 跳字图标垂直微调（正=下移，负=上移） |
+| `hudIconOffsetX` | 总伤害 HUD 图标水平微调（正=右移，负=左移） |
+| `hudIconOffsetY` | 总伤害 HUD 图标垂直微调（正=下移，负=上移） |
+
+> **锚点说明**：跳字与总伤害 HUD（总伤害数字和尾随数字）的图标锚点一致——水平方向紧贴文字边缘，垂直方向图标中心与文字中心对齐，偏移量在此基础上微调。
+>
+> **偏移配置独立**：`iconOffsetX/Y` 仅作用于伤害跳字图标；`hudIconOffsetX/Y` 仅作用于总伤害 HUD 图标。两套配置互不影响，可分别调校，避免一处调整导致另一处错位。
 
 ## 音效
 
@@ -188,6 +198,8 @@ config/stylizeddamage/styles/<样式名>.json
   "iconPosition": "right",
   "iconOffsetX": 0,
   "iconOffsetY": 4,
+  "hudIconOffsetX": 0,
+  "hudIconOffsetY": 4,
   "decimalPlaces": 1,
   "damageScale": {
     "enabled": true,
