@@ -28,10 +28,45 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 
 ### bullet_style Sub-fields
 
+> **v2 structure (modifier stacking)**: the legacy `model` object + `render_mode` is deprecated, replaced by `base` + `modifiers`. Modifiers from multiple sources (gun / plugins / traits / state conditions) **stack** instead of being fully replaced.
+
 | JSON Key | Type | Required | Default | Description |
 |----------|------|----------|---------|-------------|
-| `model` | String → resource path object | **Yes** | — | Render resources. `"3d"` → model path, `"billboard"` → texture path. Recommend providing both |
+| `base` | Object | No | None | Base appearance (see below). When missing, the framework fallback texture (`modularshoot:textures/bullet/default.png`) is used |
+| `modifiers` | Object array | No | `[]` | Modifier list (see below). Same-source modifiers combine in declaration order; across sources the order is gun → plugins (install order) → active traits → state conditions |
+
+### base Sub-fields
+
+| JSON Key | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
 | `render_mode` | Text string | **Yes** | — | `"billboard"` (2D sprite) or `"3d"` (static 3D model) |
+| `texture` | Resource path string | No | None | Billboard texture path (omit for 3d mode) |
+| `model` | Resource path string | No | None | 3d model path (omit for billboard mode) |
+
+### modifiers Type Table
+
+| `type` | Fields | Merge rule |
+|--------|--------|------------|
+| `"scale"` | `value` (float, >0) | **Multiplied**: all scale values across sources multiply into the final visual scale. NaN/≤0 values are skipped with a WARN |
+| `"tint"` | `color` (array `[r,g,b]` or `[r,g,b,a]`, channels 0~1) | **Per-channel multiplied**: all tint colors multiply channel-wise. Negative/NaN channels skipped with a WARN; values >1 clamp to 1 |
+| `"attach_layer"` | `render_mode`/`texture`/`model`/`follow_rotation`/`follow_scale`/`offset`/`scale`/`tint` | **Drawn in parallel**: an independent layer on top of the base; does not participate in scale/tint multiplication; its own scale/tint apply only to the layer |
+
+> An unrecognised modifier `type` is skipped with a WARN and does **not** fail the whole list parse.
+
+### attach_layer Sub-fields
+
+| JSON Key | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `render_mode` | Text string | **Yes** | — | `"billboard"` or `"3d"` |
+| `texture` | Resource path string | No | None | Billboard layer texture (omit for 3d layers) |
+| `model` | Resource path string | No | None | 3d layer model (omit for billboard layers) |
+| `follow_rotation` | Boolean | No | `false` | Whether the layer rotates with the bullet's flight direction (billboard layers always face the camera; ignored) |
+| `follow_scale` | Boolean | No | `true` | Whether the layer inherits the base visual scale (`baseScale × scale`) |
+| `offset` | Number array | No | `[0,0,0]` | Positional offset relative to the base center `[x,y,z]` |
+| `scale` | Float | No | `1.0` | Per-layer scale |
+| `tint` | Array | No | `[1,1,1,1]` | Per-layer tint |
+
+> **v1 limitation**: `attach_layer` fully supports `billboard` layers only; `"3d"` layers are not drawn in v1 (skipped with a DEBUG log).
 
 **Path**: `data/examplemod/modularshoot/guns/assault_rifle.json`
 
@@ -64,11 +99,17 @@ Register content via datapack JSON. Equivalent to and sharing information with J
     "shoot": "examplemod:gun.assault_rifle.shoot"
   },
   "bullet_style": {
-    "model": {
-      "3d": "examplemod:models/bullet/rifle_bullet.json",
-      "billboard": "examplemod:textures/bullet/rifle_bullet.png"
+    "base": {
+      "render_mode": "billboard",
+      "texture": "examplemod:textures/bullet/rifle_bullet.png"
     },
-    "render_mode": "billboard"
+    "modifiers": [
+      { "type": "scale", "value": 1.2 },
+      { "type": "tint", "color": [1.0, 0.9, 0.8] },
+      { "type": "attach_layer", "render_mode": "billboard",
+        "texture": "examplemod:textures/bullet/flame.png",
+        "follow_scale": true, "offset": [0.0, 0.1, -0.3], "scale": 0.8 }
+    ]
   }
 }
 ```
@@ -86,7 +127,7 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 | `modifiers` | Object array | No | `[]` | Attribute modifier list (see sub-table below) |
 | `traits` | Trait ID → boolean object | No | `{}` | Trait overrides provided on install |
 | `exclusive_group` | Text string | No | None | Mutual exclusion group ID. Same-group on same gun = can't coexist |
-| `bullet_style` | Object | No | None | Bullet style override (same format as gun's `bullet_style`). **Full replacement**, not field-level merge |
+| `bullet_style` | Object | No | None | Bullet style (same format as gun's `bullet_style`). **Stacks**: plugin vs gun base picks a winner by priority (later-installed wins ties); all modifiers stack |
 | `texture_overlay` | Object | No | None | Texture overlay (see sub-table below) |
 | `brief` | Text string | No | None | One-line summary |
 | `description` | Text string | No | None | Multi-line detailed description |
@@ -123,8 +164,8 @@ Register content via datapack JSON. Equivalent to and sharing information with J
   "traits": { "examplemod:rapid_fire": true },
   "exclusive_group": "group:barrel_type",
   "bullet_style": {
-    "model": { "billboard": "examplemod:textures/bullet/fast_bullet.png" },
-    "render_mode": "billboard"
+    "base": { "render_mode": "billboard", "texture": "examplemod:textures/bullet/fast_bullet.png" },
+    "modifiers": [ { "type": "scale", "value": 1.5 } ]
   },
   "texture_overlay": {
     "texture": "examplemod:textures/plugins/rapid_barrel_overlay.png",
@@ -199,6 +240,7 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 | `brief` | Text string | No | None | One-line summary |
 | `force_show` | Boolean | No | `false` | Force display (shown in tooltip regardless of value) |
 | `priority` | Integer | No | `0` | Display priority, higher sorts first |
+| `visual_modifiers` | Object array | No | `[]` | Visual modifier list (same format as `bullet_style.modifiers`). Applied to the bullet's visual composition **when the trait is active**; no effect when inactive |
 
 **Path**: `data/examplemod/modularshoot/traits/ignite.json`
 
@@ -210,7 +252,10 @@ Register content via datapack JSON. Equivalent to and sharing information with J
   "color": "#FF8800",
   "brief": "Ignites target for 3 seconds on hit",
   "force_show": false,
-  "priority": 10
+  "priority": 10,
+  "visual_modifiers": [
+    { "type": "tint", "color": [1.0, 0.4, 0.2] }
+  ]
 }
 ```
 
@@ -266,16 +311,23 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 | `value_type` | Text string | **Yes** | — | Value type. `"int"` / `"long"` / `"double"` / `"float"` / `"boolean"` / `"string"` / `"uuid"` |
 | `default_value` | Matching type | No | Zero value for the type | Initial value. Type must match `value_type` |
 | `display` | Object | **Yes** | — | Display metadata (see sub-table below) |
+| `visual_modifiers` | Object array | No | `[]` | Conditional visual modifiers (see below). When a condition holds, its modifiers stack into the bullet's visual composition at bullet creation time |
 
-### display Sub-fields
+### visual_modifiers Sub-fields
 
 | JSON Key | Type | Required | Default | Description |
 |----------|------|----------|---------|-------------|
-| `name` | Text string | **Yes** | — | State name in tooltip. Supports `§` and `lang:` |
-| `color` | Text string | No | `""` | Name color (e.g. `"#FFAA00"`). Optional; omitting uses the default tooltip color |
-| `format` | Text string | No | `"{value}"` | Display template, `{value}` placeholder |
-| `priority` | Integer | No | `0` | Display sort order, higher sorts first |
-| `hide_default` | Boolean | No | `false` | Hide the line when value equals default |
+| `condition` | Object | **Yes** | — | Enable condition (see below) |
+| `modifiers` | Object array | **Yes** | — | Modifiers applied when the condition holds (same format as `bullet_style.modifiers`) |
+
+### condition Sub-fields
+
+| JSON Key | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `state` | Resource path string | **Yes** | — | State ID to check (must be namespaced, e.g. `"modularshoot:killstreak"`) |
+| `domain` | Text string | No | Auto-resolve | Explicit value source: `"bullet"` (bullet state) or `"gun"` (gun state). When omitted, bullet state is checked first, then gun state. `"player"` is unsupported |
+| `op` | Text string | **Yes** | — | Comparison operator: `">="` / `"<="` / `"=="` / `">"` / `"<"`. Boolean/string states support `"=="` only |
+| `value` | Matching type | **Yes** | — | Threshold (number/boolean/string). UUID states do not support conditions |
 
 **Path**: `data/examplemod/modularshoot/states/kill_count.json`
 
@@ -290,7 +342,21 @@ Register content via datapack JSON. Equivalent to and sharing information with J
     "format": "{value} kills",
     "priority": 10,
     "hide_default": true
-  }
+  },
+  "visual_modifiers": [
+    {
+      "condition": {
+        "state": "modularshoot:killstreak",
+        "domain": "bullet",
+        "op": ">=",
+        "value": 3
+      },
+      "modifiers": [
+        { "type": "tint", "color": [1.0, 0.2, 0.2] },
+        { "type": "scale", "value": 1.2 }
+      ]
+    }
+  ]
 }
 ```
 

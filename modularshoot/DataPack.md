@@ -28,10 +28,45 @@
 
 ### bullet_style 子字段
 
+> **v2 结构（修饰符叠加）**：旧版的 `model` 对象 + `render_mode` 已废弃，替换为 `base` + `modifiers`。多个来源（枪械 / 插件 / 特性 / 状态条件）的修饰符会**叠加组合**而非整体覆盖。
+
 | JSON 键 | 类型 | 必需 | 默认值 | 说明 |
 |---------|------|------|--------|------|
-| `model` | 字符串→资源路径对象 | **是** | — | 渲染资源。`"3d"`→模型路径，`"billboard"`→纹理路径。建议两者都提供 |
+| `base` | 对象 | 否 | 无 | 基础外观（见下）。缺失时使用框架默认贴图（`modularshoot:textures/bullet/default.png`） |
+| `modifiers` | 对象数组 | 否 | `[]` | 修饰符列表（见下），同来源按声明顺序、跨来源按 枪械→插件（按安装序）→激活特性→状态条件 组合 |
+
+### base 子字段
+
+| JSON 键 | 类型 | 必需 | 默认值 | 说明 |
+|---------|------|------|--------|------|
 | `render_mode` | 字符串 | **是** | — | `"billboard"`（2D 精灵）或 `"3d"`（静态 3D 模型） |
+| `texture` | 资源路径字符串 | 否 | 无 | billboard 模式纹理路径（3d 模式不填） |
+| `model` | 资源路径字符串 | 否 | 无 | 3d 模式模型路径（billboard 模式不填） |
+
+### modifiers 修饰符类型表
+
+| `type` | 字段 | 合并规则 |
+|--------|------|---------|
+| `"scale"` | `value`（浮点数，>0） | **连乘**：所有来源的 scale 值相乘为最终视觉缩放。NaN/≤0 跳过并告警 |
+| `"tint"` | `color`（数组 `[r,g,b]` 或 `[r,g,b,a]`，各通道 0~1） | **逐通道连乘**：所有来源的 tint 逐通道相乘。负/NaN 通道跳过并告警；>1 clamp 到 1 |
+| `"attach_layer"` | `render_mode`/`texture`/`model`/`follow_rotation`/`follow_scale`/`offset`/`scale`/`tint` | **并行绘制**：独立层叠加在 base 之上，不参与 scale/tint 连乘；自身 scale/tint 只作用于本层 |
+
+> 修饰符内的 `type` 若无法识别，该条会被跳过并记 WARN，**不会**导致整个列表解析失败。
+
+### attach_layer 子字段
+
+| JSON 键 | 类型 | 必需 | 默认值 | 说明 |
+|---------|------|------|--------|------|
+| `render_mode` | 字符串 | **是** | — | `"billboard"` 或 `"3d"` |
+| `texture` | 资源路径字符串 | 否 | 无 | billboard 层纹理（3d 层不填） |
+| `model` | 资源路径字符串 | 否 | 无 | 3d 层模型（billboard 层不填） |
+| `follow_rotation` | 布尔值 | 否 | `false` | 是否随子弹飞行方向旋转（billboard 层恒朝相机，忽略此值） |
+| `follow_scale` | 布尔值 | 否 | `true` | 是否继承 base 视觉缩放（`baseScale × scale`） |
+| `offset` | 数值数组 | 否 | `[0,0,0]` | 相对 base 中心的位置偏移 `[x,y,z]` |
+| `scale` | 浮点数 | 否 | `1.0` | 本层缩放 |
+| `tint` | 数组 | 否 | `[1,1,1,1]` | 本层染色 |
+
+> **v1 限制**：`attach_layer` 目前仅完整支持 `billboard` 层；`"3d"` 层暂不绘制（跳过并记 DEBUG 日志）。
 
 **路径**：`data/examplemod/modularshoot/guns/assault_rifle.json`
 
@@ -64,11 +99,17 @@
     "shoot": "examplemod:gun.assault_rifle.shoot"
   },
   "bullet_style": {
-    "model": {
-      "3d": "examplemod:models/bullet/rifle_bullet.json",
-      "billboard": "examplemod:textures/bullet/rifle_bullet.png"
+    "base": {
+      "render_mode": "billboard",
+      "texture": "examplemod:textures/bullet/rifle_bullet.png"
     },
-    "render_mode": "billboard"
+    "modifiers": [
+      { "type": "scale", "value": 1.2 },
+      { "type": "tint", "color": [1.0, 0.9, 0.8] },
+      { "type": "attach_layer", "render_mode": "billboard",
+        "texture": "examplemod:textures/bullet/flame.png",
+        "follow_scale": true, "offset": [0.0, 0.1, -0.3], "scale": 0.8 }
+    ]
   }
 }
 ```
@@ -86,7 +127,7 @@
 | `modifiers` | 对象数组 | 否 | `[]` | 属性修饰符列表（见下表） |
 | `traits` | 特性ID→布尔值对象 | 否 | `{}` | 安装后提供的特性覆盖 |
 | `exclusive_group` | 字符串 | 否 | 无 | 互斥组 ID。同一枪上同组插件不可共存 |
-| `bullet_style` | 对象 | 否 | 无 | 子弹样式覆盖（格式同枪械的 `bullet_style`）。**整体覆盖**非字段级合并 |
+| `bullet_style` | 对象 | 否 | 无 | 子弹样式（格式同枪械的 `bullet_style`）。**叠加组合**：插件与枪械的 base 按 priority（同 priority 后装赢）选出赢家，modifiers 全部叠加 |
 | `texture_overlay` | 对象 | 否 | 无 | 纹理叠加（见下表） |
 | `brief` | 字符串 | 否 | 无 | 一行简介 |
 | `description` | 字符串 | 否 | 无 | 多行详细描述 |
@@ -123,8 +164,8 @@
   "traits": { "examplemod:rapid_fire": true },
   "exclusive_group": "group:barrel_type",
   "bullet_style": {
-    "model": { "billboard": "examplemod:textures/bullet/fast_bullet.png" },
-    "render_mode": "billboard"
+    "base": { "render_mode": "billboard", "texture": "examplemod:textures/bullet/fast_bullet.png" },
+    "modifiers": [ { "type": "scale", "value": 1.5 } ]
   },
   "texture_overlay": {
     "texture": "examplemod:textures/plugins/rapid_barrel_overlay.png",
@@ -199,6 +240,7 @@
 | `brief` | 字符串 | 否 | 无 | 一行简介 |
 | `force_show` | 布尔值 | 否 | `false` | 是否强制展示（无论值为何都显示在 tooltip） |
 | `priority` | 整数 | 否 | `0` | 显示优先级，越大越靠前 |
+| `visual_modifiers` | 对象数组 | 否 | `[]` | 视觉修饰符列表（格式同 `bullet_style.modifiers`）。**特性激活时**这些修饰符叠加进子弹视觉组合；未激活不生效 |
 
 **路径**：`data/examplemod/modularshoot/traits/ignite.json`
 
@@ -210,7 +252,10 @@
   "color": "#FF8800",
   "brief": "命中时点燃目标 3 秒",
   "force_show": false,
-  "priority": 10
+  "priority": 10,
+  "visual_modifiers": [
+    { "type": "tint", "color": [1.0, 0.4, 0.2] }
+  ]
 }
 ```
 
@@ -266,6 +311,23 @@
 | `value_type` | 字符串 | **是** | — | 值类型。`"int"` / `"long"` / `"double"` / `"float"` / `"boolean"` / `"string"` / `"uuid"` |
 | `default_value` | 对应类型 | 否 | 对应类型零值 | 初始值，类型须与 `value_type` 匹配 |
 | `display` | 对象 | **是** | — | 显示元数据（见下表） |
+| `visual_modifiers` | 对象数组 | 否 | `[]` | 条件视觉修饰符（见下表）。**条件成立时**这些修饰符在子弹创建瞬间叠加进视觉组合 |
+
+### visual_modifiers 子字段
+
+| JSON 键 | 类型 | 必需 | 默认值 | 说明 |
+|---------|------|------|--------|------|
+| `condition` | 对象 | **是** | — | 启用条件（见下） |
+| `modifiers` | 对象数组 | **是** | — | 条件成立时应用的修饰符（格式同 `bullet_style.modifiers`） |
+
+### condition 子字段
+
+| JSON 键 | 类型 | 必需 | 默认值 | 说明 |
+|---------|------|------|--------|------|
+| `state` | 资源路径字符串 | **是** | — | 要检查的状态 ID（须带命名空间，如 `"modularshoot:killstreak"`） |
+| `domain` | 字符串 | 否 | 自动解析 | 显式指定取值来源：`"bullet"`（子弹状态）或 `"gun"`（枪械状态）。省略时先查子弹状态、再查枪械状态。`"player"` 不支持 |
+| `op` | 字符串 | **是** | — | 比较操作符：`">="` / `"<="` / `"=="` / `">"` / `"<"`。布尔/字符串状态仅支持 `"=="` |
+| `value` | 对应类型 | **是** | — | 阈值（数字/布尔/字符串）。UUID 状态不支持条件判定 |
 
 ### display 子字段
 
@@ -290,7 +352,21 @@
     "format": "{value} 层",
     "priority": 10,
     "hide_default": true
-  }
+  },
+  "visual_modifiers": [
+    {
+      "condition": {
+        "state": "modularshoot:killstreak",
+        "domain": "bullet",
+        "op": ">=",
+        "value": 3
+      },
+      "modifiers": [
+        { "type": "tint", "color": [1.0, 0.2, 0.2] },
+        { "type": "scale", "value": 1.2 }
+      ]
+    }
+  ]
 }
 ```
 
