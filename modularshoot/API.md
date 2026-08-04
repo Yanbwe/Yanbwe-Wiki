@@ -67,7 +67,9 @@ ModularShootAPI 所有公开静态方法速查。方法按功能分组。
 | `ON_BLOCK_HIT` | onBlockHit | `(BulletRecord, BulletSnapshot, BlockPos, Direction)` | 服务端 |
 | `ON_EXPIRE` | onExpire | `(BulletRecord, BulletSnapshot)` | 服务端 |
 | `ON_REMOVE` | onRemove | `(BulletRecord, BulletSnapshot, RemoveReason)` | 服务端 |
-| `ON_VISUAL_TICK` | onVisualTick | 客户端渲染对象 | 仅客户端 |
+| `ON_VISUAL_TICK` | onVisualTick | 客户端渲染对象（`BulletRenderObject`） | 仅客户端 |
+
+> **onVisualTick 契约（修饰符叠加系统）**：子弹的视觉组合（base / scale / tint / 附加层）在**创建瞬间冻结**并缓存于 `BulletRecord.composedStyle`（服务端）→ 经 `BulletS2CPacket` 传给客户端 `BulletRenderObject`。飞行中的 `onVisualTick` 钩子要改视觉，应**直接修改 `BulletRenderObject`**（`setScale` / `setComposedTint` / `setLayers` / 换纹理等），不要试图改 `BulletSnapshot` 期望触发重新组合——组合不会在飞行中重算。
 
 ## 注册表查询
 

@@ -67,7 +67,9 @@ Call these methods during mod initialization (constructor or `FMLCommonSetupEven
 | `ON_BLOCK_HIT` | onBlockHit | `(BulletRecord, BulletSnapshot, BlockPos, Direction)` | Server |
 | `ON_EXPIRE` | onExpire | `(BulletRecord, BulletSnapshot)` | Server |
 | `ON_REMOVE` | onRemove | `(BulletRecord, BulletSnapshot, RemoveReason)` | Server |
-| `ON_VISUAL_TICK` | onVisualTick | Client render object | Client only |
+| `ON_VISUAL_TICK` | onVisualTick | Client render object (`BulletRenderObject`) | Client only |
+
+> **onVisualTick contract (modifier-stacking system)**: a bullet's visual composition (base / scale / tint / attach layers) is **frozen at creation time** and cached on `BulletRecord.composedStyle` (server) → sent to the client's `BulletRenderObject` via `BulletS2CPacket`. In-flight `onVisualTick` hooks that want to change appearance should **mutate the `BulletRenderObject` directly** (`setScale` / `setComposedTint` / `setLayers` / swap texture, etc.) — do not mutate `BulletSnapshot` expecting a recomposition; composition is never recomputed in-flight.
 
 ## Registry Queries
 
