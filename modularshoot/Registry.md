@@ -31,14 +31,32 @@ ModularShoot 通过 6 张动态注册表（DataPackRegistry）存储所有定义
 | `traits` | 特性ID→布尔值映射 | 否 | 空映射 | 枪械固有特性覆盖。枪械声明的特性始终覆盖所有插件 |
 | `slots` | 种类ID→整数映射 | 否 | 空映射 | 插件插槽配置，键为插件种类 ID，值为插槽数量 |
 | `sounds` | 字符串→资源路径映射 | 否 | 空映射 | 音效绑定。预置槽位 `shoot`（射击声），可自定义槽位名称 |
-| `bulletStyle` | 可选子弹样式 | 否 | 无（纯碰撞体，无渲染对象） | 子弹视觉外观配置 |
+| `bulletStyle` | 可选子弹样式 | 否 | 无（回退框架默认外观 `ComposedBulletStyle.FALLBACK_BASE`，billboard + 默认纹理） | 子弹视觉外观配置 |
 
 ### 子弹样式（BulletStyle）
 
+> **v2 结构（修饰符叠加）**：旧版的 `model` 对象 + `render_mode` 已废弃，替换为 `base` + `modifiers`。多个来源（枪械 / 插件 / 特性 / 状态条件）的修饰符会**叠加组合**而非整体覆盖。
+
 | 字段 | 类型 | 必需 | 默认值 | 说明 |
 |------|------|------|--------|------|
-| `model` | 字符串→资源路径映射 | **是** | — | 渲染资源。惯例键：`"3d"`→原版静态 JSON 模型路径，`"billboard"`→纹理路径。建议两者都提供 |
-| `renderMode` | 枚举 | **是** | — | 渲染模式：`BILLBOARD`（始终面向玩家的 2D 精灵）或 `THREE_D`（原版静态 3D 模型） |
+| `base` | 可选对象 | 否 | 无 | 基础外观（见下）。缺失时回退框架默认外观（billboard + 默认纹理） |
+| `modifiers` | 可选列表 | 否 | 空列表 | 叠加修饰符（见下），按 `"type"` 分发；未知 type 容忍解码为 `UnsupportedModifier` 哨兵，不导致整个列表解析失败 |
+
+`base` 子字段：
+
+| 字段 | 类型 | 必需 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| `render_mode` | 枚举 | **是** | — | 渲染模式：`BILLBOARD`（始终面向玩家的 2D 精灵）或 `THREE_D`（原版静态 3D 模型） |
+| `texture` | 可选资源路径 | 否 | 无 | billboard 模式纹理路径（3d 模式不填） |
+| `model` | 可选资源路径 | 否 | 无 | 3d 模式模型路径（billboard 模式不填）。`texture` / `model` 二选一 |
+
+`modifiers` 修饰符类型表：
+
+| `type` | 字段 | 合并规则 |
+|--------|------|---------|
+| `scale` | `value`（浮点数，>0） | **连乘**：所有来源的 scale 值相乘为最终视觉缩放。NaN/≤0 跳过并告警 |
+| `tint` | `color`（数组 `[r,g,b]` 或 `[r,g,b,a]`，各通道 0~1） | **逐通道连乘**：所有来源的 tint 逐通道相乘。负/NaN 通道跳过并告警；>1 clamp 到 1 |
+| `attach_layer` | `render_mode`/`texture`/`model`/`follow_rotation`/`follow_scale`/`offset`/`scale`/`tint` | **并行绘制**：独立层叠加在 base 之上，不参与 scale/tint 连乘；自身 scale/tint 只作用于本层 |
 
 ### 射击纹理模式（ShootTextureMode）
 
@@ -60,7 +78,7 @@ ModularShoot 通过 6 张动态注册表（DataPackRegistry）存储所有定义
 | `modifiers` | 修饰符列表 | 否 | 空列表 | 属性修饰符数组，安装后叠加到枪械属性 |
 | `traits` | 特性ID→布尔值映射 | 否 | 空映射 | 安装后提供的特性覆盖 |
 | `exclusiveGroup` | 可选字符串 | 否 | 无 | 互斥组 ID。同一枪上不能安装两个互斥组 ID 相同的插件 |
-| `bulletStyle` | 可选子弹样式 | 否 | 无 | 子弹样式覆盖。安装后替换枪械定义的子弹样式。**整体覆盖**，非字段级合并 |
+| `bulletStyle` | 可选子弹样式 | 否 | 无 | 子弹样式叠加。安装后与枪械的样式**叠加组合**：base 按 priority 选举（同 priority 后装赢，无候选回退框架默认外观），modifiers 全部叠加（scale 连乘、tint 逐通道连乘、attach_layer 全部保留） |
 | `textureOverlay` | 可选纹理叠加 | 否 | 无 | 纹理叠加信息。安装后在枪械纹理上叠加图层 |
 | `name` | 可选字符串 | 否 | 无 | 插件显示名称，支持 `§` 颜色代码 |
 | `brief` | 可选字符串 | 否 | 无 | 一行简介，tooltip 默认层级显示 |
@@ -108,6 +126,7 @@ ModularShoot 通过 6 张动态注册表（DataPackRegistry）存储所有定义
 | `brief` | 可选字符串 | 否 | 无 | 一行简介，tooltip Alt 层级显示 |
 | `forceShow` | 布尔值 | 否 | `false` | 是否强制展示。`true` 时无论特性值为何都在 tooltip 显示 |
 | `priority` | 整数 | 否 | `0` | 显示优先级，越大越靠前 |
+| `visual_modifiers` | Modifier 列表 | 否 | 空列表 | 视觉修饰符列表（格式同 `bullet_style.modifiers`）。**特性激活时**这些修饰符叠加进子弹视觉组合；未激活不生效 |
 
 > 运行时行为（钩子回调）不存储在 Trait 定义中，需通过 `registerTraitHook` API 单独注册。
 
@@ -136,13 +155,14 @@ ModularShoot 通过 6 张动态注册表（DataPackRegistry）存储所有定义
 | `valueType` | 枚举 | **是** | — | 值类型。`INT` / `LONG` / `DOUBLE` / `FLOAT` / `BOOLEAN` / `STRING` / `UUID` |
 | `defaultValue` | 对象 | 否 | 对应类型的零值 | 初始值，类型须与 `valueType` 匹配。per-gun / per-player 首次访问时按此初始化 |
 | `display` | 状态显示 | **是** | — | 显示元数据对象 |
+| `visual_modifiers` | 条件视觉修饰符批次列表 | 否 | 空列表 | 每批 = `condition`（`state` / `domain` / `op` / `value`）+ `modifiers` 列表（格式同 `bullet_style.modifiers`）。**条件成立时**这些修饰符在子弹创建瞬间叠加进视觉组合 |
 
 ### 状态显示（StateDisplay）
 
 | 字段 | 类型 | 必需 | 默认值 | 说明 |
 |------|------|------|--------|------|
 | `name` | 字符串 | **是** | — | 状态在 tooltip 中的名称。支持 `§` 颜色代码和 `lang:` 翻译键前缀 |
-| `color` | 字符串 | **是** | — | 名称颜色（如 `#FFAA00`） |
+| `color` | 字符串 | 否（可选） | 无 | 名称颜色（如 `#FFAA00`）。省略时用默认 tooltip 颜色 |
 | `format` | 字符串 | 否 | `"{value}"` | 显示模板，`{value}` 占位。如 `"{value} 层"` → tooltip 显示 `击杀层数: 3 层` |
 | `priority` | 整数 | 否 | `0` | tooltip 内排序，越大越靠前 |
 | `hideDefault` | 布尔值 | 否 | `false` | 值为默认值时不显示该行 |

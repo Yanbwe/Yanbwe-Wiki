@@ -59,8 +59,10 @@ import org.yanbwe.modularshoot.ModularShootAPI;
 import org.yanbwe.modularshoot.registry.gun.GunDefinition;
 import org.yanbwe.modularshoot.registry.gun.BulletStyle;
 import org.yanbwe.modularshoot.registry.gun.BulletStyle.RenderMode;
+import org.yanbwe.modularshoot.registry.gun.ScaleModifier;
 import org.yanbwe.modularshoot.registry.gun.ShootTextureMode;
 import net.minecraft.resources.ResourceLocation;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -84,10 +86,12 @@ ModularShootAPI.registerGun(
         ),
         Map.of("shoot", ResourceLocation.parse("examplemod:gun.ar.shoot")),  // sounds
         Optional.of(new BulletStyle(                        // bulletStyle
-            Map.of(
-                "billboard", ResourceLocation.parse("examplemod:textures/bullet/rifle_bullet.png")
-            ),
-            RenderMode.BILLBOARD
+            Optional.of(new BulletStyle.Base(
+                RenderMode.BILLBOARD,
+                Optional.of(ResourceLocation.parse("examplemod:textures/bullet/rifle_bullet.png")),
+                Optional.empty()
+            )),
+            List.of(new ScaleModifier(1.0f))
         ))
     )
 );
@@ -163,13 +167,14 @@ import org.yanbwe.modularshoot.plugin.UninstallResult;
 import java.util.List;
 
 // Uninstall by UUID
+// Preferred 5-arg overloads: RegistryAccess is derived internally from player.level().registryAccess().
+// The old 6-arg overloads with an explicit RegistryAccess parameter are @Deprecated.
 UninstallResult result = ModularShootAPI.uninstallPlugin(
     gunStack,
     instanceUuid,
     player,
     false,    // force: false = don't force-uninstall locked plugins
-    true,     // returnItems: true = return plugin item
-    level.registryAccess()
+    true      // returnItems: true = return plugin item
 );
 
 if (result.success()) {
@@ -182,8 +187,7 @@ List<UninstallResult> results = ModularShootAPI.uninstallPluginsByType(
     player,
     ResourceLocation.parse("examplemod:barrel"),
     true,     // force: true = uninstall even locked plugins
-    true,
-    level.registryAccess()
+    true
 );
 
 // Uninstall all plugins
@@ -191,8 +195,7 @@ List<UninstallResult> allResults = ModularShootAPI.uninstallAllPlugins(
     gunStack,
     player,
     false,    // force: false = skip locked plugins
-    true,
-    level.registryAccess()
+    true
 );
 
 // Uninstall a random plugin
@@ -200,8 +203,7 @@ UninstallResult randomResult = ModularShootAPI.uninstallRandomPlugin(
     gunStack,
     player,
     false,
-    true,
-    level.registryAccess()
+    true
 );
 ```
 
@@ -209,13 +211,15 @@ UninstallResult randomResult = ModularShootAPI.uninstallRandomPlugin(
 
 ```java
 // Lock plugin (can't be uninstalled unless force=true)
-ModularShootAPI.setPluginLocked(gunStack, instanceUuid, true);
+// The 4-arg overload refreshes the ATTRIBUTE_MODIFIERS component;
+// the old 3-arg overload is @Deprecated and does not refresh it.
+ModularShootAPI.setPluginLocked(gunStack, instanceUuid, true, level.registryAccess());
 
 // Query lock status
 boolean locked = ModularShootAPI.isPluginLocked(gunStack, instanceUuid);
 
 // Unlock
-ModularShootAPI.setPluginLocked(gunStack, instanceUuid, false);
+ModularShootAPI.setPluginLocked(gunStack, instanceUuid, false, level.registryAccess());
 ```
 
 ### Access State
@@ -328,12 +332,14 @@ import org.yanbwe.modularshoot.bullet.BulletRecord;
 import net.minecraft.world.phys.Vec3;
 
 // Build bullet snapshot
+// setStat takes a ResourceLocation; ModularShootAttributes constants are
+// DeferredHolder<Attribute, Attribute>, so pass .getKey()
 BulletSnapshot snapshot = new BulletSnapshot();
-snapshot.setStat(ModularShootAttributes.HIT_DAMAGE, 10.0);
-snapshot.setStat(ModularShootAttributes.BULLET_SPEED, 30.0);
-snapshot.setStat(ModularShootAttributes.RANGE, 80.0);
-snapshot.setStat(ModularShootAttributes.BULLET_SIZE, 0.3);
-snapshot.setStat(ModularShootAttributes.BLOCK_PENETRATION, 3);
+snapshot.setStat(ModularShootAttributes.HIT_DAMAGE.getKey(), 10.0);
+snapshot.setStat(ModularShootAttributes.BULLET_SPEED.getKey(), 30.0);
+snapshot.setStat(ModularShootAttributes.RANGE.getKey(), 80.0);
+snapshot.setStat(ModularShootAttributes.BULLET_SIZE.getKey(), 0.3);
+snapshot.setStat(ModularShootAttributes.BLOCK_PENETRATION.getKey(), 3);
 snapshot.setDamageType(level.registryAccess().holderOrThrow(ModularShootDamageTypes.BULLET));
 
 // Fire from turret position

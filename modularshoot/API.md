@@ -42,7 +42,8 @@ ModularShootAPI 所有公开静态方法速查。方法按功能分组。
 
 | 方法签名 | 参数说明 | 返回值 | 说明 |
 |---------|---------|--------|------|
-| `setPluginLocked(ItemStack gun, UUID instanceUuid, boolean locked)` | `gun` — 枪械物品；`instanceUuid` — 插件实例 UUID；`locked` — `true` 锁定 / `false` 解锁 | `void` | 锁定或解锁指定已安装插件。锁定后普通拆卸（`force=false`）跳过该插件 |
+| `setPluginLocked(ItemStack gun, UUID instanceUuid, boolean locked, RegistryAccess registryAccess)` | `gun` — 枪械物品；`instanceUuid` — 插件实例 UUID；`locked` — `true` 锁定 / `false` 解锁；`registryAccess` — 运行时注册表视图 | `void` | **首选签名**。锁定或解锁指定已安装插件，成功后自动刷新 `ATTRIBUTE_MODIFIERS` 组件。锁定后普通拆卸（`force=false`）跳过该插件 |
+| `setPluginLocked(ItemStack gun, UUID instanceUuid, boolean locked)` | `gun` — 枪械物品；`instanceUuid` — 插件实例 UUID；`locked` — `true` 锁定 / `false` 解锁 | `void` | **已废弃**（`@Deprecated`）。三参重载不刷新 `ATTRIBUTE_MODIFIERS` 组件，请改用四参版本 |
 | `isPluginLocked(ItemStack gun, UUID instanceUuid)` | `gun` — 枪械物品；`instanceUuid` — 插件实例 UUID | `boolean` | 查询指定插件是否已锁定。插件不存在或未锁定时返回 `false` |
 
 ## 注册 API

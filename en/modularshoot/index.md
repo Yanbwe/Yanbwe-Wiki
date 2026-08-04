@@ -2,14 +2,14 @@
 
 ModularShoot is an attribute-driven, modular assembly gun system **framework mod** for NeoForge 1.21.1.
 
-> **Framework only**: This mod provides registration APIs, an attribute calculation pipeline, and a shooting engine. It ships with **zero built-in guns, zero built-in plugins, and zero built-in traits**. All content is added by other mods via the API or datapacks.
+> **Framework + demo content**: This mod is a pure framework — it provides registration APIs, an attribute calculation pipeline, and a shooting engine; production content is added by other mods via the API or datapacks. For demonstration and debugging, the bundled datapack ships test content: **4 test guns, 9 demo plugins, 2 plugin types (`barrel` / `accessory`), 1 demo trait (`visual_bloodlust`) and 1 demo state (`visual_killstreak`)** — all overridable by external datapacks.
 
 ## Key Features
 
 | Feature | Description |
 |---------|-------------|
 | **Single ID + DataComponent** | All guns share a single item ID (`modularshoot:gun`), differentiated via DataComponent. Same for plugins (`modularshoot:plugin`) |
-| **Pure Framework** | 0 preset guns, 0 preset plugins, 0 preset traits — only API and engine |
+| **Pure Framework** | 4 demo guns, 9 demo plugins, 2 plugin types, 1 demo trait, 1 demo state — all overridable by datapacks |
 | **Attribute-Driven** | Gun behavior is entirely determined by attributes + traits. No hardcoded logic. `ADD_VALUE → ADD_MULTIPLIED_BASE → ADD_MULTIPLIED_TOTAL` three-stage stacking |
 | **Dual Registration** | Supports Java API registration and datapack JSON registration, sharing the same registries. `/reload` hot-reloads JSON; API entries are unaffected |
 | **Non-Entity Bullets** | Bullets are lightweight data records managed by BulletManager, supporting thousands of simultaneous projectiles (chunk-bucketed indexing + capsule collision) |

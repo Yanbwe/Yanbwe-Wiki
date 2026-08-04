@@ -59,8 +59,10 @@ import org.yanbwe.modularshoot.ModularShootAPI;
 import org.yanbwe.modularshoot.registry.gun.GunDefinition;
 import org.yanbwe.modularshoot.registry.gun.BulletStyle;
 import org.yanbwe.modularshoot.registry.gun.BulletStyle.RenderMode;
+import org.yanbwe.modularshoot.registry.gun.ScaleModifier;
 import org.yanbwe.modularshoot.registry.gun.ShootTextureMode;
 import net.minecraft.resources.ResourceLocation;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -83,11 +85,13 @@ ModularShootAPI.registerGun(
             ResourceLocation.parse("examplemod:magazine"), 1
         ),
         Map.of("shoot", ResourceLocation.parse("examplemod:gun.ar.shoot")),  // sounds
-        Optional.of(new BulletStyle(                        // bulletStyle
-            Map.of(
-                "billboard", ResourceLocation.parse("examplemod:textures/bullet/rifle_bullet.png")
-            ),
-            RenderMode.BILLBOARD
+        Optional.of(new BulletStyle(                        // bulletStyle（v2：base + modifiers 叠加结构）
+            Optional.of(new BulletStyle.Base(               // base：渲染模式 + 纹理/模型二选一
+                RenderMode.BILLBOARD,
+                Optional.of(ResourceLocation.parse("modularshoot:textures/bullet/test_bullet_plain.png")),
+                Optional.empty()                             // model：3d 模式才填
+            )),
+            List.of(new ScaleModifier(1.0f))                // modifiers：scale/tint/attach_layer 叠加修饰符
         ))
     )
 );
@@ -162,14 +166,14 @@ import org.yanbwe.modularshoot.ModularShootAPI;
 import org.yanbwe.modularshoot.plugin.UninstallResult;
 import java.util.List;
 
-// 按 UUID 拆卸指定插件
+// 按 UUID 拆卸指定插件（五参首选重载；带 RegistryAccess 的六参旧重载已 @Deprecated 废弃，
+// RegistryAccess 由框架内部从 player.level().registryAccess() 获取）
 UninstallResult result = ModularShootAPI.uninstallPlugin(
     gunStack,
     instanceUuid,
     player,
     false,    // force: false = 不强制拆锁定插件
-    true,     // returnItems: true = 返还插件物品
-    level.registryAccess()
+    true      // returnItems: true = 返还插件物品
 );
 
 if (result.success()) {
@@ -182,8 +186,7 @@ List<UninstallResult> results = ModularShootAPI.uninstallPluginsByType(
     player,
     ResourceLocation.parse("examplemod:barrel"),
     true,     // force: true = 强制拆卸包括锁定插件
-    true,
-    level.registryAccess()
+    true
 );
 
 // 拆卸全部插件
@@ -191,8 +194,7 @@ List<UninstallResult> allResults = ModularShootAPI.uninstallAllPlugins(
     gunStack,
     player,
     false,    // force: false = 跳过锁定插件
-    true,
-    level.registryAccess()
+    true
 );
 
 // 随机拆卸一个
@@ -200,8 +202,7 @@ UninstallResult randomResult = ModularShootAPI.uninstallRandomPlugin(
     gunStack,
     player,
     false,
-    true,
-    level.registryAccess()
+    true
 );
 ```
 
@@ -209,13 +210,14 @@ UninstallResult randomResult = ModularShootAPI.uninstallRandomPlugin(
 
 ```java
 // 锁定插件（不可拆卸，除非 force=true）
-ModularShootAPI.setPluginLocked(gunStack, instanceUuid, true);
+// 四参版本会刷新 ATTRIBUTE_MODIFIERS 组件；三参旧重载已 @Deprecated 废弃且不刷新修饰符
+ModularShootAPI.setPluginLocked(gunStack, instanceUuid, true, player.level().registryAccess());
 
 // 查询锁定状态
 boolean locked = ModularShootAPI.isPluginLocked(gunStack, instanceUuid);
 
 // 解锁
-ModularShootAPI.setPluginLocked(gunStack, instanceUuid, false);
+ModularShootAPI.setPluginLocked(gunStack, instanceUuid, false, player.level().registryAccess());
 ```
 
 ### 访问状态
@@ -263,7 +265,7 @@ public class EventListeners {
     // 射击前：取消射击（如安全区禁枪）
     @SubscribeEvent
     public static void onPreShoot(PreShootEvent event) {
-        if (isInSafeZone(event.getEntity())) {
+        if (isInSafeZone(event.getPlayer())) {
             event.setCanceled(true);
         }
     }
@@ -328,12 +330,13 @@ import org.yanbwe.modularshoot.bullet.BulletRecord;
 import net.minecraft.world.phys.Vec3;
 
 // 构造子弹快照
+// setStat 接收 ResourceLocation；ModularShootAttributes 常量是 DeferredHolder<Attribute, Attribute>，需 .getKey()
 BulletSnapshot snapshot = new BulletSnapshot();
-snapshot.setStat(ModularShootAttributes.HIT_DAMAGE, 10.0);
-snapshot.setStat(ModularShootAttributes.BULLET_SPEED, 30.0);
-snapshot.setStat(ModularShootAttributes.RANGE, 80.0);
-snapshot.setStat(ModularShootAttributes.BULLET_SIZE, 0.3);
-snapshot.setStat(ModularShootAttributes.BLOCK_PENETRATION, 3);
+snapshot.setStat(ModularShootAttributes.HIT_DAMAGE.getKey(), 10.0);
+snapshot.setStat(ModularShootAttributes.BULLET_SPEED.getKey(), 30.0);
+snapshot.setStat(ModularShootAttributes.RANGE.getKey(), 80.0);
+snapshot.setStat(ModularShootAttributes.BULLET_SIZE.getKey(), 0.3);
+snapshot.setStat(ModularShootAttributes.BLOCK_PENETRATION.getKey(), 3);
 snapshot.setDamageType(level.registryAccess().holderOrThrow(ModularShootDamageTypes.BULLET));
 
 // 从炮塔位置发射

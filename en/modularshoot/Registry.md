@@ -31,14 +31,16 @@ Registry: `modularshoot:guns`
 | `traits` | Trait ID → boolean map | No | Empty map | Gun inherent trait overrides. Gun-declared traits always override all plugins |
 | `slots` | Plugin type ID → integer map | No | Empty map | Plugin slot configuration. Key is plugin type ID, value is slot count |
 | `sounds` | String → resource path map | No | Empty map | Sound bindings. Predefined slot: `shoot` (firing sound). Custom slot names supported |
-| `bulletStyle` | Optional bullet style | No | None (pure collision body, no render object) | Bullet visual appearance config |
+| `bulletStyle` | Optional bullet style | No | None (falls back to framework default appearance `ComposedBulletStyle.FALLBACK_BASE`, billboard + default texture) | Bullet visual appearance config |
 
 ### BulletStyle
 
+> **v2 structure (modifier stacking)**: the legacy `model` map + `renderMode` structure is replaced by `base` + `modifiers`. Modifiers from multiple sources (gun / plugins / traits / state conditions) **stack** instead of being fully replaced.
+
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
-| `model` | String → resource path map | **Yes** | — | Render resources. Conventional keys: `"3d"` → vanilla static JSON model path, `"billboard"` → texture path. Recommend providing both |
-| `renderMode` | Enum | **Yes** | — | Render mode: `BILLBOARD` (2D sprite always facing viewer) or `THREE_D` (vanilla static 3D model) |
+| `base` | Optional object | No | None (framework fallback base used at compose time) | Base appearance. `renderMode` is required (`BILLBOARD` / `THREE_D`); `texture` (billboard texture) and `model` (3d model) are optional, exactly one of them used per mode |
+| `modifiers` | Optional list of modifiers | No | Empty list | Stacking visual modifiers, dispatched by `"type"`: `scale` / `tint` / `attach_layer`. An unrecognised `"type"` decodes to an `UnsupportedModifier` sentinel (skipped with a WARN) rather than failing the whole list |
 
 ### ShootTextureMode
 
@@ -60,7 +62,7 @@ Registry: `modularshoot:plugins`
 | `modifiers` | List of modifiers | No | Empty list | Attribute modifier array. Applied to gun on installation |
 | `traits` | Trait ID → boolean map | No | Empty map | Trait overrides provided after installation |
 | `exclusiveGroup` | Optional text string | No | None | Mutual exclusion group ID. Two plugins with the same group ID cannot coexist on the same gun |
-| `bulletStyle` | Optional bullet style | No | None | Bullet style override. Replaces gun-defined style on install. **Full replacement**, not field-level merge |
+| `bulletStyle` | Optional bullet style | No | None | Bullet style contribution. **Stacks**: base candidates are elected by priority (same priority: later-installed wins; when no candidate, the framework fallback appearance is used); all modifiers stack (scale multiplies, tint multiplies channel-wise, attach layers are all kept) |
 | `textureOverlay` | Optional texture overlay | No | None | Texture overlay info. Layers stacked over the gun's base texture after install |
 | `name` | Optional text string | No | None | Plugin display name. Supports `§` color codes |
 | `brief` | Optional text string | No | None | One-line summary. Shown in default tooltip level |
@@ -108,6 +110,7 @@ Registry: `modularshoot:traits`
 | `brief` | Optional text string | No | None | One-line summary. Shown in Alt tooltip level |
 | `forceShow` | Boolean | No | `false` | Force display. When `true`, shown in tooltip regardless of value |
 | `priority` | Integer | No | `0` | Display priority, higher sorts first |
+| `visualModifiers` | List of modifiers | No | Empty list | Stacking visual modifiers. Stacked into the composed bullet style when the trait is active |
 
 > Runtime behavior (hook callbacks) is not stored in the Trait definition. Register it separately via `registerTraitHook` API.
 
@@ -136,13 +139,14 @@ Registry: `modularshoot:states`
 | `valueType` | Enum | **Yes** | — | Value type. `INT` / `LONG` / `DOUBLE` / `FLOAT` / `BOOLEAN` / `STRING` / `UUID` |
 | `defaultValue` | Object | No | Zero value for the type | Initial value. Type must match `valueType`. Used when per-gun/per-player first accessed |
 | `display` | State display | **Yes** | — | Display metadata object |
+| `visualModifiers` | List of state visual modifiers | No | Empty list | Conditional visual modifier batches: each entry pairs a `condition` (`state` / `domain` / `op` / `value`) with a `modifiers` list, stacked into the composed bullet style when the condition holds at bullet creation time |
 
 ### State Display (StateDisplay)
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
 | `name` | Text string | **Yes** | — | State name in tooltip. Supports `§` color codes and `lang:` translation key prefix |
-| `color` | Text string | **Yes** | — | Name color (e.g. `#FFAA00`) |
+| `color` | Optional text string | No | None (default tooltip color) | Name color (e.g. `#FFAA00`). When omitted, the default tooltip color is used |
 | `format` | Text string | No | `"{value}"` | Display template with `{value}` placeholder. E.g. `"{value} kills"` → tooltip shows `Kill Count: 3 kills` |
 | `priority` | Integer | No | `0` | Tooltip sort order, higher sorts first |
 | `hideDefault` | Boolean | No | `false` | When `true`, the line is hidden if the value equals the default |

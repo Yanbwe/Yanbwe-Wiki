@@ -336,6 +336,16 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 | `op` | Text string | **Yes** | — | Comparison operator: `">="` / `"<="` / `"=="` / `">"` / `"<"`. Boolean/string states support `"=="` only |
 | `value` | Matching type | **Yes** | — | Threshold (number/boolean/string). UUID states do not support conditions |
 
+### display Sub-fields
+
+| JSON Key | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `name` | Text string | **Yes** | — | State name in the tooltip. Supports `§` and `lang:` |
+| `color` | Text string | No | `""` | Name color (e.g. `"#FFAA00"`). Optional — the default tooltip color is used when omitted |
+| `format` | Text string | No | `"{value}"` | Display template with the `{value}` placeholder |
+| `priority` | Integer | No | `0` | Tooltip sort order, higher sorts first |
+| `hide_default` | Boolean | No | `false` | Hide the line when the value equals the default |
+
 **Path**: `data/examplemod/modularshoot/states/kill_count.json`
 
 ```json

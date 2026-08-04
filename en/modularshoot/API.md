@@ -42,8 +42,10 @@ Parameter details:
 
 | Method Signature | Parameters | Returns | Description |
 |-----------------|------------|---------|-------------|
-| `setPluginLocked(ItemStack gun, UUID instanceUuid, boolean locked)` | `gun` — gun item; `instanceUuid` — plugin instance UUID; `locked` — `true` to lock / `false` to unlock | `void` | Locks or unlocks a specific installed plugin. Locked plugins are skipped by normal uninstall (`force=false`) |
+| `setPluginLocked(ItemStack gun, UUID instanceUuid, boolean locked, RegistryAccess registryAccess)` | `gun` — gun item; `instanceUuid` — plugin instance UUID; `locked` — `true` to lock / `false` to unlock; `registryAccess` — runtime registry view | `void` | **Preferred**. Locks or unlocks a specific installed plugin and refreshes the `ATTRIBUTE_MODIFIERS` component. Locked plugins are skipped by normal uninstall (`force=false`) |
 | `isPluginLocked(ItemStack gun, UUID instanceUuid)` | `gun` — gun item; `instanceUuid` — plugin instance UUID | `boolean` | Queries whether the specified plugin is locked. Returns `false` when plugin doesn't exist or is unlocked |
+
+> **Backward compatibility**: The old 3-parameter overload `setPluginLocked(ItemStack gun, UUID instanceUuid, boolean locked)` is `@Deprecated` and does **not** refresh the `ATTRIBUTE_MODIFIERS` component. Prefer the 4-parameter overload above whenever a `RegistryAccess` is available.
 
 ## Registration API
 
