@@ -26,6 +26,7 @@ Registry: `modularshoot:guns`
 | `texture` | Resource path | **Yes** | — | Gun base texture path, rendered using vanilla item pipeline with 3D-ification |
 | `shootTexture` | Optional resource path | No | None (always uses base texture) | Texture swapped to while firing |
 | `shootTextureMode` | Enum | No | `PER_SHOT` | Texture swap timing. Only effective when `shootTexture` is specified |
+| `textureScale` | Enum | No | `AUTO` | Whether the render geometry scales with the texture resolution. `AUTO` (16 px = 1 grid cell; a 32×32 texture renders 2× larger) / `FIXED` (fixed 16×16 unit grid). Base and shoot textures scale independently by their own size |
 | `stats` | Attribute ID → decimal map | No | Empty map | Attribute base values. Keys **must** include full namespace (e.g. `modularshoot:hit_damage`). Unspecified attributes use the metadata table default |
 | `traits` | Trait ID → boolean map | No | Empty map | Gun inherent trait overrides. Gun-declared traits always override all plugins |
 | `slots` | Plugin type ID → integer map | No | Empty map | Plugin slot configuration. Key is plugin type ID, value is slot count |
@@ -55,6 +56,7 @@ Registry: `modularshoot:plugins`
 | `tags` | List of resource paths | No | Empty list | Matching tags. Install requires intersection with a type's tags. Empty list prevents installation (logs WARN) |
 | `priority` | Integer | No | `0` | Trait conflict priority, higher wins. Does **not** inherit type priority |
 | `itemIcon` | Resource path | **Yes** | — | Plugin icon texture shown in inventory/hotbar |
+| `textureScale` | Enum | No | `AUTO` | Whether the icon geometry scales with the texture resolution; same semantics as the gun's `textureScale` (`AUTO` / `FIXED`) |
 | `modifiers` | List of modifiers | No | Empty list | Attribute modifier array. Applied to gun on installation |
 | `traits` | Trait ID → boolean map | No | Empty map | Trait overrides provided after installation |
 | `exclusiveGroup` | Optional text string | No | None | Mutual exclusion group ID. Two plugins with the same group ID cannot coexist on the same gun |
@@ -79,6 +81,8 @@ Registry: `modularshoot:plugins`
 |-------|------|----------|---------|-------------|
 | `texture` | Resource path | **Yes** | — | Overlay texture path layered onto the gun texture |
 | `layer` | Integer | **Yes** | — | Z-order, higher renders on top. Same layer: later-installed covers earlier |
+| `alignment` | Enum | No | `TOP_LEFT` | Nine-grid alignment: `TOP_LEFT` / `TOP_CENTER` / `TOP_RIGHT` / `CENTER_LEFT` / `CENTER` / `CENTER_RIGHT` / `BOTTOM_LEFT` / `BOTTOM_CENTER` / `BOTTOM_RIGHT`. Only effective when `fit` is `NONE` |
+| `fit` | Enum | No | `NONE` | Fit mode: `NONE` (no resampling, blended at the aligned position, parts beyond the canvas are clipped with a WARN) / `FILL` (bilinearly stretched to cover the whole canvas; distorted when aspect ratios differ) / `CONTAIN` (uniformly scaled to be fully visible, centred with transparent margins) |
 
 ## Plugin Type Definition (PluginTypeDefinition)
 

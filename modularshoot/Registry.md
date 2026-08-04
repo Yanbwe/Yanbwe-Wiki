@@ -26,6 +26,7 @@ ModularShoot 通过 6 张动态注册表（DataPackRegistry）存储所有定义
 | `texture` | 资源路径 | **是** | — | 枪械基础纹理路径，原版物品渲染管线立体化处理 |
 | `shootTexture` | 可选资源路径 | 否 | 无（始终使用基础纹理） | 射击时切换的纹理路径 |
 | `shootTextureMode` | 枚举 | 否 | `PER_SHOT` | 射击纹理切换模式。仅在指定了 `shootTexture` 时生效 |
+| `textureScale` | 枚举 | 否 | `AUTO` | 渲染几何是否随纹理分辨率缩放。`AUTO`（16 像素 = 1 格，32×32 纹理渲染为 2 倍大）/ `FIXED`（固定 16×16 单位网格）。基础纹理与射击纹理分别按各自尺寸缩放 |
 | `stats` | 属性ID→浮点数映射 | 否 | 空映射 | 属性基础值。键必须带完整命名空间（如 `modularshoot:hit_damage`）。未声明的属性使用元数据表的默认值 |
 | `traits` | 特性ID→布尔值映射 | 否 | 空映射 | 枪械固有特性覆盖。枪械声明的特性始终覆盖所有插件 |
 | `slots` | 种类ID→整数映射 | 否 | 空映射 | 插件插槽配置，键为插件种类 ID，值为插槽数量 |
@@ -55,6 +56,7 @@ ModularShoot 通过 6 张动态注册表（DataPackRegistry）存储所有定义
 | `tags` | 资源路径列表 | 否 | 空列表 | 匹配用标签。与种类 tags 存在交集即可安装。空列表时无法安装（输出 WARN） |
 | `priority` | 整数 | 否 | `0` | 特性冲突优先级，越大越优先。不继承种类优先级 |
 | `itemIcon` | 资源路径 | **是** | — | 插件在背包/快捷栏中的图标纹理路径 |
+| `textureScale` | 枚举 | 否 | `AUTO` | 图标渲染几何是否随纹理分辨率缩放，语义同枪械的 `textureScale`（`AUTO` / `FIXED`） |
 | `modifiers` | 修饰符列表 | 否 | 空列表 | 属性修饰符数组，安装后叠加到枪械属性 |
 | `traits` | 特性ID→布尔值映射 | 否 | 空映射 | 安装后提供的特性覆盖 |
 | `exclusiveGroup` | 可选字符串 | 否 | 无 | 互斥组 ID。同一枪上不能安装两个互斥组 ID 相同的插件 |
@@ -79,6 +81,8 @@ ModularShoot 通过 6 张动态注册表（DataPackRegistry）存储所有定义
 |------|------|------|--------|------|
 | `texture` | 资源路径 | **是** | — | 叠加到枪械纹理上的图层纹理路径 |
 | `layer` | 整数 | **是** | — | 层级，越大越靠上。同层级按安装顺序（后装覆盖先装） |
+| `alignment` | 枚举 | 否 | `TOP_LEFT` | 九宫格对齐：`TOP_LEFT` / `TOP_CENTER` / `TOP_RIGHT` / `CENTER_LEFT` / `CENTER` / `CENTER_RIGHT` / `BOTTOM_LEFT` / `BOTTOM_CENTER` / `BOTTOM_RIGHT`。仅 `fit` 为 `NONE` 时生效 |
+| `fit` | 枚举 | 否 | `NONE` | 适配模式：`NONE`（不缩放，按对齐混合，超出画布的部分被裁剪并输出 WARN）/ `FILL`（双线性插值拉伸铺满画布，宽高比不同会变形）/ `CONTAIN`（等比缩放至完整可见，居中留透明边） |
 
 ## 插件种类定义（PluginTypeDefinition）
 

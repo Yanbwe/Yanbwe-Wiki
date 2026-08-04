@@ -20,6 +20,7 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 | `texture` | Resource path string | **Yes** | — | Base texture path (e.g. `"modularshoot:textures/gun/rifle.png"`) |
 | `shoot_texture` | Resource path string | No | None | Shooting texture path. Uses base texture throughout if omitted |
 | `shoot_texture_mode` | Text string | No | `"per_shot"` | Texture swap mode. `"per_shot"` (swap per shot) / `"while_firing"` (hold while firing). Only effective when `shoot_texture` is specified |
+| `texture_scale` | Text string | No | `"auto"` | Whether the render geometry scales with the texture resolution. `"auto"` (16 px = 1 grid cell; a 32×32 texture renders 2× larger; width/height scale independently without distortion; extrusion thickness stays 1/16 cell) / `"fixed"` (fixed 16×16 unit grid; large textures only look sharper) |
 | `stats` | Attribute ID → decimal object | No | `{}` | Attribute base values. Keys **must** include full namespace (e.g. `"modularshoot:hit_damage": 50.0`). Missing attributes use metadata table defaults |
 | `traits` | Trait ID → boolean object | No | `{}` | Gun inherent trait overrides. Empty `{}` if no traits |
 | `slots` | Plugin type ID → integer object | No | `{}` | Plugin slot config. Key is plugin type ID, value is slot count |
@@ -76,6 +77,7 @@ Register content via datapack JSON. Equivalent to and sharing information with J
   "texture": "examplemod:textures/gun/assault_rifle.png",
   "shoot_texture": "examplemod:textures/gun/assault_rifle_shoot.png",
   "shoot_texture_mode": "while_firing",
+  "texture_scale": "auto",
   "stats": {
     "modularshoot:hit_damage": 8.0,
     "modularshoot:fire_rate": 10.0,
@@ -124,6 +126,7 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 | `tags` | String array | No | `[]` | Matching tag list (e.g. `["c:barrel", "examplemod:barrel"]`). Empty array matches no types |
 | `priority` | Integer | No | `0` | Trait conflict priority, higher wins |
 | `item_icon` | Resource path string | **Yes** | — | Item icon texture path |
+| `texture_scale` | Text string | No | `"auto"` | Whether the icon geometry scales with the texture resolution; same semantics as the gun's `texture_scale` (`"auto"` / `"fixed"`) |
 | `modifiers` | Object array | No | `[]` | Attribute modifier list (see sub-table below) |
 | `traits` | Trait ID → boolean object | No | `{}` | Trait overrides provided on install |
 | `exclusive_group` | Text string | No | None | Mutual exclusion group ID. Same-group on same gun = can't coexist |
@@ -147,6 +150,8 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 |----------|------|----------|---------|-------------|
 | `texture` | Resource path string | **Yes** | — | Overlay layer texture path |
 | `layer` | Integer | **Yes** | — | Z-order, higher renders on top. Same layer: later-installed covers earlier |
+| `alignment` | Text string | No | `"top_left"` | Nine-grid alignment: `"top_left"` / `"top_center"` / `"top_right"` / `"center_left"` / `"center"` / `"center_right"` / `"bottom_left"` / `"bottom_center"` / `"bottom_right"`. Only effective when `fit` is `"none"` |
+| `fit` | Text string | No | `"none"` | Fit mode: `"none"` (no resampling, blended at the aligned position; parts beyond the canvas are clipped with a WARN) / `"fill"` (stretched to cover the whole canvas; distorted when aspect ratios differ) / `"contain"` (uniformly scaled to be fully visible, centred with transparent margins) |
 
 **Path**: `data/examplemod/modularshoot/plugins/rapid_barrel.json`
 
@@ -169,7 +174,9 @@ Register content via datapack JSON. Equivalent to and sharing information with J
   },
   "texture_overlay": {
     "texture": "examplemod:textures/plugins/rapid_barrel_overlay.png",
-    "layer": 10
+    "layer": 10,
+    "alignment": "center",
+    "fit": "fill"
   },
   "brief": "Greatly increases fire rate, slightly reduces damage and accuracy",
   "description": "Doubles fire rate on install, but reduces single-shot damage by 20% and increases spread by 30%.",

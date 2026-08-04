@@ -20,6 +20,7 @@
 | `texture` | 资源路径字符串 | **是** | — | 基础纹理路径（如 `"modularshoot:textures/gun/rifle.png"`） |
 | `shoot_texture` | 资源路径字符串 | 否 | 无 | 射击纹理路径。不指定时射击期间始终使用基础纹理 |
 | `shoot_texture_mode` | 字符串 | 否 | `"per_shot"` | 射击纹理切换模式。`"per_shot"`（每次射击切纹理）/ `"while_firing"`（按住射击期间持续显示）。仅在指定了 `shoot_texture` 时生效 |
+| `texture_scale` | 字符串 | 否 | `"auto"` | 渲染几何是否随纹理分辨率缩放。`"auto"`（16 像素 = 1 格，32×32 纹理渲染为 2 倍大，宽高分别缩放不变形，厚度固定 1/16 格）/ `"fixed"`（固定 16×16 单位网格，大纹理仅表现为更精细） |
 | `stats` | 属性ID→浮点数对象 | 否 | `{}` | 属性基础值。键**必须带完整命名空间**（如 `"modularshoot:hit_damage": 50.0`）。不出现的属性使用元数据表默认值 |
 | `traits` | 特性ID→布尔值对象 | 否 | `{}` | 枪械固有特性覆盖。无特性时留空对象 `{}` |
 | `slots` | 种类ID→整数对象 | 否 | `{}` | 插件插槽配置，键为插件种类 ID，值为插槽数量 |
@@ -76,6 +77,7 @@
   "texture": "examplemod:textures/gun/assault_rifle.png",
   "shoot_texture": "examplemod:textures/gun/assault_rifle_shoot.png",
   "shoot_texture_mode": "while_firing",
+  "texture_scale": "auto",
   "stats": {
     "modularshoot:hit_damage": 8.0,
     "modularshoot:fire_rate": 10.0,
@@ -124,6 +126,7 @@
 | `tags` | 字符串数组 | 否 | `[]` | 匹配用标签列表（如 `["c:barrel", "examplemod:barrel"]`）。空数组时无法匹配任何种类 |
 | `priority` | 整数 | 否 | `0` | 特性冲突优先级，越大越优先 |
 | `item_icon` | 资源路径字符串 | **是** | — | 物品图标纹理路径 |
+| `texture_scale` | 字符串 | 否 | `"auto"` | 图标渲染几何是否随纹理分辨率缩放，语义同枪械的 `texture_scale`（`"auto"` / `"fixed"`） |
 | `modifiers` | 对象数组 | 否 | `[]` | 属性修饰符列表（见下表） |
 | `traits` | 特性ID→布尔值对象 | 否 | `{}` | 安装后提供的特性覆盖 |
 | `exclusive_group` | 字符串 | 否 | 无 | 互斥组 ID。同一枪上同组插件不可共存 |
@@ -147,6 +150,8 @@
 |---------|------|------|--------|------|
 | `texture` | 资源路径字符串 | **是** | — | 叠加图层纹理路径 |
 | `layer` | 整数 | **是** | — | 层级，越大越靠上。同层级按安装顺序（后装覆盖先装） |
+| `alignment` | 字符串 | 否 | `"top_left"` | 九宫格对齐：`"top_left"` / `"top_center"` / `"top_right"` / `"center_left"` / `"center"` / `"center_right"` / `"bottom_left"` / `"bottom_center"` / `"bottom_right"`。仅 `fit` 为 `"none"` 时生效 |
+| `fit` | 字符串 | 否 | `"none"` | 适配模式：`"none"`（不缩放，按对齐混合，超出画布部分被裁剪并输出 WARN）/ `"fill"`（拉伸铺满画布，宽高比不同会变形）/ `"contain"`（等比缩放至完整可见，居中留透明边） |
 
 **路径**：`data/examplemod/modularshoot/plugins/rapid_barrel.json`
 
@@ -169,7 +174,9 @@
   },
   "texture_overlay": {
     "texture": "examplemod:textures/plugins/rapid_barrel_overlay.png",
-    "layer": 10
+    "layer": 10,
+    "alignment": "center",
+    "fit": "fill"
   },
   "brief": "大幅提升射速，但伤害和精准度略有下降",
   "description": "安装后射速翻倍，但单发伤害降低 20%，散布增加 30%。",
