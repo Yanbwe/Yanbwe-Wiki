@@ -12,7 +12,7 @@ ModularShoot is an attribute-driven, modular assembly gun system **framework mod
 | **Pure Framework** | 4 demo guns, 9 demo plugins, 2 plugin types, 1 demo trait, 1 demo state — all overridable by datapacks |
 | **Attribute-Driven** | Gun behavior is entirely determined by attributes + traits. No hardcoded logic. `ADD_VALUE → ADD_MULTIPLIED_BASE → ADD_MULTIPLIED_TOTAL` three-stage stacking |
 | **Dual Registration** | Supports Java API registration and datapack JSON registration, sharing the same registries. `/reload` hot-reloads JSON; API entries are unaffected |
-| **Non-Entity Bullets** | Bullets are lightweight data records managed by BulletManager, supporting thousands of simultaneous projectiles (chunk-bucketed indexing + capsule collision) |
+| **Non-Entity Bullets** | Bullets are lightweight data records managed by BulletManager, supporting thousands of simultaneous projectiles (per-chunk entity-candidate caching + capsule collision) |
 | **Fully Event-Driven** | All extension points exposed via events + callback APIs: shoot events, install/uninstall events, trait hooks, damage handlers, right-click/reload events |
 | **Server-Authoritative** | Shooting, bullet flight, and hit detection are all server-side. Client is render-only, cheat-resistant |
 
