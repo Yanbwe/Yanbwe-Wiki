@@ -10,6 +10,8 @@
 - 可选字段省略时使用代码中注明的默认值
 - `/reload` 后 JSON 定义即时生效，已发放物品的行为实时跟随新定义
 
+**子弹伤害类型与击退约定**：子弹命中**不产生击退**。框架随包将 `modularshoot:bullet_damage` 加入 `minecraft:no_knockback` 伤害类型 tag（`data/minecraft/tags/damage_type/no_knockback.json`），原版 `hurt()` 据此跳过击退分支。若上层模组通过 `ammo_damage_type` 状态或 trait 钩子使用**自定义伤害类型**，该类型必须由所属模组同样加入 `minecraft:no_knockback` tag——否则会触发原版"零向量随机方向击退"兜底行为（多个数据包写入同一 tag 文件按 union 合并，追加安全）。需要子弹击退效果时应在伤害处理器/`onHit` 钩子中自行实现。
+
 ## 枪械 JSON
 
 **路径**：`data/<命名空间>/modularshoot/guns/<枪械id>.json`
@@ -24,8 +26,20 @@
 | `stats` | 属性ID→浮点数对象 | 否 | `{}` | 属性基础值。键**必须带完整命名空间**（如 `"modularshoot:hit_damage": 50.0`）。不出现的属性使用元数据表默认值 |
 | `traits` | 特性ID→布尔值对象 | 否 | `{}` | 枪械固有特性覆盖。无特性时留空对象 `{}` |
 | `slots` | 种类ID→整数对象 | 否 | `{}` | 插件插槽配置，键为插件种类 ID，值为插槽数量 |
-| `sounds` | 字符串→资源路径对象 | 否 | `{}` | 音效绑定。如 `"shoot": "modularshoot:gun.rifle.shoot"` |
+| `sounds` | 字符串→资源路径对象 | 否 | `{}` | 音效绑定，键为槽位名、值为音效 ID。支持槽位：`shoot`（射击音效）、`hit_entity`/`hit_block`/`hit_pierce`（命中音效，随命中包下发客户端播放）、`plugin_install`（插件安装音效）；**未配置的槽位一律静音**。如 `"shoot": "modularshoot:gun.rifle.shoot"`（槽位详见下表） |
 | `bullet_style` | 对象 | 否 | 无 | 子弹视觉样式（见下表） |
+
+**`sounds` 槽位说明**：
+
+| 槽位 | 触发时机 | 播放方 | 未配置 |
+|------|---------|--------|--------|
+| `shoot` | 每次射击 | 服务端 | 静音 |
+| `hit_entity` | 子弹命中实体 | 客户端（服务端解析 ID 随 `BulletHitS2CPacket` 下发） | 静音 |
+| `hit_block` | 子弹命中方块 | 同上 | 静音 |
+| `hit_pierce` | 子弹穿透命中 | 同上（当前无广播点，槽位预留） | 静音 |
+| `plugin_install` | 插件安装成功 | 服务端（同步客户端） | 静音 |
+
+> 槽位未配置一律静音——框架从不硬编码播放任何音效。客户端播放命中特效前 post `ClientBulletHitEvent`（可取消），供扩展模组取消或追加特效（见 API 参考/事件一览）。
 
 ### bullet_style 子字段
 

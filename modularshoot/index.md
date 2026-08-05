@@ -12,7 +12,7 @@ ModularShoot 是一个基于属性驱动、模块化组装的枪械系统**框�
 | **纯框架 + 演示包** | 4 把演示枪械、9 个演示插件、2 个插件种类、1 个演示特性、1 个演示状态（全部可被数据包覆盖）——提供 API 和引擎 |
 | **属性驱动** | 枪械行为完全由属性 + 特性决定，无硬编码特殊逻辑。`ADD_VALUE → ADD_MULTIPLIED_BASE → ADD_MULTIPLIED_TOTAL` 三阶段叠加 |
 | **双路注册** | 支持 Java API 注册和数据包 JSON 注册，共享同一注册表。`/reload` 热重载 JSON，API 注册不受影响 |
-| **非实体子弹** | 子弹为轻量数据记录，由 BulletManager 管理，支持数千发同时飞行（chunk 分桶索引 + 胶囊体碰撞检测） |
+| **非实体子弹** | 子弹为轻量数据记录，由 BulletManager 管理，支持数千发同时飞行（每 tick 每区块实体候选缓存 + 胶囊体碰撞检测） |
 | **完全事件化** | 所有扩展点通过事件 + 回调 API 暴露：射击事件、安装/拆卸事件、特性钩子、伤害处理器、右键/换弹事件 |
 | **服务端权威** | 射击、子弹飞行、命中判定均由服务端执行，客户端仅渲染，防作弊 |
 
@@ -67,3 +67,6 @@ ModularShoot 是一个基于属性驱动、模块化组装的枪械系统**框�
 | `PostPluginInstallEvent` | 插件写入组件后 | 否 |
 | `PrePluginUninstallEvent` | 插件拆卸前 | 是 |
 | `PostPluginUninstallEvent` | 插件拆卸后 | 否 |
+| `ClientBulletHitEvent` | 客户端收到命中包、播放默认特效前（仅客户端，NeoForge.EVENT_BUS） | 是 |
+
+> **命中特效钩子**：`ClientBulletHitEvent` 在客户端播放命中特效前触发，字段含 `soundId`（服务端从枪械 `sounds` 槽位解析的命中音效 ID——实体 `hit_entity`/方块 `hit_block`/穿透 `hit_pierce`，未配置为 null）；取消则跳过默认粒子与音效，未取消时可在监听逻辑中追加自定义音效/粒子。
