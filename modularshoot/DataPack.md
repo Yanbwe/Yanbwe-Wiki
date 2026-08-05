@@ -132,6 +132,7 @@
 | `exclusive_group` | 字符串 | 否 | 无 | 互斥组 ID。同一枪上同组插件不可共存 |
 | `bullet_style` | 对象 | 否 | 无 | 子弹样式（格式同枪械的 `bullet_style`）。**叠加组合**：插件与枪械的 base 按 priority（同 priority 后装赢）选出赢家，modifiers 全部叠加 |
 | `texture_overlay` | 对象 | 否 | 无 | 纹理叠加（见下表） |
+| `gun_outline` | 对象 | 否 | 无 | 整枪描边：对合成结果（基础纹理 + 所有叠加图层）的轮廓描边。`{ "color": [r,g,b], "alpha": 0.9, "width": 3 }`。**多插件可叠加**：按 `width` 从宽到窄逐层绘制，形成同心嵌套的多层描边；同宽按安装顺序后装覆盖先装 |
 | `brief` | 字符串 | 否 | 无 | 一行简介 |
 | `description` | 字符串 | 否 | 无 | 多行详细描述 |
 | `color` | 字符串 | 否 | 无 | 名称颜色（如 `"#FF4444"`） |
@@ -152,6 +153,29 @@
 | `layer` | 整数 | **是** | — | 层级，越大越靠上。同层级按安装顺序（后装覆盖先装） |
 | `alignment` | 字符串 | 否 | `"top_left"` | 九宫格对齐：`"top_left"` / `"top_center"` / `"top_right"` / `"center_left"` / `"center"` / `"center_right"` / `"bottom_left"` / `"bottom_center"` / `"bottom_right"`。仅 `fit` 为 `"none"` 时生效 |
 | `fit` | 字符串 | 否 | `"none"` | 适配模式：`"none"`（不缩放，按对齐混合，超出画布部分被裁剪并输出 WARN）/ `"fill"`（拉伸铺满画布，宽高比不同会变形）/ `"contain"`（等比缩放至完整可见，居中留透明边） |
+| `tint` | 浮点数数组 | 否 | `[1,1,1,1]` | RGBA 乘色：混合前对图层像素逐通道相乘（含透明度），白色恒等。如 `[1.0, 0.4, 0.3, 1.0]` 让图层泛红 |
+| `blend` | 字符串 | 否 | `"normal"` | 颜色混合模式：`"normal"`（普通 alpha 覆盖）/ `"multiply"`（乘色加深）/ `"screen"`（滤色提亮）/ `"add"`（相加提亮，结果 clamp 到 1）。仅影响颜色通道，透明度始终按普通覆盖合成 |
+| `outline` | 对象 | 否 | 无 | 图层描边：沿图层自身 alpha 边缘向外描边。`{ "color": [r,g,b], "alpha": 1.0, "width": 1 }`，`width` 为像素宽度（默认 1）。描边随图层一起摆放/缩放（`fill`/`contain` 时等比例缩放）；描边色不参与 `tint` |
+
+**视觉增强示例**：`data/examplemod/modularshoot/plugins/ember_overlay.json`
+
+```json
+{
+  "name": "§c枪械余烬",
+  "tags": ["c:accessory"],
+  "priority": 90,
+  "item_icon": "examplemod:textures/plugins/ember.png",
+  "texture_overlay": {
+    "texture": "examplemod:textures/plugins/ember_overlay.png",
+    "layer": 5,
+    "fit": "contain",
+    "tint": [1.0, 0.4, 0.3, 1.0],
+    "blend": "add",
+    "outline": { "color": [1.0, 0.9, 0.4], "alpha": 1.0, "width": 1 }
+  },
+  "gun_outline": { "color": [1.0, 0.2, 0.1], "alpha": 0.9, "width": 3 }
+}
+```
 
 **路径**：`data/examplemod/modularshoot/plugins/rapid_barrel.json`
 

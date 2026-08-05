@@ -132,6 +132,7 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 | `exclusive_group` | Text string | No | None | Mutual exclusion group ID. Same-group on same gun = can't coexist |
 | `bullet_style` | Object | No | None | Bullet style (same format as gun's `bullet_style`). **Stacks**: plugin vs gun base picks a winner by priority (later-installed wins ties); all modifiers stack |
 | `texture_overlay` | Object | No | None | Texture overlay (see sub-table below) |
+| `gun_outline` | Object | No | None | Whole-gun outline: strokes the silhouette of the composited result (base texture + all overlay layers). Format: `{ "color": [r,g,b], "alpha": 0.9, "width": 3 }`. **Multiple plugins stack**: drawn widest-first, forming concentrically nested rings; ties broken by installation order (later install paints over earlier) |
 | `brief` | Text string | No | None | One-line summary |
 | `description` | Text string | No | None | Multi-line detailed description |
 | `color` | Text string | No | None | Name color (e.g. `"#FF4444"`) |
@@ -152,6 +153,29 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 | `layer` | Integer | **Yes** | — | Z-order, higher renders on top. Same layer: later-installed covers earlier |
 | `alignment` | Text string | No | `"top_left"` | Nine-grid alignment: `"top_left"` / `"top_center"` / `"top_right"` / `"center_left"` / `"center"` / `"center_right"` / `"bottom_left"` / `"bottom_center"` / `"bottom_right"`. Only effective when `fit` is `"none"` |
 | `fit` | Text string | No | `"none"` | Fit mode: `"none"` (no resampling, blended at the aligned position; parts beyond the canvas are clipped with a WARN) / `"fill"` (stretched to cover the whole canvas; distorted when aspect ratios differ) / `"contain"` (uniformly scaled to be fully visible, centred with transparent margins) |
+| `tint` | Float array | No | `[1,1,1,1]` | RGBA multiplier: multiplies the layer pixels channel-by-channel (including alpha) before blending; white is the identity. E.g. `[1.0, 0.4, 0.3, 1.0]` tints the layer red |
+| `blend` | Text string | No | `"normal"` | Colour mixing mode: `"normal"` (ordinary alpha-over) / `"multiply"` (darkens) / `"screen"` (brightens) / `"add"` (additive brightening, clamped to 1). Affects colour channels only; alpha always uses ordinary over compositing |
+| `outline` | Object | No | None | Layer outline: strokes the layer's own alpha silhouette. Format: `{ "color": [r,g,b], "alpha": 1.0, "width": 1 }`, `width` in pixels (default 1). The stroke scales with the layer (`fill`/`contain` rescale it proportionally); the stroke colour never participates in `tint` |
+
+**Visual enhancement example**: `data/examplemod/modularshoot/plugins/ember_overlay.json`
+
+```json
+{
+  "name": "§cGun Ember",
+  "tags": ["c:accessory"],
+  "priority": 90,
+  "item_icon": "examplemod:textures/plugins/ember.png",
+  "texture_overlay": {
+    "texture": "examplemod:textures/plugins/ember_overlay.png",
+    "layer": 5,
+    "fit": "contain",
+    "tint": [1.0, 0.4, 0.3, 1.0],
+    "blend": "add",
+    "outline": { "color": [1.0, 0.9, 0.4], "alpha": 1.0, "width": 1 }
+  },
+  "gun_outline": { "color": [1.0, 0.2, 0.1], "alpha": 0.9, "width": 3 }
+}
+```
 
 **Path**: `data/examplemod/modularshoot/plugins/rapid_barrel.json`
 
