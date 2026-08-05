@@ -64,6 +64,8 @@ Registry: `modularshoot:plugins`
 | `exclusiveGroup` | Optional text string | No | None | Mutual exclusion group ID. Two plugins with the same group ID cannot coexist on the same gun |
 | `bulletStyle` | Optional bullet style | No | None | Bullet style contribution. **Stacks**: base candidates are elected by priority (same priority: later-installed wins; when no candidate, the framework fallback appearance is used); all modifiers stack (scale multiplies, tint multiplies channel-wise, attach layers are all kept) |
 | `textureOverlay` | Optional texture overlay | No | None | Texture overlay info. Layers stacked over the gun's base texture after install |
+| `gunOutline` | Optional outline spec | No | None | Whole-gun outline spec (see "Outline Spec (OutlineSpec)" below). Strokes the silhouette of the final composited gun texture; multiple plugins nest concentrically, widest first |
+| `extraValues` | Namespaced-number map | No | Empty map | Extension numeric fields: keys are ResourceLocations, values are numbers. The framework only carries and sums them per key (read via `ModularShootAPI.getExtraValueSums` / `getExtraValue`) without interpreting their meaning — integration mods use them to carry custom values (e.g. rarity) and accumulate them onto the gun in plugin install/uninstall events |
 | `name` | Optional text string | No | None | Plugin display name. Supports `§` color codes |
 | `brief` | Optional text string | No | None | One-line summary. Shown in default tooltip level |
 | `description` | Optional text string | No | None | Multi-line detailed description. Shown in Shift tooltip level |
@@ -85,6 +87,25 @@ Registry: `modularshoot:plugins`
 | `layer` | Integer | **Yes** | — | Z-order, higher renders on top. Same layer: later-installed covers earlier |
 | `alignment` | Enum | No | `TOP_LEFT` | Nine-grid alignment: `TOP_LEFT` / `TOP_CENTER` / `TOP_RIGHT` / `CENTER_LEFT` / `CENTER` / `CENTER_RIGHT` / `BOTTOM_LEFT` / `BOTTOM_CENTER` / `BOTTOM_RIGHT`. Only effective when `fit` is `NONE` |
 | `fit` | Enum | No | `NONE` | Fit mode: `NONE` (no resampling, blended at the aligned position, parts beyond the canvas are clipped with a WARN) / `FILL` (bilinearly stretched to cover the whole canvas; distorted when aspect ratios differ) / `CONTAIN` (uniformly scaled to be fully visible, centred with transparent margins) |
+
+### Outline Spec (OutlineSpec)
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `color` | RGB float array | **Yes** | — | Outline colour, three 0-1 floats (e.g. `[1.0, 0.2, 0.1]`) |
+| `alpha` | Decimal number | No | `1.0` | Outline opacity |
+| `width` | Integer | No | `1` | Outline width (pixels). Multiple plugin outlines nest concentrically, widest first; ties broken by installation order (later install paints over earlier) |
+
+**Dynamic outlines (per-frame colour)**: outline colours are baked statically at composite time by default. An integration mod that needs a per-frame colour shift can register a `GunOutlineTintProvider` (functional interface `(ItemStack, float partialTick) → Vector4f RGBA`) in `DynamicOutlineTintRegistry`, keyed by the plugin id, during **client initialisation**:
+
+```java
+// Client initialisation (e.g. @Mod(Dist.CLIENT) constructor)
+DynamicOutlineTintRegistry.register(
+    ResourceLocation.parse("examplemod:prismatic_core"),
+    (stack, partialTick) -> /* per-frame colour, e.g. a rainbow hue rotating over time */);
+```
+
+Every gun with that plugin installed then renders its outline with the provider's per-frame colour (white outline mask × per-frame tint; cached textures are never rebuilt). Outlines without a registered provider keep their static baked colour. The framework ships a built-in demo plugin `modularshoot:visual_gun_prism` (rainbow outline).
 
 ## Plugin Type Definition (PluginTypeDefinition)
 

@@ -19,6 +19,8 @@ ModularShootAPI 所有公开静态方法速查。方法按功能分组。
 | `getPluginId(ItemStack stack)` | `stack` — 插件物品堆叠 | `Optional<ResourceLocation>` | 获取插件定义 ID。非插件物品或无 plugin_data 组件时返回空 |
 | `getPluginData(ItemStack stack)` | `stack` — 插件物品堆叠 | `Optional<PluginData>` | 获取插件完整 Data Component（含 pluginId） |
 | `getInstalledPlugins(ItemStack gun)` | `gun` — 枪械物品堆叠 | `List<PluginInstance>`（不可变） | 查询枪械已安装的插件列表。非枪械或无已安装插件时返回空列表 |
+| `getExtraValueSums(ItemStack gun, RegistryAccess registryAccess)` | `gun` — 枪械物品堆叠；`registryAccess` — 运行时注册表视图（需已加载世界） | `Map<ResourceLocation, Double>`（不可变） | 汇总枪械上所有**有效**插件（定义仍存在者）的 `extra_values`，按命名空间键求和。失效插件被过滤（与属性管线同一降级口径），未声明过的键不出现在结果中 |
+| `getExtraValue(ItemStack gun, ResourceLocation key, RegistryAccess registryAccess)` | `gun` — 枪械物品堆叠；`key` — 要查询的扩展字段键；`registryAccess` — 运行时注册表视图 | `double` | 便捷单键查询：`key` 在枪械上的累加值，未声明时返回 `0.0` |
 
 ## 拆卸 API
 
@@ -71,6 +73,29 @@ ModularShootAPI 所有公开静态方法速查。方法按功能分组。
 | `ON_VISUAL_TICK` | onVisualTick | 客户端渲染对象（`BulletRenderObject`） | 仅客户端 |
 
 > **onVisualTick 契约（修饰符叠加系统）**：子弹的视觉组合（base / scale / tint / 附加层）在**创建瞬间冻结**并缓存于 `BulletRecord.composedStyle`（服务端）→ 经 `BulletS2CPacket` 传给客户端 `BulletRenderObject`。飞行中的 `onVisualTick` 钩子要改视觉，应**直接修改 `BulletRenderObject`**（`setScale` / `setComposedTint` / `setLayers` / 换纹理等），不要试图改 `BulletSnapshot` 期望触发重新组合——组合不会在飞行中重算。
+
+## 客户端描边注册（仅客户端）
+
+以下 API 位于 `org.yanbwe.modularshoot.client.render.DynamicOutlineTintRegistry`，仅在客户端可用，应在客户端初始化阶段（如 `@Mod(Dist.CLIENT)` 构造函数）调用。
+
+| 方法签名 | 参数说明 | 返回值 | 说明 |
+|---------|---------|--------|------|
+| `register(ResourceLocation pluginId, GunOutlineTintProvider provider)` | `pluginId` — 插件定义 ID；`provider` — 每帧描边颜色提供器（函数式接口：`(ItemStack, float partialTick) → Vector4f RGBA`） | `void` | 为指定插件注册**动态描边**：凡安装该插件的枪械，其 `gun_outline` 描边颜色在渲染时逐帧取 provider 返回值（白色描边遮罩 × 每帧 tint，缓存纹理无需重建）。未注册 provider 的插件描边保持静态烘焙色。后注册的同 id provider 覆盖前者 |
+
+**集成示例（彩虹描边）**：
+
+```java
+// 客户端初始化
+DynamicOutlineTintRegistry.register(
+    ResourceLocation.parse("examplemod:prismatic_core"),
+    (stack, partialTick) -> {
+        long time = Minecraft.getInstance().level.getGameTime() + (long) partialTick;
+        float hue = (time * 6.0F) % 360.0F;
+        return /* HSV→RGB 转换后的 Vector4f */;
+    });
+```
+
+第一人称、第三人称与背包 GUI 统一生效。插件数据包 JSON 无需任何改动（`gun_outline` 照常声明，颜色仅作静态回退）。框架内置演示插件 `modularshoot:visual_gun_prism`。
 
 ## 注册表查询
 

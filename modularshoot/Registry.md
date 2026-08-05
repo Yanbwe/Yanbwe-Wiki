@@ -80,6 +80,8 @@ ModularShoot 通过 6 张动态注册表（DataPackRegistry）存储所有定义
 | `exclusiveGroup` | 可选字符串 | 否 | 无 | 互斥组 ID。同一枪上不能安装两个互斥组 ID 相同的插件 |
 | `bulletStyle` | 可选子弹样式 | 否 | 无 | 子弹样式叠加。安装后与枪械的样式**叠加组合**：base 按 priority 选举（同 priority 后装赢，无候选回退框架默认外观），modifiers 全部叠加（scale 连乘、tint 逐通道连乘、attach_layer 全部保留） |
 | `textureOverlay` | 可选纹理叠加 | 否 | 无 | 纹理叠加信息。安装后在枪械纹理上叠加图层 |
+| `gunOutline` | 可选描边规格 | 否 | 无 | 整枪描边规格（见下文「描边规格（OutlineSpec）」）。安装后围绕枪械合成纹理的最终轮廓描边，多插件按宽度从宽到窄同心嵌套 |
+| `extraValues` | 命名空间数字映射 | 否 | 空映射 | 扩展数值字段：键为 ResourceLocation、值为数字。框架只承载与按 key 求和（经 `ModularShootAPI.getExtraValueSums` / `getExtraValue` 读取），不解释语义，供集成模组携带自定义数值（如稀有度值）并在插件安装/拆卸事件中累加到枪械上 |
 | `name` | 可选字符串 | 否 | 无 | 插件显示名称，支持 `§` 颜色代码 |
 | `brief` | 可选字符串 | 否 | 无 | 一行简介，tooltip 默认层级显示 |
 | `description` | 可选字符串 | 否 | 无 | 多行详细描述，tooltip Shift 层级显示 |
@@ -101,6 +103,25 @@ ModularShoot 通过 6 张动态注册表（DataPackRegistry）存储所有定义
 | `layer` | 整数 | **是** | — | 层级，越大越靠上。同层级按安装顺序（后装覆盖先装） |
 | `alignment` | 枚举 | 否 | `TOP_LEFT` | 九宫格对齐：`TOP_LEFT` / `TOP_CENTER` / `TOP_RIGHT` / `CENTER_LEFT` / `CENTER` / `CENTER_RIGHT` / `BOTTOM_LEFT` / `BOTTOM_CENTER` / `BOTTOM_RIGHT`。仅 `fit` 为 `NONE` 时生效 |
 | `fit` | 枚举 | 否 | `NONE` | 适配模式：`NONE`（不缩放，按对齐混合，超出画布的部分被裁剪并输出 WARN）/ `FILL`（双线性插值拉伸铺满画布，宽高比不同会变形）/ `CONTAIN`（等比缩放至完整可见，居中留透明边） |
+
+### 描边规格（OutlineSpec）
+
+| 字段 | 类型 | 必需 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| `color` | RGB 浮点数组 | **是** | — | 描边颜色，三元素 0-1 浮点数组（如 `[1.0, 0.2, 0.1]`） |
+| `alpha` | 浮点数 | 否 | `1.0` | 描边透明度 |
+| `width` | 整数 | 否 | `1` | 描边宽度（像素）。多插件描边按宽度从宽到窄同心嵌套，同宽后安装覆盖先安装 |
+
+**动态描边（逐帧变色）**：描边颜色默认在合成时烘焙为静态色。集成模组若需逐帧变色，可在**客户端初始化**时向 `DynamicOutlineTintRegistry` 以插件 id 为键注册 `GunOutlineTintProvider`（函数式接口 `(ItemStack, float partialTick) → Vector4f RGBA`）：
+
+```java
+// 客户端初始化（如 @Mod(Dist.CLIENT) 构造函数）
+DynamicOutlineTintRegistry.register(
+    ResourceLocation.parse("examplemod:prismatic_core"),
+    (stack, partialTick) -> /* 每帧颜色，如色相随时间旋转的彩虹 */);
+```
+
+渲染时凡安装该插件的枪械，其描边逐帧取 provider 颜色（白色描边遮罩 × 每帧 tint，缓存纹理无需重建）；未注册 provider 的描边保持静态烘焙色。框架内置演示插件 `modularshoot:visual_gun_prism`（彩虹描边）。
 
 ## 插件种类定义（PluginTypeDefinition）
 

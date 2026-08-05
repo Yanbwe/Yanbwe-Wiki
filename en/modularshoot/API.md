@@ -19,6 +19,8 @@ Quick reference for all public static methods in ModularShootAPI. Methods groupe
 | `getPluginId(ItemStack stack)` | `stack` — the plugin item stack | `Optional<ResourceLocation>` | Gets the plugin definition ID. Returns empty for non-plugin items or when no `plugin_data` component exists |
 | `getPluginData(ItemStack stack)` | `stack` — the plugin item stack | `Optional<PluginData>` | Gets the full PluginData component (contains plugin ID) |
 | `getInstalledPlugins(ItemStack gun)` | `gun` — the gun item stack | `List<PluginInstance>` (immutable) | Queries the list of plugins installed on the gun. Returns empty list for non-gun items or when no plugins are installed |
+| `getExtraValueSums(ItemStack gun, RegistryAccess registryAccess)` | `gun` — the gun item stack; `registryAccess` — runtime registry view (needs a loaded world) | `Map<ResourceLocation, Double>` (immutable) | Totals the `extra_values` of every **valid** plugin (definition still present) installed on the gun, summed per namespaced key. Degraded plugins are filtered (same contract as the attribute pipeline); keys never declared are absent from the result |
+| `getExtraValue(ItemStack gun, ResourceLocation key, RegistryAccess registryAccess)` | `gun` — the gun item stack; `key` — the extension-field key to look up; `registryAccess` — runtime registry view | `double` | Convenience single-key lookup: the accumulated value of `key` on the gun, or `0.0` when undeclared |
 
 ## Uninstall API
 
@@ -72,6 +74,29 @@ Call these methods during mod initialization (constructor or `FMLCommonSetupEven
 | `ON_VISUAL_TICK` | onVisualTick | Client render object (`BulletRenderObject`) | Client only |
 
 > **onVisualTick contract (modifier-stacking system)**: a bullet's visual composition (base / scale / tint / attach layers) is **frozen at creation time** and cached on `BulletRecord.composedStyle` (server) → sent to the client's `BulletRenderObject` via `BulletS2CPacket`. In-flight `onVisualTick` hooks that want to change appearance should **mutate the `BulletRenderObject` directly** (`setScale` / `setComposedTint` / `setLayers` / swap texture, etc.) — do not mutate `BulletSnapshot` expecting a recomposition; composition is never recomputed in-flight.
+
+## Client Outline Registration (client only)
+
+The following API lives in `org.yanbwe.modularshoot.client.render.DynamicOutlineTintRegistry`. It is client-only and should be called during client initialisation (e.g. the `@Mod(Dist.CLIENT)` constructor).
+
+| Method Signature | Parameters | Returns | Description |
+|-----------------|------------|---------|-------------|
+| `register(ResourceLocation pluginId, GunOutlineTintProvider provider)` | `pluginId` — plugin definition ID; `provider` — per-frame outline colour supplier (functional interface: `(ItemStack, float partialTick) → Vector4f RGBA`) | `void` | Registers a **dynamic outline** for the plugin: every gun with that plugin installed renders its `gun_outline` with the provider's per-frame colour (white outline mask × per-frame tint; cached textures are never rebuilt). Outlines without a registered provider keep their static baked colour. A later registration for the same plugin id replaces the earlier one |
+
+**Integration example (rainbow outline)**:
+
+```java
+// Client initialisation
+DynamicOutlineTintRegistry.register(
+    ResourceLocation.parse("examplemod:prismatic_core"),
+    (stack, partialTick) -> {
+        long time = Minecraft.getInstance().level.getGameTime() + (long) partialTick;
+        float hue = (time * 6.0F) % 360.0F;
+        return /* Vector4f from an HSV→RGB conversion */;
+    });
+```
+
+Effective in first person, third person and the inventory GUI alike. No datapack JSON changes are needed (`gun_outline` is declared as usual; its colour only acts as the static fallback). The framework ships a built-in demo plugin `modularshoot:visual_gun_prism`.
 
 ## Registry Queries
 

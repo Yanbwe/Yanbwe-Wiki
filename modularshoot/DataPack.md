@@ -132,7 +132,8 @@
 | `exclusive_group` | 字符串 | 否 | 无 | 互斥组 ID。同一枪上同组插件不可共存 |
 | `bullet_style` | 对象 | 否 | 无 | 子弹样式（格式同枪械的 `bullet_style`）。**叠加组合**：插件与枪械的 base 按 priority（同 priority 后装赢）选出赢家，modifiers 全部叠加 |
 | `texture_overlay` | 对象 | 否 | 无 | 纹理叠加（见下表） |
-| `gun_outline` | 对象 | 否 | 无 | 整枪描边：对合成结果（基础纹理 + 所有叠加图层）的轮廓描边。`{ "color": [r,g,b], "alpha": 0.9, "width": 3 }`。**多插件可叠加**：按 `width` 从宽到窄逐层绘制，形成同心嵌套的多层描边；同宽按安装顺序后装覆盖先装 |
+| `gun_outline` | 对象 | 否 | 无 | 整枪描边：对合成结果（基础纹理 + 所有叠加图层）的轮廓描边。`{ "color": [r,g,b], "alpha": 0.9, "width": 3 }`。**多插件可叠加**：按 `width` 从宽到窄逐层绘制，形成同心嵌套的多层描边；同宽按安装顺序后装覆盖先装。静态描边颜色烘焙进合成纹理；如需**逐帧变色描边**（如彩虹），集成模组可在客户端以本插件 id 向 `DynamicOutlineTintRegistry` 注册 provider（数据包无需任何改动，见 API 文档） |
+| `extra_values` | 命名空间数字对象 | 否 | `{}` | 扩展数值字段：键为 ResourceLocation（须带命名空间）、值为数字。框架只承载与按 key 求和、不解释语义。集成模组可在插件安装/拆卸事件中经 `ModularShootAPI.getExtraValueSums` 读取全部已安装插件的累加值，并翻译到自身系统（如稀有度核心写入稀有度组件） |
 | `brief` | 字符串 | 否 | 无 | 一行简介 |
 | `description` | 字符串 | 否 | 无 | 多行详细描述 |
 | `color` | 字符串 | 否 | 无 | 名称颜色（如 `"#FF4444"`） |
