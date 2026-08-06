@@ -11,6 +11,7 @@
 | `plugin <id> [数量]` | `id` — 插件注册 ID；`数量` — 可选，给予数量（默认 1，钳制在 1-64） | 给予自身一个或多个指定插件物品 |
 | `bullets` | 无 | 查询当前世界的活跃子弹数量与简要状态 |
 | `debug <on\|off>` | `on` 或 `off` | 切换调试模式。开启时在动作栏持续显示当前主手枪械的关键属性值 |
+| `variants` | 无 | 预览当前主手枪械的**变体池**（服务端计算，含饰品贡献者加成）：逐候选显示变体 ID、最终权重与概率百分比；未声明变体池的枪械含"普通弹（默认兜底）"条目（规格 §6.4 v1.2） |
 
 ## 使用示例
 
@@ -22,3 +23,4 @@
 | 获取 5 个速射枪管插件 | `/modularshoot plugin modularshoot:rapid_fire_barrel 5` |
 | 查看世界中有多少活跃子弹 | `/modularshoot bullets` |
 | 开启调试 HUD | `/modularshoot debug on` |
+| 查看手中枪的变体池概率 | `/modularshoot variants` |
