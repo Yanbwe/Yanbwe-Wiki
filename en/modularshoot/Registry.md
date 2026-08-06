@@ -28,7 +28,7 @@ Registry: `modularshoot:guns`
 | `shootTexture` | Optional resource path | No | None (always uses base texture) | Texture swapped to while firing |
 | `shootTextureMode` | Enum | No | `PER_SHOT` | Texture swap timing. Only effective when `shootTexture` is specified |
 | `textureScale` | Enum | No | `AUTO` | Whether the render geometry scales with the texture resolution. `AUTO` (16 px = 1 grid cell; a 32×32 texture renders 2× larger) / `FIXED` (fixed 16×16 unit grid). Base and shoot textures scale independently by their own size |
-| `stats` | Attribute ID → decimal map | No | Empty map | Attribute base values. Keys are the logical ids of attribute_meta-registered entries and **must** include full namespace (e.g. `modularshoot:hit_damage`). Unspecified attributes use the metadata table default. **Since v1.2, any registered entry is supported** (beyond the 10 preset attributes): adding an attribute_meta entry makes `stats` support that key automatically |
+| `stats` | Attribute ID → decimal map | No | Empty map | Attribute base values. Keys are the logical ids of attribute_meta-registered entries and **must** include full namespace (e.g. `modularshoot:hit_damage`). Unspecified attributes use the metadata table default. **Any registered entry is supported** (beyond the 10 preset attributes): adding an attribute_meta entry makes `stats` support that key automatically |
 | `traits` | Trait ID → boolean map | No | Empty map | Gun inherent trait overrides. Gun-declared traits always override all plugins |
 | `variants` | Variant ID → decimal map | No | Empty map | Variant pool base weights: variant ID → base weight. The pool is assembled fresh for every shot, summed with plugins' `addsVariants` per variant, adjusted by contributor weight modifiers, then rolled weighted-random (see "Variant Definition (VariantDefinition)") |
 | `slots` | Plugin type ID → integer map | No | Empty map | Plugin slot configuration. Key is plugin type ID, value is slot count |
@@ -144,7 +144,7 @@ Registry: `modularshoot:attribute_meta`
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
-| `binds` | Resource path | **Yes** | — | Points to a registered vanilla `Attribute` ID. Framework resolves the `Attribute` holder through this field at runtime. **Since v1.2, shared by all three paths** (mount / resolve / display all resolve through `binds`); may be rebound to any registered vanilla attribute. Preset attributes have logical ID = body ID, `binds` points to self |
+| `binds` | Resource path | **Yes** | — | Points to a registered vanilla `Attribute` ID. Framework resolves the `Attribute` holder through this field at runtime. **Shared by all three paths** (mount / resolve / display all resolve through `binds`); may be rebound to any registered vanilla attribute. Preset attributes have logical ID = body ID, `binds` points to self |
 | `defaultValue` | Decimal number | **Yes** | — | Gun base value when not declared by the gun (participates in ADD_VALUE calculation). Hot-reloadable. **Not the vanilla Attribute's base** (which is always 0) |
 | `description` | Text string | No | `""` (empty string) | Description text |
 | `color` | Text string | No | `""` (empty string) | Attribute name color (e.g. `#FF4444`) |
@@ -153,7 +153,7 @@ Registry: `modularshoot:attribute_meta`
 
 > If the `binds` target attribute is not registered: metadata entry is retained but modifier won't mount, tooltip won't show, reads return 0.
 
-> **v1.2**: datapacks may rebind `binds` to any registered vanilla attribute (incl. `minecraft:*`), e.g. rebind `modularshoot:hit_damage` to `minecraft:attack_damage`. The three-path (mount / resolve / display) semantics plus the base-offset and syncable conventions are described in the [datapack format doc](DataPack.md#attribute-metadata-json).
+> Datapacks may rebind `binds` to any registered vanilla attribute (incl. `minecraft:*`), e.g. rebind `modularshoot:hit_damage` to `minecraft:attack_damage`. The three-path (mount / resolve / display) semantics plus the base-offset and syncable conventions are described in the [datapack format doc](DataPack.md#attribute-metadata-json).
 
 ## Variant Definition (VariantDefinition)
 

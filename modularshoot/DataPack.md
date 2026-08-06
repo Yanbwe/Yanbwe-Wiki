@@ -315,7 +315,7 @@
 
 | JSON 键 | 类型 | 必需 | 默认值 | 说明 |
 |---------|------|------|--------|------|
-| `binds` | 资源路径字符串 | **是** | — | 指向已注册的原版 `Attribute` ID（如 `"minecraft:generic.max_health"`）。框架通过此字段定位 `Attribute` holder。**v1.2 起为三路径共用**：挂载层（枪械基础值修饰符按此解析挂载目标）、结算层（射击结算、射速门禁、客户端预测、`/modularshoot stats` 与 debug 命令读值）、显示层（tooltip 取值）均经 `binds` 解析；可指向任意已注册属性（含 `minecraft:*`） |
+| `binds` | 资源路径字符串 | **是** | — | 指向已注册的原版 `Attribute` ID（如 `"minecraft:generic.max_health"`）。框架通过此字段定位 `Attribute` holder。**三路径共用**：挂载层（枪械基础值修饰符按此解析挂载目标）、结算层（射击结算、射速门禁、客户端预测、`/modularshoot stats` 与 debug 命令读值）、显示层（tooltip 取值）均经 `binds` 解析；可指向任意已注册属性（含 `minecraft:*`） |
 | `default_value` | 浮点数 | **是** | — | 枪械未声明该属性时的基础值（参与加算）。**非原版 base 值** |
 | `description` | 字符串 | 否 | `""` | 说明文本 |
 | `color` | 字符串 | 否 | `""` | 名称颜色 |
@@ -351,7 +351,7 @@
 
 **路径**：`data/examplemod/modularshoot/attribute_meta/hit_damage.json`
 
-（**v1.2 重绑示例**——将逻辑属性 `hit_damage` 重绑到原版攻击力属性。与上一个示例同路径，实际部署时二选一）
+（**重绑示例**——将逻辑属性 `hit_damage` 重绑到原版攻击力属性。与上一个示例同路径，实际部署时二选一）
 
 ```json
 {
@@ -362,7 +362,7 @@
 
 > **效果**：持枪时玩家攻击伤害 = 原版 base（1.0）+ 枪械伤害（10.0）= **11 点**，射击结算同样读到此值；卸枪后修饰符移除、攻击伤害恢复原版 base；持枪近战攻击也会同步提升（特性，非缺陷）。
 
-> **v1.2 注意事项**：
+> **注意事项**：
 > - **base 偏移约定**：绑定到非零 base 属性时，结算值为"属性 base + 修饰符净额"。如重绑到 `minecraft:attack_damage`（玩家 base = 1.0）后，结算 = 1.0 + 枪械伤害。框架**不自动校准**，数据包作者需用 `default_value` 或枪械 `stats` 补偿
 > - **近战副作用**：修饰符挂到 `minecraft:attack_damage` 后，持枪近战伤害同步提升（特性，非缺陷）
 > - **syncable 约定**：绑定目标建议为 syncable 属性（客户端预测与 tooltip 需要同步值）；非 syncable 时客户端读到 0.0，客户端射速预测**静默禁用**（不影响服务端）

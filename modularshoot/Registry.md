@@ -28,7 +28,7 @@ ModularShoot 通过 7 张动态注册表（DataPackRegistry）存储所有定义
 | `shootTexture` | 可选资源路径 | 否 | 无（始终使用基础纹理） | 射击时切换的纹理路径 |
 | `shootTextureMode` | 枚举 | 否 | `PER_SHOT` | 射击纹理切换模式。仅在指定了 `shootTexture` 时生效 |
 | `textureScale` | 枚举 | 否 | `AUTO` | 渲染几何是否随纹理分辨率缩放。`AUTO`（16 像素 = 1 格，32×32 纹理渲染为 2 倍大）/ `FIXED`（固定 16×16 单位网格）。基础纹理与射击纹理分别按各自尺寸缩放 |
-| `stats` | 属性ID→浮点数映射 | 否 | 空映射 | 属性基础值。键为 attribute_meta 已登记条目的逻辑 id，必须带完整命名空间（如 `modularshoot:hit_damage`）。未声明的属性使用元数据表的默认值。**v1.2 起支持任意已登记条目**（不限于框架预置的 10 个）：数据包新增 attribute_meta 条目后，`stats` 自动支持该键 |
+| `stats` | 属性ID→浮点数映射 | 否 | 空映射 | 属性基础值。键为 attribute_meta 已登记条目的逻辑 id，必须带完整命名空间（如 `modularshoot:hit_damage`）。未声明的属性使用元数据表的默认值。**支持任意已登记条目**（不限于框架预置的 10 个）：数据包新增 attribute_meta 条目后，`stats` 自动支持该键 |
 | `traits` | 特性ID→布尔值映射 | 否 | 空映射 | 枪械固有特性覆盖。枪械声明的特性始终覆盖所有插件 |
 | `variants` | 变体ID→浮点数映射 | 否 | 空映射 | 变体池基础权重：变体 ID → 基础权重。每发射击实时组装变体池，与插件 `addsVariants` 同变体求和，并经贡献者权重修饰符调整后加权随机选举（详见「变体定义（VariantDefinition）」） |
 | `slots` | 种类ID→整数映射 | 否 | 空映射 | 插件插槽配置，键为插件种类 ID，值为插槽数量 |
@@ -160,7 +160,7 @@ DynamicOutlineTintRegistry.register(
 
 | 字段 | 类型 | 必需 | 默认值 | 说明 |
 |------|------|------|--------|------|
-| `binds` | 资源路径 | **是** | — | 指向已注册的原版 `Attribute` ID。框架通过此字段定位 `Attribute` holder 参与修饰符挂载。**v1.2 起为三路径共用**（挂载 / 结算 / 显示均经 `binds` 解析），可重绑到任意已注册原版属性。预置属性的逻辑 ID 与本体 ID 一致，`binds` 指向自身 |
+| `binds` | 资源路径 | **是** | — | 指向已注册的原版 `Attribute` ID。框架通过此字段定位 `Attribute` holder 参与修饰符挂载。**三路径共用**（挂载 / 结算 / 显示均经 `binds` 解析），可重绑到任意已注册原版属性。预置属性的逻辑 ID 与本体 ID 一致，`binds` 指向自身 |
 | `defaultValue` | 浮点数 | **是** | — | 枪械未声明该属性时的基础值（参与 ADD_VALUE 计算）。可热重载。**非原版 Attribute 的 base 值**（后者恒为 0） |
 | `description` | 字符串 | 否 | `""`（空字符串） | 说明文本 |
 | `color` | 字符串 | 否 | `""`（空字符串） | 属性名称颜色（如 `#FF4444`） |
@@ -169,7 +169,7 @@ DynamicOutlineTintRegistry.register(
 
 > `binds` 指向的属性未注册时：元数据条目保留，但修饰符不挂载、tooltip 不显示、读取返回 0。
 
-> **v1.2**：数据包可将 `binds` 重绑到任意已注册原版属性（含 `minecraft:*`），如将 `modularshoot:hit_damage` 重绑到 `minecraft:attack_damage`。三路径（挂载/结算/显示）语义、base 偏移与 syncable 等约定见[数据包格式文档](DataPack.md#属性元数据-json)。
+> 数据包可将 `binds` 重绑到任意已注册原版属性（含 `minecraft:*`），如将 `modularshoot:hit_damage` 重绑到 `minecraft:attack_damage`。三路径（挂载/结算/显示）语义、base 偏移与 syncable 等约定见[数据包格式文档](DataPack.md#属性元数据-json)。
 
 ## 变体定义（VariantDefinition）
 
