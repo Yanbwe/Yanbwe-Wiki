@@ -123,6 +123,51 @@ ModularShootAPI.registerShootPredicate((player, gun) -> {
 });
 ```
 
+### 注册射击效果（registerShootEffect）
+
+每颗弹丸快照 `copy()` 之后、散布采样之前按注册顺序执行；后注册者可见前序修改（`pelletIndex` 可用作逐颗分化种子）。**使用红线**：推荐 `setTrait`（布尔可共存）/ `multiplyStat`（倍率乘算）/ `setStat`（确定性覆盖）；**禁止** `setDamageType` 与视觉 `base` 覆盖——单值互斥字段的互斥场景必须走变体池（技术上不阻止，但会产生字段级碎片化）。
+
+```java
+import org.yanbwe.modularshoot.ModularShootAPI;
+import net.minecraft.resources.ResourceLocation;
+
+// 10% 概率触发"致命一击"：点亮特性（特性自带的 visual_modifiers 让子弹变红）并翻倍伤害
+ModularShootAPI.registerShootEffect((player, gun, snapshot, pelletIndex, totalPellets) -> {
+    if (player.getRandom().nextFloat() < 0.10f) {
+        // 红线内：setTrait（布尔可共存）/ multiplyStat（倍率乘算）/ setStat（确定性覆盖）
+        snapshot.setTrait(ResourceLocation.parse("examplemod:critical_hit"), true);
+        snapshot.multiplyStat(ResourceLocation.parse("modularshoot:hit_damage"), 2.0);
+        // 红线外：不要在这里 setDamageType 或覆盖视觉 base——
+        // 它们是一次选举单值互斥字段，互斥场景必须走变体池（modularshoot:variants）
+    }
+});
+```
+
+### 注册变体贡献者（registerVariantContributor）
+
+声明"变体 ID → 权重修饰符"，每发射击组装变体池时实时收集（不持久化）。修饰符复用原版 `AttributeModifier` record + Operation 三阶段语义。
+
+```java
+import org.yanbwe.modularshoot.ModularShootAPI;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+
+// 给"火弹"变体追加 2 倍权重修饰符
+ModularShootAPI.registerVariantContributor(sink -> {
+    // ADD_MULTIPLIED_BASE：只乘基础权重。若枪械声明了 fireball 基础权重 1.0，
+    // 最终权重 = 1.0 × (1 + 1.0) = 2.0；若基础权重为 0 且无 ADD_VALUE 加算，
+    // 结果恒为 0 —— "火元素饰品对非火枪无效"
+    sink.add(
+        ResourceLocation.parse("examplemod:fireball"),
+        new AttributeModifier(
+            ResourceLocation.parse("examplemod:fireball_weight_x2"),
+            1.0,
+            AttributeModifier.Operation.ADD_MULTIPLIED_BASE
+        )
+    );
+});
+```
+
 ### 注册特性钩子（ON_HIT 示例）
 
 ```java

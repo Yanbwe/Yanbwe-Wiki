@@ -1,6 +1,6 @@
 # 注册表参考
 
-ModularShoot 通过 6 张动态注册表（DataPackRegistry）存储所有定义。全部支持 `/reload` 热重载和客户端同步。
+ModularShoot 通过 7 张动态注册表（DataPackRegistry）存储所有定义。全部支持 `/reload` 热重载和客户端同步。
 
 
 ## 注册表概览
@@ -13,6 +13,7 @@ ModularShoot 通过 6 张动态注册表（DataPackRegistry）存储所有定义
 | `modularshoot:traits` | 布尔特性定义 | `Trait` |
 | `modularshoot:attribute_meta` | 属性元数据 | `AttributeMeta` |
 | `modularshoot:states` | 持久状态定义 | `StateDefinition` |
+| `modularshoot:variants` | 随机变体定义 | `VariantDefinition` |
 
 > 属性**本体**（`Attribute` 实例）不在上述动态注册表中——须用原版 `DeferredRegister` 注册到 `BuiltInRegistries.ATTRIBUTE`。元数据表仅存储默认值、显示信息和绑定关系。
 
@@ -29,6 +30,7 @@ ModularShoot 通过 6 张动态注册表（DataPackRegistry）存储所有定义
 | `textureScale` | 枚举 | 否 | `AUTO` | 渲染几何是否随纹理分辨率缩放。`AUTO`（16 像素 = 1 格，32×32 纹理渲染为 2 倍大）/ `FIXED`（固定 16×16 单位网格）。基础纹理与射击纹理分别按各自尺寸缩放 |
 | `stats` | 属性ID→浮点数映射 | 否 | 空映射 | 属性基础值。键必须带完整命名空间（如 `modularshoot:hit_damage`）。未声明的属性使用元数据表的默认值 |
 | `traits` | 特性ID→布尔值映射 | 否 | 空映射 | 枪械固有特性覆盖。枪械声明的特性始终覆盖所有插件 |
+| `variants` | 变体ID→浮点数映射 | 否 | 空映射 | 变体池基础权重：变体 ID → 基础权重。每发射击实时组装变体池，与插件 `addsVariants` 同变体求和，并经贡献者权重修饰符调整后加权随机选举（详见「变体定义（VariantDefinition）」） |
 | `slots` | 种类ID→整数映射 | 否 | 空映射 | 插件插槽配置，键为插件种类 ID，值为插槽数量 |
 | `sounds` | 字符串→资源路径映射 | 否 | 空映射 | 音效绑定。预置槽位 `shoot`（射击声），可自定义槽位名称 |
 | `bulletStyle` | 可选子弹样式 | 否 | 无（回退框架默认外观 `ComposedBulletStyle.FALLBACK_BASE`，billboard + 默认纹理） | 子弹视觉外观配置 |
@@ -77,6 +79,7 @@ ModularShoot 通过 6 张动态注册表（DataPackRegistry）存储所有定义
 | `textureScale` | 枚举 | 否 | `AUTO` | 图标渲染几何是否随纹理分辨率缩放，语义同枪械的 `textureScale`（`AUTO` / `FIXED`） |
 | `modifiers` | 修饰符列表 | 否 | 空列表 | 属性修饰符数组，安装后叠加到枪械属性 |
 | `traits` | 特性ID→布尔值映射 | 否 | 空映射 | 安装后提供的特性覆盖 |
+| `addsVariants` | 变体ID→浮点数映射 | 否 | 空映射 | 追加进枪械变体池的基础权重。安装后与枪械声明的同变体权重求和（详见「变体定义（VariantDefinition）」） |
 | `exclusiveGroup` | 可选字符串 | 否 | 无 | 互斥组 ID。同一枪上不能安装两个互斥组 ID 相同的插件 |
 | `bulletStyle` | 可选子弹样式 | 否 | 无 | 子弹样式叠加。安装后与枪械的样式**叠加组合**：base 按 priority 选举（同 priority 后装赢，无候选回退框架默认外观），modifiers 全部叠加（scale 连乘、tint 逐通道连乘、attach_layer 全部保留） |
 | `textureOverlay` | 可选纹理叠加 | 否 | 无 | 纹理叠加信息。安装后在枪械纹理上叠加图层 |
@@ -165,6 +168,26 @@ DynamicOutlineTintRegistry.register(
 | `forceShow` | 布尔值 | 否 | `false` | 是否强制展示。`true` 时即使值与默认值相同也在 tooltip 显示 |
 
 > `binds` 指向的属性未注册时：元数据条目保留，但修饰符不挂载、tooltip 不显示、读取返回 0。
+
+## 变体定义（VariantDefinition）
+
+注册表：`modularshoot:variants`
+
+| 字段 | 类型 | 必需 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| `weightHint` | 浮点数 | 否 | `0.0` | 基础权重兜底。仅当枪械/插件都未声明该变体时使用（典型场景：仅由 `registerVariantContributor` 引入的变体）；已被枪械/插件声明的变体以声明权重为权威 |
+| `traits` | 特性ID→布尔值映射 | 否 | 空映射 | 选中后**合并**进快照：声明的特性值写入，未声明键保留原值 |
+| `stats` | 属性ID→数值映射 | 否 | 空映射 | 选中后**只覆盖声明键**（不整体替换快照属性表） |
+| `damageType` | 可选资源路径 | 否 | 无 | 选中后覆盖 `ammo_damage_type` 预设（变体优先） |
+| `bulletStyleOverride` | 可选子弹样式 | 否 | 无 | 视觉覆盖，格式同 `bulletStyle`（base + modifiers）。base 以最高优先级参与视觉组合选举（胜过枪械/插件/特性/状态条件），modifiers 照常叠加；仅服务端 compose 读取，不序列化到客户端 |
+
+**权重语义（三来源）**：变体池每发射击**实时组装**（不持久化），三种来源合并后按加权随机选举：
+
+1. 枪械定义 `variants` 声明的基础权重
+2. 已安装插件的 `addsVariants`——同变体与枪械权重**求和**
+3. `registerVariantContributor` 贡献的 `AttributeModifier` 权重修饰符——复用原版三阶段语义：`ADD_VALUE` 加算 → `ADD_MULTIPLIED_BASE` 只乘基础权重 → `ADD_MULTIPLIED_TOTAL` 乘整体。**零基础且无加值时结果恒 0**（"火元素饰品对非火枪无效"）
+
+**逐弹丸语义**：变体对每颗弹丸**独立 roll**（一次选举只作用于本颗），霰弹中可混合出现不同变体或普通弹；权重全 0 或空池时本颗静默退化为普通弹。互斥单值字段（`damageType` / 视觉 `base`）必须走变体池；可叠加效果请走 `registerShootEffect`。
 
 ## 状态定义（StateDefinition）
 

@@ -25,6 +25,7 @@
 | `texture_scale` | 字符串 | 否 | `"auto"` | 渲染几何是否随纹理分辨率缩放。`"auto"`（16 像素 = 1 格，32×32 纹理渲染为 2 倍大，宽高分别缩放不变形，厚度固定 1/16 格）/ `"fixed"`（固定 16×16 单位网格，大纹理仅表现为更精细） |
 | `stats` | 属性ID→浮点数对象 | 否 | `{}` | 属性基础值。键**必须带完整命名空间**（如 `"modularshoot:hit_damage": 50.0`）。不出现的属性使用元数据表默认值 |
 | `traits` | 特性ID→布尔值对象 | 否 | `{}` | 枪械固有特性覆盖。无特性时留空对象 `{}` |
+| `variants` | 变体ID→浮点数对象 | 否 | `{}` | 变体池基础权重：变体 ID → 权重。如 `"variants": { "modularshoot:demo_fireball": 0.5, "modularshoot:demo_heavy": 1.5 }`。每发射击实时组装池，与插件的 `adds_variants` 同变体求和，并经贡献者权重修饰符调整后加权随机选举（详见「变体 JSON」） |
 | `slots` | 种类ID→整数对象 | 否 | `{}` | 插件插槽配置，键为插件种类 ID，值为插槽数量 |
 | `sounds` | 字符串→资源路径对象 | 否 | `{}` | 音效绑定，键为槽位名、值为音效 ID。支持槽位：`shoot`（射击音效）、`hit_entity`/`hit_block`/`hit_pierce`（命中音效，随命中包下发客户端播放）、`plugin_install`（插件安装音效）；**未配置的槽位一律静音**。如 `"shoot": "modularshoot:gun.rifle.shoot"`（槽位详见下表） |
 | `bullet_style` | 对象 | 否 | 无 | 子弹视觉样式（见下表） |
@@ -143,6 +144,7 @@
 | `texture_scale` | 字符串 | 否 | `"auto"` | 图标渲染几何是否随纹理分辨率缩放，语义同枪械的 `texture_scale`（`"auto"` / `"fixed"`） |
 | `modifiers` | 对象数组 | 否 | `[]` | 属性修饰符列表（见下表） |
 | `traits` | 特性ID→布尔值对象 | 否 | `{}` | 安装后提供的特性覆盖 |
+| `adds_variants` | 变体ID→浮点数对象 | 否 | `{}` | 追加进枪械变体池的基础权重。与枪械声明的同变体权重求和。如 `"adds_variants": { "modularshoot:demo_fireball": 10.0 }`（详见「变体 JSON」） |
 | `exclusive_group` | 字符串 | 否 | 无 | 互斥组 ID。同一枪上同组插件不可共存 |
 | `bullet_style` | 对象 | 否 | 无 | 子弹样式（格式同枪械的 `bullet_style`）。**叠加组合**：插件与枪械的 base 按 priority（同 priority 后装赢）选出赢家，modifiers 全部叠加 |
 | `texture_overlay` | 对象 | 否 | 无 | 纹理叠加（见下表） |
@@ -344,6 +346,56 @@
   "color": "#FF2222",
   "priority": 0,
   "force_show": false
+}
+```
+
+## 变体 JSON
+
+**路径**：`data/<命名空间>/modularshoot/variants/<变体id>.json`
+
+| JSON 键 | 类型 | 必需 | 默认值 | 说明 |
+|---------|------|------|--------|------|
+| `weight_hint` | 浮点数 | 否 | `0.0` | 基础权重兜底。仅当枪械/插件都未声明该变体时使用（典型场景：仅由 `registerVariantContributor` 引入的变体）；已被枪械/插件声明的变体以声明权重为权威 |
+| `traits` | 特性ID→布尔值对象 | 否 | `{}` | 选中后**合并**进快照：声明的特性值写入，未声明键保留原值 |
+| `stats` | 属性ID→数值对象 | 否 | `{}` | 选中后**只覆盖声明键**（不整体替换快照属性表） |
+| `damage_type` | 资源路径字符串 | 否 | 无 | 选中后覆盖 `ammo_damage_type` 预设（变体优先） |
+| `bullet_style_override` | 对象 | 否 | 无 | 视觉覆盖，格式同 `bullet_style`（base + modifiers）。base 以最高优先级参与视觉组合选举（胜过枪械/插件/特性/状态条件），modifiers 照常叠加；仅服务端 compose 读取，不序列化到客户端 |
+
+**权重来源（每发射击实时组装，不持久化）**：
+
+| 来源 | 位置 | 合并规则 |
+|------|------|---------|
+| 枪械声明 | 枪械 JSON `variants` | 基础权重 |
+| 插件声明 | 插件 JSON `adds_variants` | 与枪械同变体**求和** |
+| 贡献者修饰符 | `registerVariantContributor` 经 `sink.add` 声明的 `AttributeModifier` | 原版三阶段：`ADD_VALUE` 加算 → `ADD_MULTIPLIED_BASE` 只乘基础权重 → `ADD_MULTIPLIED_TOTAL` 乘整体 |
+
+> 零基础且无加值时权重恒为 0——"火元素饰品对非火枪无效"。最终权重 ≤ 0 的变体不参与选举。
+
+**逐弹丸语义**：变体对每颗弹丸**独立 roll**（一次选举只作用于本颗），霰弹中可混合出现不同变体或普通弹；权重全 0 或空池时本颗静默退化为普通弹。互斥单值字段（`damage_type` / 视觉 `base`）必须走变体池；可叠加效果走 `registerShootEffect`。
+
+> **随包多弹丸演示**：测试枪 `modularshoot:test_gun` 的 `stats` 含 `"modularshoot:pellet_count": 3.0`（单发射 3 颗弹丸），`variants` 声明 demo_fireball 0.5 / demo_heavy 1.5（基础火球概率 25%）；演示插件 `demo_pellet_barrel`（枪管）通过修饰符使 `pellet_count` +2（3 发变 5 发），`demo_fire_magic`（配件）通过 `adds_variants` 使火球权重 +10（装后约 88%）。
+
+**路径**：`data/modularshoot/modularshoot/variants/demo_fireball.json`（框架随包演示：火焰 trait + 火焰伤害类型 + 火球视觉）
+
+```json
+{
+  "weight_hint": 1,
+  "traits": { "modularshoot:visual_fire": true },
+  "stats": { "modularshoot:hit_damage": 15.0 },
+  "damage_type": "minecraft:in_fire",
+  "bullet_style_override": {
+    "base": { "render_mode": "billboard", "texture": "modularshoot:textures/bullet/test_bullet_plain.png" },
+    "modifiers": [ { "type": "tint", "color": [1.0, 0.4, 0.1] } ]
+  }
+}
+```
+
+**路径**：`data/modularshoot/modularshoot/variants/demo_heavy.json`（随包演示：仅覆盖伤害 25，无视觉覆盖）
+
+```json
+{
+  "weight_hint": 0.2,
+  "stats": { "modularshoot:hit_damage": 25.0 }
 }
 ```
 

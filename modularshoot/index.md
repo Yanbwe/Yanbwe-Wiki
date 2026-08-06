@@ -2,31 +2,32 @@
 
 ModularShoot 是一个基于属性驱动、模块化组装的枪械系统**框架模组**，运行于 NeoForge 1.21.1。
 
-> **框架定位**：本模组定位为**纯框架与 API**（注册 API、属性计算管线、射击引擎），不提供生产内容。但随包数据包附带测试/视觉演示内容（4 把 test 枪械、9 个演示插件、2 个插件种类 barrel/accessory、演示特性 visual_bloodlust、演示状态 visual_killstreak），用于功能演示与调试，可被外部数据包覆盖；生产内容由其他模组通过 API 或数据包添加。
+> **框架定位**：本模组定位为**纯框架与 API**（注册 API、属性计算管线、射击引擎），不提供生产内容。但随包数据包附带测试/视觉演示内容（4 把 test 枪械、14 个演示插件、2 个插件种类 barrel/accessory、2 个演示特性 visual_bloodlust/visual_fire、1 个演示状态 visual_killstreak、2 个演示变体 demo_fireball/demo_heavy），用于功能演示与调试，可被外部数据包覆盖；生产内容由其他模组通过 API 或数据包添加。
 
 ## 核心特点
 
 | 特点 | 说明 |
 |------|------|
 | **单 ID + Data Component** | 所有枪械共用一个物品 ID（`modularshoot:gun`），通过 Data Component 区分枪型；插件同理（`modularshoot:plugin`） |
-| **纯框架 + 演示包** | 4 把演示枪械、9 个演示插件、2 个插件种类、1 个演示特性、1 个演示状态（全部可被数据包覆盖）——提供 API 和引擎 |
+| **纯框架 + 演示包** | 4 把演示枪械、14 个演示插件、2 个插件种类、2 个演示特性、1 个演示状态、2 个演示变体（全部可被数据包覆盖）——提供 API 和引擎 |
 | **属性驱动** | 枪械行为完全由属性 + 特性决定，无硬编码特殊逻辑。`ADD_VALUE → ADD_MULTIPLIED_BASE → ADD_MULTIPLIED_TOTAL` 三阶段叠加 |
 | **双路注册** | 支持 Java API 注册和数据包 JSON 注册，共享同一注册表。`/reload` 热重载 JSON，API 注册不受影响 |
 | **非实体子弹** | 子弹为轻量数据记录，由 BulletManager 管理，支持数千发同时飞行（每 tick 每区块实体候选缓存 + 胶囊体碰撞检测） |
 | **完全事件化** | 所有扩展点通过事件 + 回调 API 暴露：射击事件、安装/拆卸事件、特性钩子、伤害处理器、右键/换弹事件 |
 | **服务端权威** | 射击、子弹飞行、命中判定均由服务端执行，客户端仅渲染，防作弊 |
+| **随机变体** | 枪械/插件声明变体池，每次射击每颗弹丸独立加权随机选举变体，合并特性、覆盖属性/伤害类型与视觉 |
 
 ## 快速导航
 
 | 文档 | 适合人群 | 内容 |
 |------|---------|------|
 | [API 参考](./API.md) | 想用代码调用框架功能的开发者 | ModularShootAPI 所有公开方法速查表 |
-| [注册表参考](./Registry.md) | 想了解定义字段含义的开发者 | 6 张动态注册表及每种定义的字段详解 |
+| [注册表参考](./Registry.md) | 想了解定义字段含义的开发者 | 7 张动态注册表及每种定义的字段详解 |
 | [数据包注册](./DataPack.md) | 想用 JSON 注册内容的开发者 | 数据包 JSON 文件路径、字段与格式说明 |
 | [命令参考](./CommandReference.md) | 想用调试命令的开发者 | `/modularshoot` 子命令速查 |
 | [示例集](./Examples.md) | 想直接看代码的开发者 | Java API 和 JSON 的所有集中示例 |
 
-## 6 张框架注册表
+## 7 张框架注册表
 
 | 注册表 ID | 用途 | 注册方式 |
 |-----------|------|---------|
@@ -35,13 +36,14 @@ ModularShoot 是一个基于属性驱动、模块化组装的枪械系统**框�
 | `modularshoot:plugin_types` | 插件种类定义 | Java API / 数据包 JSON |
 | `modularshoot:traits` | 布尔特性定义 | Java API / 数据包 JSON |
 | `modularshoot:states` | 持久状态定义 | Java API / 数据包 JSON |
+| `modularshoot:variants` | 随机变体定义 | 数据包 JSON |
 | `modularshoot:attribute_meta` | 属性元数据（默认值、显示信息、绑定） | 数据包 JSON |
 
 > 属性**本体**（`Attribute` 实例）需用原版 `DeferredRegister` 注册到 `BuiltInRegistries.ATTRIBUTE`，不在上述动态注册表中。
 
 ## 预置属性
 
-框架预注册 9 个数值属性（`modularshoot` 命名空间）：
+框架预注册 10 个数值属性（`modularshoot` 命名空间）：
 
 | 属性 ID | 说明 | 默认值 |
 |---------|------|--------|
@@ -54,13 +56,14 @@ ModularShoot 是一个基于属性驱动、模块化组装的枪械系统**框�
 | `bullet_speed` | 子弹飞行速度（格/秒） | 20.0 |
 | `bullet_size` | 子弹碰撞球半径（0 为射线） | 0.5 |
 | `block_penetration` | 穿透方块数（0 不穿透） | 0 |
+| `pellet_count` | 单次射击弹丸数量（四舍五入后钳制到 1~32，超上限 WARN；0 或未挂载时静默退化为单弹丸） | 1.0 |
 
 ## 关键事件一览
 
 | 事件 | 触发时机 | 可取消 |
 |------|---------|--------|
 | `PreShootEvent` | 射击条件判断通过后 | 是 |
-| `PostShootEvent` | 子弹注册后 | 否 |
+| `PostShootEvent` | 所有弹丸注册后（携带本次射击的全部弹丸，经 `getBullets()` 获取） | 否 |
 | `GunRightClickEvent` | 非 GUI 中右键枪械 | 是 |
 | `ReloadEvent` | 按下换弹键（默认 R） | 是 |
 | `PrePluginInstallEvent` | 插件安装校验通过后 | 是 |

@@ -23,6 +23,7 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 | `texture_scale` | Text string | No | `"auto"` | Whether the render geometry scales with the texture resolution. `"auto"` (16 px = 1 grid cell; a 32×32 texture renders 2× larger; width/height scale independently without distortion; extrusion thickness stays 1/16 cell) / `"fixed"` (fixed 16×16 unit grid; large textures only look sharper) |
 | `stats` | Attribute ID → decimal object | No | `{}` | Attribute base values. Keys **must** include full namespace (e.g. `"modularshoot:hit_damage": 50.0`). Missing attributes use metadata table defaults |
 | `traits` | Trait ID → boolean object | No | `{}` | Gun inherent trait overrides. Empty `{}` if no traits |
+| `variants` | Variant ID → decimal object | No | `{}` | Variant pool base weights: variant ID → weight. E.g. `"variants": { "modularshoot:demo_fireball": 0.5, "modularshoot:demo_heavy": 1.5 }`. The pool is assembled fresh per shot, summed with plugins' `adds_variants`, adjusted by contributor weight modifiers, then rolled weighted-random (see "Variant JSON") |
 | `slots` | Plugin type ID → integer object | No | `{}` | Plugin slot config. Key is plugin type ID, value is slot count |
 | `sounds` | String → resource path object | No | `{}` | Sound bindings. E.g. `"shoot": "modularshoot:gun.rifle.shoot"` |
 | `bullet_style` | Object | No | None | Bullet visual style (see sub-table below) |
@@ -129,6 +130,7 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 | `texture_scale` | Text string | No | `"auto"` | Whether the icon geometry scales with the texture resolution; same semantics as the gun's `texture_scale` (`"auto"` / `"fixed"`) |
 | `modifiers` | Object array | No | `[]` | Attribute modifier list (see sub-table below) |
 | `traits` | Trait ID → boolean object | No | `{}` | Trait overrides provided on install |
+| `adds_variants` | Variant ID → decimal object | No | `{}` | Base weights appended to the gun's variant pool. Summed with the gun-declared weight of the same variant. E.g. `"adds_variants": { "modularshoot:demo_fireball": 10.0 }` (see "Variant JSON") |
 | `exclusive_group` | Text string | No | None | Mutual exclusion group ID. Same-group on same gun = can't coexist |
 | `bullet_style` | Object | No | None | Bullet style (same format as gun's `bullet_style`). **Stacks**: plugin vs gun base picks a winner by priority (later-installed wins ties); all modifiers stack |
 | `texture_overlay` | Object | No | None | Texture overlay (see sub-table below) |
@@ -330,6 +332,56 @@ Register content via datapack JSON. Equivalent to and sharing information with J
   "color": "#FF2222",
   "priority": 0,
   "force_show": false
+}
+```
+
+## Variant JSON
+
+**Path**: `data/<namespace>/modularshoot/variants/<variant_id>.json`
+
+| JSON Key | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `weight_hint` | Decimal number | No | `0.0` | Base weight fallback. Used only when *no* gun/plugin declares this variant in its pool (typical for variants introduced solely via `registerVariantContributor`); declared gun/plugin weights are authoritative |
+| `traits` | Trait ID → boolean object | No | `{}` | **Merged** into the snapshot when selected: declared trait values are written, unlisted keys are kept |
+| `stats` | Attribute ID → decimal object | No | `{}` | When selected, **overrides only the declared keys** (does not replace the whole snapshot stat table) |
+| `damage_type` | Resource path string | No | None | When present, overrides the `ammo_damage_type` preset (variant takes precedence) |
+| `bullet_style_override` | Object | No | None | Visual override, same format as `bullet_style` (base + modifiers). Its base participates in the visual composition election with the highest priority (beats gun / plugins / traits / state conditions); modifiers stack as usual. Read by server-side compose only; never serialised to clients |
+
+**Weight sources (assembled fresh every shot, never persisted)**:
+
+| Source | Location | Merge rule |
+|--------|----------|------------|
+| Gun declaration | Gun JSON `variants` | Base weight |
+| Plugin declaration | Plugin JSON `adds_variants` | **Summed** with the gun's weight of the same variant |
+| Contributor modifiers | `AttributeModifier`s declared via `registerVariantContributor` / `sink.add` | Vanilla three stages: `ADD_VALUE` (flat add) → `ADD_MULTIPLIED_BASE` (multiplies only the base weight) → `ADD_MULTIPLIED_TOTAL` (scales the whole) |
+
+> A zero base with no ADD_VALUE modifier always resolves to `0` — "a fire trinket is useless on a non-fire gun". Variants with a final weight ≤ 0 never participate in the roll.
+
+**Per-pellet semantics**: the variant is rolled **independently per pellet** (one election affects only that pellet), so a shotgun blast can mix different variants or normal pellets; an all-zero-weight or empty pool silently yields a normal pellet. Mutually-exclusive single-value fields (`damage_type` / visual `base`) must go through the variant pool; stackable effects should use `registerShootEffect`.
+
+> **Bundled multi-pellet demo**: the test gun `modularshoot:test_gun` declares `"modularshoot:pellet_count": 3.0` in its `stats` (3 pellets per shot) and `variants` demo_fireball 0.5 / demo_heavy 1.5 (25% base fireball chance); the demo plugin `demo_pellet_barrel` (barrel) adds +2 to `pellet_count` via a modifier (3 → 5 pellets), while `demo_fire_magic` (accessory) adds +10 fireball weight via `adds_variants` (≈88% after install).
+
+**Path**: `data/modularshoot/modularshoot/variants/demo_fireball.json` (bundled demo: fire trait + fire damage type + fireball visuals)
+
+```json
+{
+  "weight_hint": 1,
+  "traits": { "modularshoot:visual_fire": true },
+  "stats": { "modularshoot:hit_damage": 15.0 },
+  "damage_type": "minecraft:in_fire",
+  "bullet_style_override": {
+    "base": { "render_mode": "billboard", "texture": "modularshoot:textures/bullet/test_bullet_plain.png" },
+    "modifiers": [ { "type": "tint", "color": [1.0, 0.4, 0.1] } ]
+  }
+}
+```
+
+**Path**: `data/modularshoot/modularshoot/variants/demo_heavy.json` (bundled demo: overrides damage to 25 only, no visual override)
+
+```json
+{
+  "weight_hint": 0.2,
+  "stats": { "modularshoot:hit_damage": 25.0 }
 }
 ```
 

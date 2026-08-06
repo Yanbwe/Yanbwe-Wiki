@@ -123,6 +123,55 @@ ModularShootAPI.registerShootPredicate((player, gun) -> {
 });
 ```
 
+### Register a Shoot Effect (registerShootEffect)
+
+Effects run inside the pellet loop, right after each pellet's snapshot `copy()` and right before spread application, in registration order; a later effect sees all mutations made by earlier ones (`pelletIndex` may serve as a per-pellet differentiation seed). **Usage red lines**: recommended mutations are `setTrait` (boolean traits stack naturally) / `multiplyStat` (multiplicative scaling composes) / `setStat` (deliberate, deterministic overwrite); **forbidden** are `setDamageType` and visual `base` overrides — exclusive single-value fields, whose exclusive scenarios must go through the variant pool (technically not blocked, but the result is field-level fragmentation).
+
+```java
+import org.yanbwe.modularshoot.ModularShootAPI;
+import net.minecraft.resources.ResourceLocation;
+
+// 10% chance to trigger "critical hit": enable a trait (its visual_modifiers
+// tint the bullet red) and double the damage
+ModularShootAPI.registerShootEffect((player, gun, snapshot, pelletIndex, totalPellets) -> {
+    if (player.getRandom().nextFloat() < 0.10f) {
+        // Inside the red lines: setTrait (boolean, co-exists) / multiplyStat
+        // (multiplicative) / setStat (deterministic overwrite)
+        snapshot.setTrait(ResourceLocation.parse("examplemod:critical_hit"), true);
+        snapshot.multiplyStat(ResourceLocation.parse("modularshoot:hit_damage"), 2.0);
+        // Outside the red lines: do NOT setDamageType or override the visual
+        // base here — they are exclusive single-value fields; exclusive
+        // scenarios must go through the variant pool (modularshoot:variants)
+    }
+});
+```
+
+### Register a Variant Contributor (registerVariantContributor)
+
+Declares "variant id → weight modifier" pairs, collected fresh every shot when the per-shot pool is assembled (never persisted). Modifiers reuse the vanilla `AttributeModifier` record and its `Operation` three-stage semantics.
+
+```java
+import org.yanbwe.modularshoot.ModularShootAPI;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+
+// Give the "fireball" variant a 2x weight modifier
+ModularShootAPI.registerVariantContributor(sink -> {
+    // ADD_MULTIPLIED_BASE: multiplies only the base weight. If the gun
+    // declares fireball base weight 1.0, the final weight = 1.0 × (1 + 1.0)
+    // = 2.0; with a zero base and no ADD_VALUE modifier the result stays 0
+    // — "a fire trinket is useless on a non-fire gun"
+    sink.add(
+        ResourceLocation.parse("examplemod:fireball"),
+        new AttributeModifier(
+            ResourceLocation.parse("examplemod:fireball_weight_x2"),
+            1.0,
+            AttributeModifier.Operation.ADD_MULTIPLIED_BASE
+        )
+    );
+});
+```
+
 ### Register a Trait Hook (ON_HIT Example)
 
 ```java

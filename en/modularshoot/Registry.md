@@ -1,6 +1,6 @@
 # Registry Reference
 
-ModularShoot stores all definitions in 6 dynamic registries (DataPackRegistry). All support `/reload` hot-reload and client sync.
+ModularShoot stores all definitions in 7 dynamic registries (DataPackRegistry). All support `/reload` hot-reload and client sync.
 
 
 ## Registry Overview
@@ -13,6 +13,7 @@ ModularShoot stores all definitions in 6 dynamic registries (DataPackRegistry). 
 | `modularshoot:traits` | Boolean trait definitions | `Trait` |
 | `modularshoot:attribute_meta` | Attribute metadata | `AttributeMeta` |
 | `modularshoot:states` | Persistent state definitions | `StateDefinition` |
+| `modularshoot:variants` | Random variant definitions | `VariantDefinition` |
 
 > Attribute **bodies** (`Attribute` instances) are not in these dynamic registries — register them using vanilla `DeferredRegister` into `BuiltInRegistries.ATTRIBUTE`. The metadata table stores only defaults, display info, and bindings.
 
@@ -29,6 +30,7 @@ Registry: `modularshoot:guns`
 | `textureScale` | Enum | No | `AUTO` | Whether the render geometry scales with the texture resolution. `AUTO` (16 px = 1 grid cell; a 32×32 texture renders 2× larger) / `FIXED` (fixed 16×16 unit grid). Base and shoot textures scale independently by their own size |
 | `stats` | Attribute ID → decimal map | No | Empty map | Attribute base values. Keys **must** include full namespace (e.g. `modularshoot:hit_damage`). Unspecified attributes use the metadata table default |
 | `traits` | Trait ID → boolean map | No | Empty map | Gun inherent trait overrides. Gun-declared traits always override all plugins |
+| `variants` | Variant ID → decimal map | No | Empty map | Variant pool base weights: variant ID → base weight. The pool is assembled fresh for every shot, summed with plugins' `addsVariants` per variant, adjusted by contributor weight modifiers, then rolled weighted-random (see "Variant Definition (VariantDefinition)") |
 | `slots` | Plugin type ID → integer map | No | Empty map | Plugin slot configuration. Key is plugin type ID, value is slot count |
 | `sounds` | String → resource path map | No | Empty map | Sound bindings. Predefined slot: `shoot` (firing sound). Custom slot names supported |
 | `bulletStyle` | Optional bullet style | No | None (falls back to framework default appearance `ComposedBulletStyle.FALLBACK_BASE`, billboard + default texture) | Bullet visual appearance config |
@@ -61,6 +63,7 @@ Registry: `modularshoot:plugins`
 | `textureScale` | Enum | No | `AUTO` | Whether the icon geometry scales with the texture resolution; same semantics as the gun's `textureScale` (`AUTO` / `FIXED`) |
 | `modifiers` | List of modifiers | No | Empty list | Attribute modifier array. Applied to gun on installation |
 | `traits` | Trait ID → boolean map | No | Empty map | Trait overrides provided after installation |
+| `addsVariants` | Variant ID → decimal map | No | Empty map | Base weights appended to the gun's variant pool. Summed with the gun-declared weight of the same variant once installed (see "Variant Definition (VariantDefinition)") |
 | `exclusiveGroup` | Optional text string | No | None | Mutual exclusion group ID. Two plugins with the same group ID cannot coexist on the same gun |
 | `bulletStyle` | Optional bullet style | No | None | Bullet style contribution. **Stacks**: base candidates are elected by priority (same priority: later-installed wins; when no candidate, the framework fallback appearance is used); all modifiers stack (scale multiplies, tint multiplies channel-wise, attach layers are all kept) |
 | `textureOverlay` | Optional texture overlay | No | None | Texture overlay info. Layers stacked over the gun's base texture after install |
@@ -149,6 +152,26 @@ Registry: `modularshoot:attribute_meta`
 | `forceShow` | Boolean | No | `false` | Force display. When `true`, shown in tooltip even if value equals default |
 
 > If the `binds` target attribute is not registered: metadata entry is retained but modifier won't mount, tooltip won't show, reads return 0.
+
+## Variant Definition (VariantDefinition)
+
+Registry: `modularshoot:variants`
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `weightHint` | Decimal number | No | `0.0` | Base weight fallback. Used only when *no* gun/plugin declares this variant in its pool (typical for variants introduced solely via `registerVariantContributor`); declared gun/plugin weights are authoritative |
+| `traits` | Trait ID → boolean map | No | Empty map | **Merged** into the snapshot when selected: declared trait values are written, unlisted keys are kept |
+| `stats` | Attribute ID → decimal map | No | Empty map | When selected, **overrides only the declared keys** (does not replace the whole snapshot stat table) |
+| `damageType` | Optional resource path | No | None | When present, overrides the `ammo_damage_type` preset (variant takes precedence) |
+| `bulletStyleOverride` | Optional bullet style | No | None | Visual override, same format as `bulletStyle` (base + modifiers). Its base participates in the visual composition election with the highest priority (beats gun / plugins / traits / state conditions); modifiers stack as usual. Read by server-side compose only; never serialised to clients |
+
+**Weight semantics (three sources)**: the variant pool is **assembled fresh for every shot** (never persisted). After merging the three sources below, one variant is rolled weighted-random:
+
+1. Base weights declared by the gun definition (`variants`)
+2. Installed plugins' `addsVariants` — **summed** with the gun's weight of the same variant
+3. Weight modifiers contributed via `registerVariantContributor` — vanilla `AttributeModifier` three-stage semantics: `ADD_VALUE` (flat add) → `ADD_MULTIPLIED_BASE` (multiplies only the base weight) → `ADD_MULTIPLIED_TOTAL` (scales the whole). **A zero base with no ADD_VALUE modifier always resolves to `0`** — "a fire trinket is useless on a non-fire gun"
+
+**Per-pellet semantics**: the variant is rolled **independently per pellet** (one election affects only that pellet), so a shotgun blast can mix different variants or normal pellets; an all-zero-weight or empty pool silently yields a normal pellet. Mutually-exclusive single-value fields (`damageType` / visual `base`) must go through the variant pool; stackable effects should use `registerShootEffect`.
 
 ## State Definition (StateDefinition)
 
