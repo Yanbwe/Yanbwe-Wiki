@@ -301,7 +301,7 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 
 | JSON Key | Type | Required | Default | Description |
 |----------|------|----------|---------|-------------|
-| `binds` | Resource path string | **Yes** | — | Points to a registered vanilla `Attribute` ID (e.g. `"minecraft:generic.max_health"`). Framework resolves the `Attribute` holder through this field |
+| `binds` | Resource path string | **Yes** | — | Points to a registered vanilla `Attribute` ID (e.g. `"minecraft:generic.max_health"`). Framework resolves the `Attribute` holder through this field. **Since v1.2, shared by all three paths**: mounting (gun base-value modifiers resolve their mount target), resolution (shot resolution, fire-rate gating, client prediction, `/modularshoot stats` and debug command reads) and display (tooltip values) all resolve through `binds`; may point to any registered attribute (incl. `minecraft:*`) |
 | `default_value` | Decimal number | **Yes** | — | Gun base value when not declared by the gun (participates in additive calculations). **Not the vanilla base value** |
 | `description` | Text string | No | `""` | Description text |
 | `color` | Text string | No | `""` | Name color |
@@ -334,6 +334,27 @@ Register content via datapack JSON. Equivalent to and sharing information with J
   "force_show": false
 }
 ```
+
+**Path**: `data/examplemod/modularshoot/attribute_meta/hit_damage.json`
+
+(**v1.2 rebinding example** — rebind the logical attribute `hit_damage` to the vanilla attack damage attribute. Same path as the example above; deploy only one of them)
+
+```json
+{
+  "binds": "minecraft:attack_damage",
+  "default_value": 10.0
+}
+```
+
+> **Effect**: while holding the gun, the player's attack damage = vanilla base (1.0) + gun damage (10.0) = **11**, and shot resolution reads the same value; when the gun is no longer held the modifier is removed and attack damage returns to the vanilla base; melee damage while holding the gun also scales up (a feature, not a defect).
+
+> **v1.2 notes**:
+> - **Base offset convention**: when bound to an attribute with a non-zero base, the resolved value is "attribute base + modifier net". E.g. rebound to `minecraft:attack_damage` (player base = 1.0) → resolved = 1.0 + gun damage. The framework does **not** auto-calibrate; datapack authors compensate via `default_value` or gun `stats`
+> - **Melee side effect**: with the modifier mounted on `minecraft:attack_damage`, melee damage while holding the gun scales up too (a feature, not a defect)
+> - **syncable convention**: binding targets should preferably be syncable attributes — client prediction and tooltip need the synced value; on non-syncable attributes the client reads 0.0 and client-side fire-rate prediction is **silently disabled** (server unaffected)
+> - **Add = plug-and-play, delete = disabled**: adding an attribute_meta entry for any logical id makes gun `stats` support that key automatically (beyond the 10 preset attributes); deleting an entry disables that logical attribute's mounting and resolution (reads 0.0)
+> - **Avoid multiple entries binding the same attribute**: base modifiers share the fixed ID `modularshoot:gun_base`; multiple entries on the same attribute overwrite each other with no guaranteed winner
+> - **Degradation contract unchanged**: `binds` target not registered → metadata entry is kept, modifier not mounted, tooltip not shown, reads return 0
 
 ## Variant JSON
 

@@ -41,6 +41,8 @@ ModularShoot is an attribute-driven, modular assembly gun system **framework mod
 
 > Attribute **bodies** (`Attribute` instances) must be registered using vanilla `DeferredRegister` into `BuiltInRegistries.ATTRIBUTE`. They are not in the dynamic registries above.
 
+> **v1.2**: an attribute_meta entry's `binds` can be rebound to any registered vanilla attribute (e.g. `minecraft:attack_damage`); all three paths (mount / resolve / display) share it. See the [datapack registration doc](./DataPack.md#attribute-metadata-json).
+
 ## Preset Attributes
 
 The framework pre-registers 10 numeric attributes (`modularshoot` namespace):

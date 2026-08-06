@@ -41,6 +41,8 @@ ModularShoot 是一个基于属性驱动、模块化组装的枪械系统**框�
 
 > 属性**本体**（`Attribute` 实例）需用原版 `DeferredRegister` 注册到 `BuiltInRegistries.ATTRIBUTE`，不在上述动态注册表中。
 
+> **v1.2**：attribute_meta 条目的 `binds` 可重绑到任意已注册原版属性（如绑定到 `minecraft:attack_damage`），挂载/结算/显示三路径共用，详见[数据包注册](./DataPack.md#属性元数据-json)。
+
 ## 预置属性
 
 框架预注册 10 个数值属性（`modularshoot` 命名空间）：
