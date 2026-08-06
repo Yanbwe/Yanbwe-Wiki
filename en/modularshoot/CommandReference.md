@@ -12,7 +12,7 @@
 | `plugin <id> [count]` | `id` — plugin registry ID; `count` — optional, quantity to give (default 1, clamped to 1–64) | Gives yourself one or more specified plugin items |
 | `bullets` | None | Queries the current world's active bullet count and brief status |
 | `debug <on|off>` | `on` or `off` | Toggles debug mode. When on, continuously shows key attribute values of your main-hand gun on the action bar |
-| `variants` | None | Previews your main-hand gun's **variant pool** (computed server-side, includes trinket contributor modifiers): one line per candidate with variant ID, final weight and probability percentage; guns declaring no variant pool show a "Normal bullet (default fallback)" entry (spec §6.4 v1.2) |
+| `variants` | None | Previews your main-hand gun's **variant pool** (computed server-side, includes trinket contributor modifiers): one line per candidate with variant ID, final weight and probability percentage; guns declaring no variant pool show a "Normal bullet (default fallback)" entry (spec §6.4) |
 
 ## Usage Examples
 
