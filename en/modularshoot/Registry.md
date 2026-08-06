@@ -171,6 +171,8 @@ Registry: `modularshoot:variants`
 2. Installed plugins' `addsVariants` — **summed** with the gun's weight of the same variant
 3. Weight modifiers contributed via `registerVariantContributor` — vanilla `AttributeModifier` three-stage semantics: `ADD_VALUE` (flat add) → `ADD_MULTIPLIED_BASE` (multiplies only the base weight) → `ADD_MULTIPLIED_TOTAL` (scales the whole). **A zero base with no ADD_VALUE modifier always resolves to `0`** — "a fire trinket is useless on a non-fire gun"
 
+**Normal-bullet fallback**: when the gun declares **no** `variants`, the pool implicitly contains a "normal bullet" candidate with weight `1.0` (not written into any JSON); **guns that declare `variants` get no fallback**. Probability math: `P(variant X) = X's final weight ÷ pool total weight` (pool total = the sum of the final weights of all positive-weight candidates, including the fallback `1.0`); equal weights in a two-candidate pool give 50% each, and a variant hits 50% ⟺ its weight equals the sum of the other candidates' weights. Example: a normal gun + fireball plugin `adds_variants: 1.0` → pool {fireball 1.0, normal bullet 1.0} → exactly 50%.
+
 **Per-pellet semantics**: the variant is rolled **independently per pellet** (one election affects only that pellet), so a shotgun blast can mix different variants or normal pellets; an all-zero-weight or empty pool silently yields a normal pellet. Mutually-exclusive single-value fields (`damageType` / visual `base`) must go through the variant pool; stackable effects should use `registerShootEffect`.
 
 ## State Definition (StateDefinition)

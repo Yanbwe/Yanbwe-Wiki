@@ -354,8 +354,21 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 | Gun declaration | Gun JSON `variants` | Base weight |
 | Plugin declaration | Plugin JSON `adds_variants` | **Summed** with the gun's weight of the same variant |
 | Contributor modifiers | `AttributeModifier`s declared via `registerVariantContributor` / `sink.add` | Vanilla three stages: `ADD_VALUE` (flat add) → `ADD_MULTIPLIED_BASE` (multiplies only the base weight) → `ADD_MULTIPLIED_TOTAL` (scales the whole) |
+| Default normal-bullet fallback | Implicit (not written into any JSON) | When the gun declares **no** `variants`, the pool implicitly contains a "normal bullet" candidate with weight `1.0`, participating in the probability calculation |
 
 > A zero base with no ADD_VALUE modifier always resolves to `0` — "a fire trinket is useless on a non-fire gun". Variants with a final weight ≤ 0 never participate in the roll.
+
+> **Fallback rationale**: without this fallback, "a normal gun + a 50% fireball plugin" (`adds_variants: 1.0`) would trigger 100% of the time because the fireball would be the pool's only candidate — the plugin's probability semantics would be distorted. With the fallback the pool becomes {fireball 1.0, normal bullet 1.0} → exactly 50%. **Guns that do declare `variants` get no fallback** — probabilities are computed strictly from the declared weights.
+
+**Probability math (developer quick reference)**: weights are **relative proportions** — there is no fixed "weight X = 50%"; the actual probability depends on the whole pool's total weight:
+
+- `P(variant X) = X's final weight ÷ pool total weight`. The pool total = the sum of the final weights of all positive-weight candidates (including the normal-bullet fallback `1.0` when the gun declares no `variants`)
+- A single-candidate pool always rolls 100% (no matter the weight); a two-candidate pool with equal weights (e.g. `1 : 1`) gives 50% each
+- A variant hits 50% ⟺ its weight equals the sum of all the other candidates' weights
+
+Examples: a normal gun + fireball plugin `adds_variants: 1.0` → pool {fireball 1.0, normal bullet 1.0} → exactly 50%; `test_gun` declares `demo_fireball 0.5 : demo_heavy 1.5` → pool total 2.0 → fireball 25%. The final weight = the base weight computed through the three stages (`ADD_VALUE` add → `ADD_MULTIPLIED_BASE` multiplies only the base → `ADD_MULTIPLIED_TOTAL` scales the whole), influenced by `registerVariantContributor` modifiers.
+
+> **Plugin description guideline**: a plugin JSON's `description` (visible in the player tooltip) should not state raw weight numbers — write the computed probability instead (e.g. "fireball chance raised to ≈88%"). The demo plugin `demo_fire_magic` demonstrates this.
 
 **Per-pellet semantics**: the variant is rolled **independently per pellet** (one election affects only that pellet), so a shotgun blast can mix different variants or normal pellets; an all-zero-weight or empty pool silently yields a normal pellet. Mutually-exclusive single-value fields (`damage_type` / visual `base`) must go through the variant pool; stackable effects should use `registerShootEffect`.
 

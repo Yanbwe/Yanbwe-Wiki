@@ -187,6 +187,8 @@ DynamicOutlineTintRegistry.register(
 2. 已安装插件的 `addsVariants`——同变体与枪械权重**求和**
 3. `registerVariantContributor` 贡献的 `AttributeModifier` 权重修饰符——复用原版三阶段语义：`ADD_VALUE` 加算 → `ADD_MULTIPLIED_BASE` 只乘基础权重 → `ADD_MULTIPLIED_TOTAL` 乘整体。**零基础且无加值时结果恒 0**（"火元素饰品对非火枪无效"）
 
+**普通弹兜底**：枪械**未声明** `variants` 时，池中默认存在权重 `1.0` 的"普通子弹"候选（隐式，不写入任何 JSON）；**声明了 `variants` 的枪械无兜底**。概率换算：`P(变体X) = X 的最终权重 ÷ 池总权重`（池总权重 = 所有正权重候选的最终权重之和，含兜底 `1.0`）；两候选权重相等时各 50%，某变体 50% ⟺ 其权重 = 其余候选权重之和。示例：普通枪 + 火球插件 `adds_variants: 1.0` → 池 {火球 1.0, 普通弹 1.0} → 火球恰 50%。
+
 **逐弹丸语义**：变体对每颗弹丸**独立 roll**（一次选举只作用于本颗），霰弹中可混合出现不同变体或普通弹；权重全 0 或空池时本颗静默退化为普通弹。互斥单值字段（`damageType` / 视觉 `base`）必须走变体池；可叠加效果请走 `registerShootEffect`。
 
 ## 状态定义（StateDefinition）
