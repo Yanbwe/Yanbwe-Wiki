@@ -328,9 +328,9 @@ public class EventListeners {
         event.setCanceled(true); // 如果处理了就不再传递
     }
 
-    // 换弹键（R）：实现换弹
+    // 动作键（R）：实现换弹或其他自定义动作
     @SubscribeEvent
-    public static void onReload(ReloadEvent event) {
+    public static void onAction(ActionEvent event) {
         if (hasSpareAmmo(event.getEntity(), event.getGun())) {
             doReload(event.getEntity(), event.getGun());
         }

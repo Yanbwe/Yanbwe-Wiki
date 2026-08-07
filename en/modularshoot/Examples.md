@@ -334,9 +334,9 @@ public class EventListeners {
         event.setCanceled(true); // Stop propagation if handled
     }
 
-    // Reload key (R): implement reload
+    // Action key (R): implement reload or other custom actions
     @SubscribeEvent
-    public static void onReload(ReloadEvent event) {
+    public static void onAction(ActionEvent event) {
         if (hasSpareAmmo(event.getEntity(), event.getGun())) {
             doReload(event.getEntity(), event.getGun());
         }
