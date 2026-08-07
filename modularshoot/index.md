@@ -1,5 +1,7 @@
 # ModularShoot（模块化射击）
 
+**https://github.com/Yanbwe/ModularShoot**
+
 ModularShoot 是一个基于属性驱动、模块化组装的枪械系统**框架模组**，运行于 NeoForge 1.21.1。
 
 > **框架定位**：本模组定位为**纯框架与 API**（注册 API、属性计算管线、射击引擎），不提供生产内容。随包数据包仅附带框架元数据（属性元数据表、插件种类 barrel/accessory），不附带演示/测试内容；生产内容由其他模组通过 API 或数据包添加。
