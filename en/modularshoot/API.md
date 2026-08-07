@@ -5,10 +5,14 @@ Quick reference for all public static methods in ModularShootAPI. Methods groupe
 
 ## Item Checks
 
+Recognition is **dual-channel**: the component channel (carrying the `gun_data`/`plugin_data` component) takes precedence, with the binding channel (item ID hitting the `gun_items`/`plugin_items` binding tables) as fallback.
+
 | Method Signature | Parameters | Returns | Description |
 |-----------------|------------|---------|-------------|
-| `isGun(ItemStack stack)` | `stack` — the item stack to check | `boolean` | Checks whether the stack is a framework gun (`modularshoot:gun`). Tests item type only |
-| `isPlugin(ItemStack stack)` | `stack` — the item stack to check | `boolean` | Checks whether the stack is a framework plugin (`modularshoot:plugin`). Tests item type only |
+| `isGun(ItemStack stack, RegistryAccess access)` | `stack` — the item stack to check; `access` — runtime registry view (e.g. `player.registryAccess()`) | `boolean` | Checks whether the stack is a gun (native `modularshoot:gun` or a binding-table entry). Use this overload at runtime |
+| `isGun(ItemStack stack)` | `stack` — the item stack to check | `boolean` | Degraded overload (when no registry view is available, e.g. the main menu): component channel + Java API binding channel only, **datapack bindings excluded** |
+| `isPlugin(ItemStack stack, RegistryAccess access)` | Same as above (plugin version) | `boolean` | Checks whether the stack is a plugin (native `modularshoot:plugin` or a binding-table entry) |
+| `isPlugin(ItemStack stack)` | `stack` — the item stack to check | `boolean` | Degraded overload, same semantics as `isGun(stack)` |
 
 ## Data Queries
 
@@ -18,6 +22,8 @@ Quick reference for all public static methods in ModularShootAPI. Methods groupe
 | `getGunData(ItemStack gun)` | `gun` — the gun item stack | `Optional<GunData>` | Gets the full GunData component (gun ID, instance UUID, installed plugin list, modifierVersion, per-gun state) |
 | `getPluginId(ItemStack stack)` | `stack` — the plugin item stack | `Optional<ResourceLocation>` | Gets the plugin definition ID. Returns empty for non-plugin items or when no `plugin_data` component exists |
 | `getPluginData(ItemStack stack)` | `stack` — the plugin item stack | `Optional<PluginData>` | Gets the full PluginData component (contains plugin ID) |
+| `resolveGunId(ItemStack stack, RegistryAccess access)` | `stack` — the item stack; `access` — runtime registry view | `Optional<ResourceLocation>` | Dual-channel resolution of the gun definition ID: component first, binding table as fallback. Bound guns resolve through the binding table even before a component is attached |
+| `resolvePluginId(ItemStack stack, RegistryAccess access)` | Same as above (plugin version) | `Optional<ResourceLocation>` | Dual-channel resolution of the plugin definition ID. The recommended read path for bound plugins (no component) |
 | `getInstalledPlugins(ItemStack gun)` | `gun` — the gun item stack | `List<PluginInstance>` (immutable) | Queries the list of plugins installed on the gun. Returns empty list for non-gun items or when no plugins are installed |
 | `getExtraValueSums(ItemStack gun, RegistryAccess registryAccess)` | `gun` — the gun item stack; `registryAccess` — runtime registry view (needs a loaded world) | `Map<ResourceLocation, Double>` (immutable) | Totals the `extra_values` of every **valid** plugin (definition still present) installed on the gun, summed per namespaced key. Degraded plugins are filtered (same contract as the attribute pipeline); keys never declared are absent from the result |
 | `getExtraValue(ItemStack gun, ResourceLocation key, RegistryAccess registryAccess)` | `gun` — the gun item stack; `key` — the extension-field key to look up; `registryAccess` — runtime registry view | `double` | Convenience single-key lookup: the accumulated value of `key` on the gun, or `0.0` when undeclared |
@@ -56,6 +62,8 @@ Call these methods during mod initialization (constructor or `FMLCommonSetupEven
 | Method Signature | Parameters | Returns | Description |
 |-----------------|------------|---------|-------------|
 | `registerGun(ResourceLocation gunId, GunDefinition definition)` | `gunId` — gun definition ID (e.g. `modularshoot:sniper_rifle`); `definition` — gun definition object | `void` | Registers a gun via the Java API. Automatically marks the ID as API-registered; later datapack JSON with the same ID is rejected |
+| `registerGunItem(ItemLike item, ResourceLocation gunId)` | `item` — the item to bind (e.g. `Items.DIAMOND_SWORD`); `gunId` — target gun definition ID | `void` | Binds the given item as a gun (equivalent to a datapack `gun_items` entry, entry key = item ID). Java API bindings take precedence over datapack bindings; runtime recognition requires `RegistryAccess` (when datapack registries are not loaded, only Java API bindings are visible) |
+| `registerPluginItem(ItemLike item, ResourceLocation pluginId)` | `item` — the item to bind; `pluginId` — target plugin definition ID | `void` | Binds the given item as a plugin (equivalent to a datapack `plugin_items` entry) |
 | `registerPluginValidator(PluginValidator validator)` | `validator` — custom install validator (functional interface: `(ItemStack, ResourceLocation) → ValidationResult`) | `void` | Registers a custom plugin install validator. Runs after framework default checks pass; returning failure aborts installation |
 | `registerShootPredicate(ShootPredicate predicate)` | `predicate` — shoot condition checker (functional interface: `(Player, ItemStack) → ShootPredicateResult`) | `void` | Registers a shoot condition predicate. Runs after fire-rate control passes; returning failure prevents shooting and shows the reason. Framework registers 0 by default |
 | `registerShootEffect(ShootEffect effect)` | `effect` — per-pellet shoot effect contributor (functional interface: `(Player player, ItemStack gun, BulletSnapshot snapshot, int pelletIndex, int totalPellets) → void`) | `void` | Registers a per-pellet shoot effect contributor. Runs inside the pellet loop, right after each pellet's snapshot `copy()` and right before spread application, in registration order; a later effect sees all mutations made by earlier ones (`pelletIndex` may serve as a per-pellet differentiation seed). **Usage red lines**: recommended mutations are `setTrait` (boolean traits stack naturally) / `multiplyStat` (multiplicative scaling composes) / `setStat` (deliberate, deterministic overwrite); **forbidden** are `setDamageType` and visual `base` overrides — exclusive single-value fields, whose exclusive scenarios must go through the variant pool (technically not blocked, but the result is field-level fragmentation). Framework registers 0 by default |

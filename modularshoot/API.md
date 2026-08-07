@@ -5,19 +5,25 @@ ModularShootAPI 所有公开静态方法速查。方法按功能分组。
 
 ## 物品判断
 
+识别为**双通道**：组件通道（携带 `gun_data`/`plugin_data` 组件）优先，绑定通道（物品 ID 命中 `gun_items`/`plugin_items` 绑定表）兜底。
+
 | 方法签名 | 参数说明 | 返回值 | 说明 |
 |---------|---------|--------|------|
-| `isGun(ItemStack stack)` | `stack` — 要检查的物品堆叠 | `boolean` | 判断物品是否为框架枪械（`modularshoot:gun`），仅检查物品类型 |
-| `isPlugin(ItemStack stack)` | `stack` — 要检查的物品堆叠 | `boolean` | 判断物品是否为框架插件（`modularshoot:plugin`），仅检查物品类型 |
+| `isGun(ItemStack stack, RegistryAccess access)` | `stack` — 要检查的物品堆叠；`access` — 运行时注册表视图（如 `player.registryAccess()`） | `boolean` | 判断物品是否为枪械（原生 `modularshoot:gun` 或绑定表条目）。运行时请用此重载 |
+| `isGun(ItemStack stack)` | `stack` — 要检查的物品堆叠 | `boolean` | 退化重载（无注册表视图时，如主菜单）：仅组件通道 + Java API 绑定通道，**不含数据包绑定** |
+| `isPlugin(ItemStack stack, RegistryAccess access)` | 同上（插件版本） | `boolean` | 判断物品是否为插件（原生 `modularshoot:plugin` 或绑定表条目） |
+| `isPlugin(ItemStack stack)` | `stack` — 要检查的物品堆叠 | `boolean` | 退化重载，语义同 `isGun(stack)` |
 
 ## 数据查询
 
 | 方法签名 | 参数说明 | 返回值 | 说明 |
 |---------|---------|--------|------|
-| `getGunId(ItemStack gun)` | `gun` — 枪械物品堆叠 | `ResourceLocation`（可空） | 获取枪械定义 ID。非枪械物品或无 gun_data 组件时返回 `null` |
+| `getGunId(ItemStack gun)` | `gun` — 枪械物品堆叠 | `ResourceLocation`（可空） | 获取枪械定义 ID。无 gun_data 组件时返回 `null` |
 | `getGunData(ItemStack gun)` | `gun` — 枪械物品堆叠 | `Optional<GunData>` | 获取枪械完整 Data Component（含 gunId、实例 UUID、已安装插件列表、modifierVersion、per-gun state） |
-| `getPluginId(ItemStack stack)` | `stack` — 插件物品堆叠 | `Optional<ResourceLocation>` | 获取插件定义 ID。非插件物品或无 plugin_data 组件时返回空 |
+| `getPluginId(ItemStack stack)` | `stack` — 插件物品堆叠 | `Optional<ResourceLocation>` | 获取插件定义 ID。无 plugin_data 组件时返回空 |
 | `getPluginData(ItemStack stack)` | `stack` — 插件物品堆叠 | `Optional<PluginData>` | 获取插件完整 Data Component（含 pluginId） |
+| `resolveGunId(ItemStack stack, RegistryAccess access)` | `stack` — 物品堆叠；`access` — 运行时注册表视图 | `Optional<ResourceLocation>` | 双通道解析枪械定义 ID：组件优先，绑定表兜底。绑定枪械未附加组件时经绑定表也能解析 |
+| `resolvePluginId(ItemStack stack, RegistryAccess access)` | 同上（插件版本） | `Optional<ResourceLocation>` | 双通道解析插件定义 ID。绑定插件（无组件）的推荐读取方式 |
 | `getInstalledPlugins(ItemStack gun)` | `gun` — 枪械物品堆叠 | `List<PluginInstance>`（不可变） | 查询枪械已安装的插件列表。非枪械或无已安装插件时返回空列表 |
 | `getExtraValueSums(ItemStack gun, RegistryAccess registryAccess)` | `gun` — 枪械物品堆叠；`registryAccess` — 运行时注册表视图（需已加载世界） | `Map<ResourceLocation, Double>`（不可变） | 汇总枪械上所有**有效**插件（定义仍存在者）的 `extra_values`，按命名空间键求和。失效插件被过滤（与属性管线同一降级口径），未声明过的键不出现在结果中 |
 | `getExtraValue(ItemStack gun, ResourceLocation key, RegistryAccess registryAccess)` | `gun` — 枪械物品堆叠；`key` — 要查询的扩展字段键；`registryAccess` — 运行时注册表视图 | `double` | 便捷单键查询：`key` 在枪械上的累加值，未声明时返回 `0.0` |
@@ -55,6 +61,8 @@ ModularShootAPI 所有公开静态方法速查。方法按功能分组。
 | 方法签名 | 参数说明 | 返回值 | 说明 |
 |---------|---------|--------|------|
 | `registerGun(ResourceLocation gunId, GunDefinition definition)` | `gunId` — 枪械定义 ID（如 `modularshoot:sniper_rifle`）；`definition` — 枪械定义对象 | `void` | 通过 Java API 注册一把枪械。调用后自动标记该 ID 为 API 注册，后续数据包 JSON 同名注册会被拒绝 |
+| `registerGunItem(ItemLike item, ResourceLocation gunId)` | `item` — 要绑定的物品（如 `Items.DIAMOND_SWORD`）；`gunId` — 目标枪械定义 ID | `void` | 把指定物品绑定为枪械（等价于数据包 `gun_items` 条目，条目键 = 物品 ID）。Java API 绑定优先于数据包绑定；运行时识别需要 `RegistryAccess`（数据包注册表未加载时仅 Java API 绑定可见） |
+| `registerPluginItem(ItemLike item, ResourceLocation pluginId)` | `item` — 要绑定的物品；`pluginId` — 目标插件定义 ID | `void` | 把指定物品绑定为插件（等价于数据包 `plugin_items` 条目） |
 | `registerPluginValidator(PluginValidator validator)` | `validator` — 自定义安装校验器（函数式接口：`(ItemStack, ResourceLocation) → ValidationResult`） | `void` | 注册自定义插件安装校验器。在框架默认校验通过后执行，返回失败则安装中止 |
 | `registerShootPredicate(ShootPredicate predicate)` | `predicate` — 射击条件判断器（函数式接口：`(Player, ItemStack) → ShootPredicateResult`） | `void` | 注册射击条件判断器。射速控制通过后执行，返回失败阻止射击并显示原因。框架默认注册 0 个 |
 | `registerShootEffect(ShootEffect effect)` | `effect` — 射击效果贡献者（函数式接口：`(Player player, ItemStack gun, BulletSnapshot snapshot, int pelletIndex, int totalPellets) → void`） | `void` | 注册逐弹丸射击效果贡献者。在每颗弹丸快照 `copy()` 之后、散布采样之前按注册顺序执行，后注册者可见前序修改（`pelletIndex` 可用作逐颗分化种子）。**使用红线**：推荐 `setTrait`（布尔可共存）/ `multiplyStat`（倍率乘算）/ `setStat`（确定性覆盖）；**禁止** `setDamageType` 与视觉 `base` 覆盖——单值互斥字段的互斥场景必须走变体池（技术上不阻止，但会产生字段级碎片化）。框架默认注册 0 个 |

@@ -1,6 +1,6 @@
 # 注册表参考
 
-ModularShoot 通过 7 张动态注册表（DataPackRegistry）存储所有定义。全部支持 `/reload` 热重载和客户端同步。
+ModularShoot 通过 9 张动态注册表（DataPackRegistry）存储所有定义。全部支持 `/reload` 热重载和客户端同步。
 
 
 ## 注册表概览
@@ -14,6 +14,8 @@ ModularShoot 通过 7 张动态注册表（DataPackRegistry）存储所有定义
 | `modularshoot:attribute_meta` | 属性元数据 | `AttributeMeta` |
 | `modularshoot:states` | 持久状态定义 | `StateDefinition` |
 | `modularshoot:variants` | 随机变体定义 | `VariantDefinition` |
+| `modularshoot:gun_items` | 物品→枪械绑定 | `GunItemBinding` |
+| `modularshoot:plugin_items` | 物品→插件绑定 | `PluginItemBinding` |
 
 > 属性**本体**（`Attribute` 实例）不在上述动态注册表中——须用原版 `DeferredRegister` 注册到 `BuiltInRegistries.ATTRIBUTE`。元数据表仅存储默认值、显示信息和绑定关系。
 
@@ -214,3 +216,26 @@ DynamicOutlineTintRegistry.register(
 | `format` | 字符串 | 否 | `"{value}"` | 显示模板，`{value}` 占位。如 `"{value} 层"` → tooltip 显示 `击杀层数: 3 层` |
 | `priority` | 整数 | 否 | `0` | tooltip 内排序，越大越靠前 |
 | `hideDefault` | 布尔值 | 否 | `false` | 值为默认值时不显示该行 |
+
+## 物品绑定定义（GunItemBinding / PluginItemBinding）
+
+注册表：`modularshoot:gun_items` / `modularshoot:plugin_items`
+
+把**其他模组的物品**绑定为枪械/插件——绑定后该物品 ID 的所有实例被视为框架枪械/插件，**无需替换原物品**（模型/纹理/获取途径全部保留，无"盗版"问题）。条目键（JSON 文件名）为任意 id，内容声明绑定目标。
+
+| 字段 | 类型 | 必需 | 说明 |
+|------|------|------|------|
+| `item` | 资源路径 | **是** | 被绑定的物品 ID（如 `minecraft:diamond_sword`） |
+| `gun` | 资源路径 | **是**（gun_items） | 目标枪械定义 ID（`modularshoot:guns` 注册表中的条目） |
+| `plugin` | 资源路径 | **是**（plugin_items） | 目标插件定义 ID（`modularshoot:plugins` 注册表中的条目） |
+
+**行为语义**：
+
+- **进背包即生效**：绑定物品进入玩家背包（36 主格 + 副手）1 tick 内，服务端自动附加 `gun_data` 组件（含实例 UUID、基础属性修饰符），附加后与原生枪械**运行时完全同构**——可装插件、锁定、状态持久化、弹道回溯、反作弊版本号全部一致。
+- **插件绑定不附加组件**：插件安装即消耗，pluginId 直接经绑定表解析。
+- **完全改造**：绑定枪械左键近战由射击替代、原版附魔无效化、射击不损耗耐久。
+- **视觉 Tier 1**：绑定物品保持原物品模型渲染；框架动态贴图管线（调色/叠加/描边/射击纹理切换）仅服务原生枪械。
+- **身份提示**：未转化（无组件）的绑定枪械 tooltip 显示灰色标识行 `枪械: <id>` 与枪械定义中注册的基础属性/插槽预览；JEI、创造物品栏、背包悬停均可见。
+- **加载后校验**（WARN 降级不拒收）：`item` 必须存在于物品注册表；`gun`/`plugin` 必须存在于对应定义表；同一物品 ID 重复绑定 → 字典序最小条目键胜出，其余 WARN。
+- **Java API 优先**：`registerGunItem`/`registerPluginItem` 注册的绑定优先于数据包条目；数据包中与 Java API 冲突的条目加载时 WARN。
+- **主菜单限制**：数据包绑定在主菜单创造物品栏无提示（注册表未加载）；Java API 绑定无此限制。

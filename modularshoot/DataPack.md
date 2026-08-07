@@ -551,6 +551,52 @@
 }
 ```
 
+## 物品绑定 JSON（gun_items / plugin_items）
+
+**路径**：`data/<命名空间>/modularshoot/gun_items/<任意条目id>.json` / `modularshoot/plugin_items/<任意条目id>.json`
+
+把**其他模组的物品**绑定为框架枪械/插件——绑定后该物品 ID 的所有实例被框架识别为枪械/插件，**原物品保留**（模型/纹理/获取途径不变）。条目键为任意文件 id，内容声明绑定目标；两个字段均必填。
+
+| JSON 键 | 类型 | 必需 | 说明 |
+|---------|------|------|------|
+| `item` | 资源路径 | **是** | 被绑定的物品 ID（如 `minecraft:diamond_sword`） |
+| `gun` | 资源路径 | **是**（gun_items） | 目标枪械定义 ID（`modularshoot:guns` 注册表条目） |
+| `plugin` | 资源路径 | **是**（plugin_items） | 目标插件定义 ID（`modularshoot:plugins` 注册表条目） |
+
+**路径**：`data/examplemod/modularshoot/gun_items/diamond_sword_rifle.json`
+
+```json
+{
+  "item": "minecraft:diamond_sword",
+  "gun": "examplemod:sword_rifle"
+}
+```
+
+**路径**：`data/examplemod/modularshoot/plugin_items/life_amulet.json`
+
+```json
+{
+  "item": "examplemod:life_amulet",
+  "plugin": "examplemod:life_amulet_plugin"
+}
+```
+
+**加载后校验**（WARN 降级，条目保留）：
+
+- `item` 必须存在于物品注册表，缺失 → WARN
+- `gun`/`plugin` 必须存在于对应定义表，缺失 → WARN（枪械定义缺失时表现为"无法射击" + 降级提示）
+- 同一物品 ID 出现多个绑定 → 字典序最小条目键胜出，其余 WARN
+- 与 Java API 绑定冲突（`registerGunItem`/`registerPluginItem`）→ Java API 优先，数据包条目 WARN
+
+**行为要点**：
+
+- **进背包即生效**：绑定枪械进入玩家背包 1 tick 内由服务端自动附加 `gun_data` 组件（含实例 UUID 与基础属性修饰符），附加后与原生枪械运行时完全同构——装插件、锁定、状态持久化、弹道回溯全部一致；无需持握
+- **插件不附加组件**：绑定插件安装即消耗，pluginId 直接经绑定表解析
+- **完全改造**：绑定枪械左键近战由射击替代、附魔无效化、射击不损耗耐久；副手限制、换弹键、调试命令、tooltip 全部自动生效
+- **身份提示**：未转化的绑定枪械 tooltip 显示 `枪械: <id>` 标识行 + 定义中注册的基础属性/插槽预览；已转化的显示完整运行时四栏
+- **主菜单限制**：数据包绑定在主菜单创造物品栏无提示（注册表未加载）；Java API 绑定无此限制
+- **视觉**：保持原物品模型渲染；动态贴图管线（调色/叠加/描边/射击纹理切换）仅服务原生枪械
+
 ## 注册冲突与覆盖
 
 | 场景 | 行为 |

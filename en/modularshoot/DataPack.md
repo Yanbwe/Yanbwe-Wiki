@@ -537,6 +537,52 @@ Examples: a normal gun + fireball plugin `adds_variants: 1.0` → pool {fireball
 }
 ```
 
+## Item Binding JSON (gun_items / plugin_items)
+
+**Path**: `data/<namespace>/modularshoot/gun_items/<any_entry_id>.json` / `modularshoot/plugin_items/<any_entry_id>.json`
+
+Binds **other mods' items** as framework guns/plugins — once bound, every instance of that item ID is recognised by the framework as a gun/plugin, and the **original item is preserved** (model / texture / acquisition paths unchanged). The entry key is an arbitrary file id; the content declares the binding target; both fields are required.
+
+| JSON Key | Type | Required | Description |
+|----------|------|----------|-------------|
+| `item` | Resource path | **Yes** | The bound item ID (e.g. `minecraft:diamond_sword`) |
+| `gun` | Resource path | **Yes** (gun_items) | Target gun definition ID (an entry in the `modularshoot:guns` registry) |
+| `plugin` | Resource path | **Yes** (plugin_items) | Target plugin definition ID (an entry in the `modularshoot:plugins` registry) |
+
+**Path**: `data/examplemod/modularshoot/gun_items/diamond_sword_rifle.json`
+
+```json
+{
+  "item": "minecraft:diamond_sword",
+  "gun": "examplemod:sword_rifle"
+}
+```
+
+**Path**: `data/examplemod/modularshoot/plugin_items/life_amulet.json`
+
+```json
+{
+  "item": "examplemod:life_amulet",
+  "plugin": "examplemod:life_amulet_plugin"
+}
+```
+
+**Post-load validation** (WARN degrade, entry retained):
+
+- `item` must exist in the item registry; missing → WARN
+- `gun`/`plugin` must exist in the corresponding definition registry; missing → WARN (a missing gun definition manifests as "cannot shoot" + a degrade hint)
+- Multiple bindings for the same item ID → the lexicographically smallest entry key wins, the rest WARN
+- Conflict with a Java API binding (`registerGunItem`/`registerPluginItem`) → Java API wins, the datapack entry WARNs
+
+**Behavior notes**:
+
+- **Converts upon entering the inventory**: within 1 tick of a bound gun entering the player's inventory, the server automatically attaches the `gun_data` component (instance UUID and base attribute modifiers). After that it is fully runtime-isomorphic with native guns — plugin installation, locking, state persistence and bullet backtracking all behave identically; no need to hold it
+- **Plugins attach no component**: bound plugins are consumed on install; the pluginId is resolved directly through the binding table
+- **Full conversion**: on bound guns, left-click melee is replaced by shooting, enchantments are nullified, and shooting does not consume durability; offhand restrictions, reload key, debug commands and tooltip all apply automatically
+- **Identity hint**: an unconverted bound gun shows the grey `Gun: <id>` identifier line in its tooltip plus the base attribute/slot preview registered in the definition; converted ones show the full runtime tooltip
+- **Main menu limitation**: datapack bindings show no hint in the main-menu creative inventory (registry not loaded); Java API bindings are exempt
+- **Visuals**: the original item model is kept for rendering; the dynamic texture pipeline (recoloring / overlays / outlines / shoot-texture swapping) serves native guns only
+
 ## Registration Conflicts & Overrides
 
 | Scenario | Behavior |

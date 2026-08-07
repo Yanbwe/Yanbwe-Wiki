@@ -1,6 +1,6 @@
 # Registry Reference
 
-ModularShoot stores all definitions in 7 dynamic registries (DataPackRegistry). All support `/reload` hot-reload and client sync.
+ModularShoot stores all definitions in 9 dynamic registries (DataPackRegistry). All support `/reload` hot-reload and client sync.
 
 
 ## Registry Overview
@@ -14,6 +14,8 @@ ModularShoot stores all definitions in 7 dynamic registries (DataPackRegistry). 
 | `modularshoot:attribute_meta` | Attribute metadata | `AttributeMeta` |
 | `modularshoot:states` | Persistent state definitions | `StateDefinition` |
 | `modularshoot:variants` | Random variant definitions | `VariantDefinition` |
+| `modularshoot:gun_items` | Item → gun bindings | `GunItemBinding` |
+| `modularshoot:plugin_items` | Item → plugin bindings | `PluginItemBinding` |
 
 > Attribute **bodies** (`Attribute` instances) are not in these dynamic registries — register them using vanilla `DeferredRegister` into `BuiltInRegistries.ATTRIBUTE`. The metadata table stores only defaults, display info, and bindings.
 
@@ -198,3 +200,26 @@ Registry: `modularshoot:states`
 | `format` | Text string | No | `"{value}"` | Display template with `{value}` placeholder. E.g. `"{value} kills"` → tooltip shows `Kill Count: 3 kills` |
 | `priority` | Integer | No | `0` | Tooltip sort order, higher sorts first |
 | `hideDefault` | Boolean | No | `false` | When `true`, the line is hidden if the value equals the default |
+
+## Item Binding Definition (GunItemBinding / PluginItemBinding)
+
+Registry: `modularshoot:gun_items` / `modularshoot:plugin_items`
+
+Binds **other mods' items** as guns/plugins — once bound, every instance of that item ID is treated as a framework gun/plugin, **without replacing the original item** (model / texture / acquisition paths are all preserved — no "counterfeit" problem). The entry key (JSON filename) is an arbitrary id; the content declares the binding target.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `item` | Resource path | **Yes** | The bound item ID (e.g. `minecraft:diamond_sword`) |
+| `gun` | Resource path | **Yes** (gun_items) | Target gun definition ID (an entry in the `modularshoot:guns` registry) |
+| `plugin` | Resource path | **Yes** (plugin_items) | Target plugin definition ID (an entry in the `modularshoot:plugins` registry) |
+
+**Behavior semantics**:
+
+- **Converts upon entering the inventory**: within 1 tick of a bound item entering the player's inventory (36 main slots + offhand), the server automatically attaches the `gun_data` component (instance UUID, base attribute modifiers). After that it is **fully runtime-isomorphic** with native guns — plugin installation, locking, state persistence, bullet backtracking and anti-cheat version numbers all behave identically.
+- **Plugin bindings attach no component**: bound plugins are consumed on install; the pluginId is resolved directly through the binding table.
+- **Full conversion**: on bound guns, left-click melee is replaced by shooting, vanilla enchantments are nullified, and shooting does not consume durability.
+- **Visual tier 1**: bound items keep their original item model rendering; the framework's dynamic texture pipeline (recoloring / overlays / outlines / shoot-texture swapping) serves native guns only.
+- **Identity hint**: an unconverted (component-less) bound gun shows a grey identifier line `Gun: <id>` in its tooltip plus the base attribute/slot preview registered in the gun definition; visible in JEI, the creative inventory and inventory hover.
+- **Post-load validation** (WARN degrade, never rejected): `item` must exist in the item registry; `gun`/`plugin` must exist in the corresponding definition registry; duplicate bindings of the same item ID → the lexicographically smallest entry key wins, the rest WARN.
+- **Java API priority**: bindings registered via `registerGunItem`/`registerPluginItem` take precedence over datapack entries; datapack entries conflicting with the Java API WARN at load time.
+- **Main menu limitation**: datapack bindings show no hint in the main-menu creative inventory (registry not loaded); Java API bindings are exempt.
