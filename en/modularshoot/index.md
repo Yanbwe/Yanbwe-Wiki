@@ -16,6 +16,7 @@ ModularShoot is an attribute-driven, modular assembly gun system **framework mod
 | **Fully Event-Driven** | All extension points exposed via events + callback APIs: shoot events, install/uninstall events, trait hooks, damage handlers, right-click/action key events |
 | **Server-Authoritative** | Shooting, bullet flight, and hit detection are all server-side. Client is render-only, cheat-resistant |
 | **Random Variants** | Guns/plugins declare variant pools; each pellet independently rolls a weighted random variant per shot — the winner merges traits and overrides stats, damage type and visuals |
+| **Shoot Visual Feedback** | Shoot textures switch at the moment of firing (`per_shot`/`while_firing` modes); in first person the gun itself plays a short recoil kick (push back + muzzle rise, settling within a few ticks), in third person the arms play the recoil pose. All three are driven by the same shoot-animation timer, pulsing in sync with every accepted shot |
 
 ## Quick Navigation
 
