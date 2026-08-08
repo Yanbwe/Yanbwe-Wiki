@@ -12,7 +12,8 @@ export default defineConfig({
       { text: '稀有度核心', link: '/raritycore/', activeMatch: '/raritycore' },
       { text: '灵动提示框', link: '/colorTooltips/', activeMatch: '/colorTooltips' },
       { text: '别样的伤害跳字', link: '/stylizeddamage/', activeMatch: '/stylizeddamage' },
-      { text: '模块化射击', link: '/modularshoot/', activeMatch: '/modularshoot' }
+      { text: '模块化射击', link: '/modularshoot/', activeMatch: '/modularshoot' },
+      { text: '模块化射击弹药', link: '/modularshootammo/', activeMatch: '/modularshootammo' }
     ],
 
     sidebar: [
@@ -94,6 +95,17 @@ export default defineConfig({
           { text: '命令参考', link: '/modularshoot/CommandReference' },
           { text: '代码示例', link: '/modularshoot/Examples' }
         ]
+      },
+      {
+        text: '模块化射击弹药',
+        collapsed: false,
+        items: [
+          { text: '首页', link: '/modularshootammo/' },
+          { text: '数据包注册', link: '/modularshootammo/DataPack' },
+          { text: 'API 参考', link: '/modularshootammo/API' },
+          { text: '命令参考', link: '/modularshootammo/CommandReference' },
+          { text: '客户端配置', link: '/modularshootammo/Configuration' }
+        ]
       }
     ],
 
@@ -171,7 +183,8 @@ export default defineConfig({
           { text: 'RarityCore', link: '/en/raritycore/', activeMatch: '/en/raritycore' },
           { text: 'ColorTooltips', link: '/en/colorTooltips/', activeMatch: '/en/colorTooltips' },
           { text: 'StylizedDamage', link: '/en/stylizeddamage/', activeMatch: '/en/stylizeddamage' },
-          { text: 'ModularShoot', link: '/en/modularshoot/', activeMatch: '/en/modularshoot' }
+          { text: 'ModularShoot', link: '/en/modularshoot/', activeMatch: '/en/modularshoot' },
+          { text: 'ModularShootAmmo', link: '/en/modularshootammo/', activeMatch: '/en/modularshootammo' }
         ],
 
         sidebar: [
@@ -252,6 +265,17 @@ export default defineConfig({
               { text: 'Datapack Format', link: '/en/modularshoot/DataPack' },
               { text: 'Command Reference', link: '/en/modularshoot/CommandReference' },
               { text: 'Code Examples', link: '/en/modularshoot/Examples' }
+            ]
+          },
+          {
+            text: 'ModularShootAmmo',
+            collapsed: false,
+            items: [
+              { text: 'Home', link: '/en/modularshootammo/' },
+              { text: 'Data Pack Registration', link: '/en/modularshootammo/DataPack' },
+              { text: 'API Reference', link: '/en/modularshootammo/API' },
+              { text: 'Command Reference', link: '/en/modularshootammo/CommandReference' },
+              { text: 'Client Configuration', link: '/en/modularshootammo/Configuration' }
             ]
           }
         ],
