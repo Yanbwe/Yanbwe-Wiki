@@ -64,7 +64,8 @@ let hex = RarityCore.formatColor(0xFFAA00)
 
 ```js
 RarityCore.isValidRarity(5)   // true
-RarityCore.normalizeRarity(10) // 7
+RarityCore.normalizeRarity(0)  // 1 (values below 1 are normalized to 1)
+RarityCore.normalizeRarity(10) // 10 (lower-bound only, no cap)
 RarityCore.validateRarity(5)   // same as normalizeRarity
 ```
 

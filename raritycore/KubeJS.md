@@ -64,7 +64,8 @@ let hex = RarityCore.formatColor(0xFFAA00)
 
 ```js
 RarityCore.isValidRarity(5)   // true
-RarityCore.normalizeRarity(10) // 7
+RarityCore.normalizeRarity(0)  // 1 (小于 1 的值规范为 1)
+RarityCore.normalizeRarity(10) // 10 (仅下限规范化,无上限)
 RarityCore.validateRarity(5)   // 同 normalizeRarity
 ```
 
