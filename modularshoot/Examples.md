@@ -381,42 +381,99 @@ public class EventListeners {
 ### 独立发射子弹（炮塔等）
 
 ```java
-import org.yanbwe.modularshoot.attribute.ModularShootAttributes;
-import org.yanbwe.modularshoot.bullet.BulletManager;
-import org.yanbwe.modularshoot.bullet.BulletSnapshot;
+import org.yanbwe.modularshoot.ModularShootAPI;
 import org.yanbwe.modularshoot.bullet.BulletRecord;
-import org.yanbwe.modularshoot.damage.ModularShootDamageTypes;
+import org.yanbwe.modularshoot.bullet.BulletSnapshot;
+import org.yanbwe.modularshoot.registry.gun.BulletStyle;
+import org.yanbwe.modularshoot.registry.gun.BulletStyle.RenderMode;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 
-// 构造子弹快照：唯一 7 参构造（stats/traits/state 内部防御拷贝）
-// 独立发射约定：gunId / gunInstanceUuid 恒为 null，shooter 经 fireBullet 末参传入（null = 无主发射源）
-// setStat 接收 ResourceLocation；ModularShootAttributes 常量是 DeferredHolder<Attribute, Attribute>，需 .getKey()
-BulletSnapshot snapshot = new BulletSnapshot(
-    new HashMap<>(),   // stats（随后用 setStat 填充）
-    new HashMap<>(),   // traits
-    level.registryAccess().holderOrThrow(ModularShootDamageTypes.BULLET),  // damageType
-    null,              // shooter
-    null,              // gunId
-    null,              // gunInstanceUuid
-    new HashMap<>()    // state
-);
-snapshot.setStat(ModularShootAttributes.HIT_DAMAGE.getKey(), 10.0);
-snapshot.setStat(ModularShootAttributes.BULLET_SPEED.getKey(), 30.0);
-snapshot.setStat(ModularShootAttributes.RANGE.getKey(), 80.0);
-snapshot.setStat(ModularShootAttributes.BULLET_SIZE.getKey(), 0.3);
-snapshot.setStat(ModularShootAttributes.BLOCK_PENETRATION.getKey(), 3);
+// 1. Builder 链式构造快照（推荐入口）
+//    独立发射约定：gunId / gunInstanceUuid / shooter 恒为 null；
+//    shooter 经 fireBullet 末参传入（null = 无主发射源）
+BulletSnapshot snapshot = ModularShootAPI.createBulletSnapshot()
+        .stat(ResourceLocation.parse("modularshoot:hit_damage"), 10.0)
+        .stat(ResourceLocation.parse("modularshoot:bullet_speed"), 30.0)
+        .stat(ResourceLocation.parse("modularshoot:range"), 80.0)
+        .stat(ResourceLocation.parse("modularshoot:bullet_size"), 0.3)
+        .trait(ResourceLocation.parse("examplemod:ignite"), true)
+        .style(new BulletStyle(               // 独立发射视觉（variant style override 通道）
+                Optional.of(new BulletStyle.Base(
+                        RenderMode.BILLBOARD,
+                        Optional.of(ResourceLocation.parse(
+                                "modularshoot:textures/bullet/default.png")),
+                        Optional.empty()      // model：3d 模式才填
+                )),
+                List.of()
+        ))
+        .build(level.registryAccess());       // 自动补框架默认伤害类型；没有 RegistryAccess
+                                              // 时用 build()（damageType 留空，fireBullet 时补）
 
-// 从炮塔位置发射
-BulletManager manager = BulletManager.get(level);
-BulletRecord bullet = manager.fireBullet(
-    level,
-    turretPosition,     // Vec3 发射位置
-    turretDirection,    // Vec3 飞行方向
-    snapshot,
-    null                // UUID 发射者（null = 无主发射源）
+// 2. 门面发射：无射速控制、无射击条件检查、无射击事件、无音效
+BulletRecord bullet = ModularShootAPI.fireBullet(
+        level,
+        turretPosition,     // Vec3 发射位置
+        turretDirection,    // Vec3 飞行方向（应已归一化）
+        snapshot,
+        null                // UUID 发射者（null = 无主发射源；传玩家 UUID 可归属伤害）
 );
 ```
+
+等价的手工构造方式（不推荐，仅当需要直接操作快照对象时）：`BulletSnapshot` 的 7 参构造（`stats`/`traits`/`state` 内部防御拷贝）+ 逐 `setStat` 填充（`setStat` 接收 `ResourceLocation`；`ModularShootAttributes` 常量是 `DeferredHolder`，需 `.getKey()`）；发射可经 `BulletManager.get(level).fireBullet(...)` 直调，等价于门面（门面额外做 null 伤害类型补丁）。两种方式都需自行保证 `gunId`/`gunInstanceUuid` 为 `null`——Builder 则强制约定。
+
+### 弹幕怪物（shooters 注册表 + fireBullet 循环）
+
+```java
+import org.yanbwe.modularshoot.ModularShootAPI;
+import org.yanbwe.modularshoot.bullet.BulletSnapshot;
+import org.yanbwe.modularshoot.registry.shooter.ShooterDefinition;
+import org.yanbwe.modularshoot.registry.shooter.ShooterRegistry;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.phys.Vec3;
+import java.util.ArrayList;
+import java.util.List;
+
+// 1. 加载 shooter 配置（modularshoot:shooters 注册表，数据包或 Java API 注册）
+RegistryAccess access = mob.level().registryAccess();
+ShooterDefinition shooter = ShooterRegistry.getShooter(
+        access, ResourceLocation.parse("examplemod:bone_shooter"))
+        .orElseThrow(() -> new IllegalStateException("shooter 未注册"));
+
+// 2. 从源实体（mob）实时读取属性生成快照：
+//    attribute_binds 命中的属性取 mob 当前值覆盖模板；读不到（未注册/白名单未命中）保留模板值
+BulletSnapshot snapshot = shooter.createSnapshot(mob, access);
+
+// 3. 扇形方向集合——弹幕模式算法由内容模组实现，框架只提供
+//    SpreadCalculator.applySpread（随机散布）与 fireBullet（发射入口）
+Vec3 baseDir = mob.getLookAngle();
+int pellets = 5;
+double spreadDeg = 40.0; // 总扇形角 40°
+List<Vec3> directions = new ArrayList<>();
+for (int i = 0; i < pellets; i++) {
+    double offsetDeg = -spreadDeg / 2.0 + spreadDeg * i / (pellets - 1);
+    directions.add(baseDir.yRot((float) Math.toRadians(offsetDeg)));
+}
+
+// 4. 逐方向发射；mob 的 UUID 标记攻击者归属
+for (Vec3 dir : directions) {
+    ModularShootAPI.fireBullet(
+            mob.level(),
+            mob.position().add(0.0, mob.getEyeHeight() * 0.8, 0.0), // 发射位置
+            dir.normalize(),
+            snapshot, // 框架不改写快照（门面仅在 damageType 为 null 时补默认一次），可跨弹复用
+            mob.getUUID()
+    );
+}
+
+// 5. 音效：fireBullet 不播音效，需要时自行播放
+shooter.playShootSound(mob.level(), mob.position());
+```
+
+> **框架边界**：`modularshoot:shooters` 只提供"数值模板 + 属性绑定 + 视觉 + 音效"的配置载体；发射入口是 `ModularShootAPI.fireBullet`；方向算法框架只提供 `SpreadCalculator.applySpread(Vec3 lookAngle, double accuracyYaw, double accuracyPitch, RandomSource random)`（椭圆随机散布，`accuracy_yaw`/`accuracy_pitch` 单位为度）。扇形/环形/螺旋等**弹幕模式的方向集合算法由内容模组自行实现**（如上例的 `yRot` 循环）。
 
 ### 标记 Java API 注册
 

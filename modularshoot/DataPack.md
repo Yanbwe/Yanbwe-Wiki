@@ -320,6 +320,7 @@
 |---------|------|------|--------|------|
 | `binds` | 资源路径字符串 | **是** | — | 指向已注册的原版 `Attribute` ID（如 `"minecraft:generic.max_health"`）。框架通过此字段定位 `Attribute` holder。**三路径共用**：挂载层（枪械基础值修饰符按此解析挂载目标）、结算层（射击结算、射速门禁、客户端预测、`/modularshoot stats` 与 debug 命令读值）、显示层（tooltip 取值）均经 `binds` 解析；可指向任意已注册属性（含 `minecraft:*`） |
 | `default_value` | 浮点数 | **是** | — | 枪械未声明该属性时的基础值（参与加算）。**非原版 base 值** |
+| `entity_types` | 实体类型 ID 数组 | 否 | `["minecraft:player"]` | **读取生效白名单**：只有列表内的实体类型，其属性值才会被框架读取；白名单外的实体类型读取时降级为 `0.0`。默认仅玩家（保持引入白名单前的行为）。挂载侧已把框架 10 个预置属性**预挂载到全部实体类型**（懒实例化，代价可忽略），因此本字段只控制"谁的属性值生效"，不控制"谁能挂载"——纯数据包改动即可切换生效范围，无需动代码。`shooters` 的 `attribute_binds` 同样受此白名单约束（见「发射者 JSON」） |
 | `description` | 字符串 | 否 | `""` | 说明文本 |
 | `color` | 字符串 | 否 | `""` | 名称颜色 |
 | `priority` | 整数 | 否 | `0` | 显示优先级 |
@@ -373,6 +374,98 @@
 > - **新增即插即用，删除即禁用**：数据包新增任意逻辑 id 的 attribute_meta 条目后，枪械 `stats` 自动支持该键（不限于预置 10 属性）；删除条目会禁用该逻辑属性的挂载与结算（读值 0.0）
 > - **避免多条目绑定同一属性**：基础修饰符共用固定 ID（`modularshoot:gun_base`），同属性多条目互相覆盖且胜者无稳定保证
 > - **降级契约不变**：`binds` 目标未注册 → 元数据条目保留、修饰符不挂载、tooltip 不显示、读值 0
+> - **生效范围由数据包控制**：挂载侧已把框架 10 个预置属性预挂载到**全部**实体类型（懒实例化），`entity_types` 决定"谁的属性值被读取"——白名单外实体读取 `0.0`，纯数据包改动即可切换生效范围。玩家始终显式优先挂载。第三方属性只挂载于玩家（框架只预挂载自己的属性），`entity_types` 命中非玩家实体时若该属性未挂载到目标实体，读取同样降级 `0.0`
+
+## 发射者 JSON（shooters）
+
+**路径**：`data/<命名空间>/modularshoot/shooters/<发射者id>.json`
+
+**发射者定义**（`ShooterDefinition`）是独立发射（炮塔、陷阱、Boss 攻击、脚本场景等非玩家发射源）的**配置模板**：给定一份数值模板，内容模组在发射时从源实体实时读取属性值覆盖上去，生成子弹快照交给 `ModularShootAPI.fireBullet`。注册表键（发射者 ID）由注册表本身提供，不是 JSON 字段。
+
+| JSON 键 | 类型 | 必需 | 默认值 | 说明 |
+|---------|------|------|--------|------|
+| `stats` | 属性ID→浮点数对象 | **是** | —（**非空**，空模板/空对象使整个条目加载失败，报错 `stats must not be empty`） | 快照数值模板：逻辑属性 ID → 基础值。**键须带完整命名空间**（如 `"modularshoot:hit_damage"`）——与枪械 `stats` 不同，这里不自动补 `modularshoot` 命名空间，裸键会导致解析失败 |
+| `traits` | 特性ID→布尔值对象 | 否 | `{}` | 快照固有特性标志（如 `"examplemod:ignite": true`）。键同样须带完整命名空间 |
+| `bullet_style` | 对象 | 否 | 无 | 独立发射视觉样式，结构同枪械的 `bullet_style`（`base` + `modifiers`）。缺失时 compose 阶段使用框架默认子弹外观 |
+| `shoot_sound` | 对象 | 否 | 无 | 发射音效（见下表）。缺失时静音 |
+| `attribute_binds` | 资源路径字符串数组 | 否 | `[]` | 属性绑定列表：快照生成时逐项从**源实体**实时读取该逻辑属性的最终值，**覆盖**模板对应条目（允许引入模板没有的新键，与 `extra_values` 约定一致）；读取为空则**保留模板值**。读取条件见下方「createSnapshot 语义」 |
+
+**shoot_sound 子字段**（`ShootSound` record）：
+
+| JSON 键 | 类型 | 必需 | 默认值 | 说明 |
+|---------|------|------|--------|------|
+| `id` | 资源路径字符串 | **是** | — | 已注册的音效事件 ID（如 `"minecraft:entity.skeleton.shoot"`）。未注册时播放跳过并记 WARN |
+| `volume` | 浮点数 | 否 | `1.0` | 播放音量 |
+| `pitch` | 浮点数 | 否 | `1.0` | 播放音调 |
+
+**createSnapshot 语义**（`ShooterDefinition.createSnapshot(LivingEntity source, RegistryAccess registryAccess)`）：
+
+- 以 `stats` 模板为起点，按声明顺序逐项处理 `attribute_binds`：**读取到值就覆盖**模板条目（或引入新键），**读不到就保留模板值**
+- 读取失败的三种情形（均保留模板值）：`source` 为 `null`（无源实体）；`attribute_meta` 中无该逻辑属性条目（记 WARN）；源实体类型不在该条目 `entity_types` 白名单内
+- 产物快照遵循独立发射约定（`gunId`/`gunInstanceUuid`/`shooter` 均 `null`），伤害类型留空（`null`）——由 `ModularShootAPI.fireBullet` 门面在发射时补默认
+- 音效**不随发射自动播放**（`fireBullet` 不播音效）：需要时由内容模组调用 `playShootSound(Level, Vec3)` 在发射位置播放（未声明 `shoot_sound` 则静默跳过）
+
+**冲突与降级口径**：
+
+- 与 `registerShooter`（Java API）同名 → Java API 优先，数据包条目忽略并 WARN（与 `registerGun` 同一条注册冲突机制）
+- `attribute_binds` 中的 ID 未注册（`attribute_meta` 无条目）→ WARN，**保留模板值**
+- `shoot_sound.id` 未在 `SOUND_EVENT` 注册表 → WARN，跳过播放
+- 空 `stats` → 整个条目加载失败（作者错误，非降级）
+
+**路径**：`data/modularshoot/modularshoot/shooters/example_bone_shooter.json`（框架随包示例：骷髅发射者——数值模板 + 独立视觉）
+
+```json
+{
+  "stats": {
+    "modularshoot:hit_damage": 6.0,
+    "modularshoot:bullet_speed": 2.5,
+    "modularshoot:range": 48.0,
+    "modularshoot:bullet_size": 0.25
+  },
+  "bullet_style": {
+    "base": {
+      "render_mode": "billboard",
+      "texture": "modularshoot:textures/bullet/default.png"
+    }
+  }
+}
+```
+
+**完整字段示例**（`data/examplemod/modularshoot/shooters/boss_turret.json`）：
+
+```json
+{
+  "stats": {
+    "modularshoot:hit_damage": 12.0,
+    "modularshoot:bullet_speed": 40.0,
+    "modularshoot:range": 96.0,
+    "modularshoot:bullet_size": 0.4
+  },
+  "traits": {
+    "examplemod:ignite": true
+  },
+  "bullet_style": {
+    "base": {
+      "render_mode": "billboard",
+      "texture": "examplemod:textures/bullet/boss_fireball.png"
+    },
+    "modifiers": [
+      { "type": "scale", "value": 1.5 },
+      { "type": "tint", "color": [1.0, 0.4, 0.1] }
+    ]
+  },
+  "shoot_sound": {
+    "id": "minecraft:entity.blaze.shoot",
+    "volume": 0.8,
+    "pitch": 1.2
+  },
+  "attribute_binds": [
+    "examplemod:boss_power"
+  ]
+}
+```
+
+> 上例中 `examplemod:boss_power` 须先在 `attribute_meta` 中登记（含 `entity_types` 白名单）；Boss 实体发射时若其类型在白名单内，快照的 `modularshoot:hit_damage` 会被 Boss 的 `boss_power` 实时属性值覆盖，否则保留模板值 `12.0`。
 
 ## 变体 JSON
 

@@ -387,45 +387,107 @@ public class EventListeners {
 ### Independent Bullet Firing (Turrets, etc.)
 
 ```java
-import org.yanbwe.modularshoot.attribute.ModularShootAttributes;
-import org.yanbwe.modularshoot.bullet.BulletManager;
-import org.yanbwe.modularshoot.bullet.BulletSnapshot;
+import org.yanbwe.modularshoot.ModularShootAPI;
 import org.yanbwe.modularshoot.bullet.BulletRecord;
-import org.yanbwe.modularshoot.damage.ModularShootDamageTypes;
+import org.yanbwe.modularshoot.bullet.BulletSnapshot;
+import org.yanbwe.modularshoot.registry.gun.BulletStyle;
+import org.yanbwe.modularshoot.registry.gun.BulletStyle.RenderMode;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 
-// Build bullet snapshot: the only constructor takes 7 args (stats/traits/
-// state are defensively copied). For independent firing, gunId and
-// gunInstanceUuid are always null; the shooter uuid is passed via
-// fireBullet's last argument (null = ownerless source).
-// setStat takes a ResourceLocation; ModularShootAttributes constants are
-// DeferredHolder<Attribute, Attribute>, so pass .getKey()
-BulletSnapshot snapshot = new BulletSnapshot(
-    new HashMap<>(),   // stats (filled below via setStat)
-    new HashMap<>(),   // traits
-    level.registryAccess().holderOrThrow(ModularShootDamageTypes.BULLET),  // damageType
-    null,              // shooter
-    null,              // gunId
-    null,              // gunInstanceUuid
-    new HashMap<>()    // state
-);
-snapshot.setStat(ModularShootAttributes.HIT_DAMAGE.getKey(), 10.0);
-snapshot.setStat(ModularShootAttributes.BULLET_SPEED.getKey(), 30.0);
-snapshot.setStat(ModularShootAttributes.RANGE.getKey(), 80.0);
-snapshot.setStat(ModularShootAttributes.BULLET_SIZE.getKey(), 0.3);
-snapshot.setStat(ModularShootAttributes.BLOCK_PENETRATION.getKey(), 3);
+// 1. Build the snapshot with the chainable builder (recommended entry point).
+//    Independent-firing convention: gunId / gunInstanceUuid / shooter are
+//    always null; the shooter uuid is passed via fireBullet's last argument
+//    (null = ownerless source)
+BulletSnapshot snapshot = ModularShootAPI.createBulletSnapshot()
+        .stat(ResourceLocation.parse("modularshoot:hit_damage"), 10.0)
+        .stat(ResourceLocation.parse("modularshoot:bullet_speed"), 30.0)
+        .stat(ResourceLocation.parse("modularshoot:range"), 80.0)
+        .stat(ResourceLocation.parse("modularshoot:bullet_size"), 0.3)
+        .trait(ResourceLocation.parse("examplemod:ignite"), true)
+        .style(new BulletStyle(               // independent-firing visuals (variant style override channel)
+                Optional.of(new BulletStyle.Base(
+                        RenderMode.BILLBOARD,
+                        Optional.of(ResourceLocation.parse(
+                                "modularshoot:textures/bullet/default.png")),
+                        Optional.empty()      // model: only for 3d mode
+                )),
+                List.of()
+        ))
+        .build(level.registryAccess());       // fills in the framework default damage type;
+                                              // without a RegistryAccess use build() (damage type
+                                              // left null and patched at fireBullet time)
 
-// Fire from turret position
-BulletManager manager = BulletManager.get(level);
-BulletRecord bullet = manager.fireBullet(
-    level,
-    turretPosition,     // Vec3 firing position
-    turretDirection,    // Vec3 flight direction
-    snapshot,
-    null                // UUID shooter (null = ownerless source)
+// 2. Facade firing: no fire-rate control, no ShootPredicate check, no shoot
+//    events, no sound playback
+BulletRecord bullet = ModularShootAPI.fireBullet(
+        level,
+        turretPosition,     // Vec3 firing position
+        turretDirection,    // Vec3 flight direction (should be normalized)
+        snapshot,
+        null                // UUID shooter (null = ownerless source; pass a player UUID to attribute the bullet)
 );
 ```
+
+The equivalent hand-constructed path (not recommended; only when you need to manipulate the snapshot object directly): `BulletSnapshot`'s 7-arg constructor (stats/traits/state defensively copied) + per-field `setStat` (`setStat` takes a `ResourceLocation`; `ModularShootAttributes` constants are `DeferredHolder`s, pass `.getKey()`); firing can go through `BulletManager.get(level).fireBullet(...)` directly, equivalent to the facade (the facade additionally patches a null damage type). Both hand paths require you to keep `gunId`/`gunInstanceUuid` `null` yourself — the builder enforces the convention.
+
+### Barrage Monster (shooters registry + fireBullet loop)
+
+```java
+import org.yanbwe.modularshoot.ModularShootAPI;
+import org.yanbwe.modularshoot.bullet.BulletSnapshot;
+import org.yanbwe.modularshoot.registry.shooter.ShooterDefinition;
+import org.yanbwe.modularshoot.registry.shooter.ShooterRegistry;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.phys.Vec3;
+import java.util.ArrayList;
+import java.util.List;
+
+// 1. Load the shooter config (modularshoot:shooters registry, datapack- or Java-API-registered)
+RegistryAccess access = mob.level().registryAccess();
+ShooterDefinition shooter = ShooterRegistry.getShooter(
+        access, ResourceLocation.parse("examplemod:bone_shooter"))
+        .orElseThrow(() -> new IllegalStateException("shooter not found"));
+
+// 2. Generate the snapshot from the source entity (mob) with live attribute
+//    values: each attribute_binds id reads the mob's current value and
+//    overrides the template; on an empty read (unregistered / whitelist
+//    miss) the template value is kept
+BulletSnapshot snapshot = shooter.createSnapshot(mob, access);
+
+// 3. Fan-shaped direction set — the barrage-pattern algorithm is implemented
+//    by the content mod; the framework only provides
+//    SpreadCalculator.applySpread (random spread) and fireBullet (the launch entry)
+Vec3 baseDir = mob.getLookAngle();
+int pellets = 5;
+double spreadDeg = 40.0; // total fan angle 40°
+List<Vec3> directions = new ArrayList<>();
+for (int i = 0; i < pellets; i++) {
+    double offsetDeg = -spreadDeg / 2.0 + spreadDeg * i / (pellets - 1);
+    directions.add(baseDir.yRot((float) Math.toRadians(offsetDeg)));
+}
+
+// 4. Fire along every direction; the mob's UUID attributes the bullets
+for (Vec3 dir : directions) {
+    ModularShootAPI.fireBullet(
+            mob.level(),
+            mob.position().add(0.0, mob.getEyeHeight() * 0.8, 0.0), // firing position
+            dir.normalize(),
+            snapshot, // the framework never rewrites the snapshot (the facade
+                      // only patches the default damage type once when null),
+                      // so it can be reused across bullets
+            mob.getUUID()
+    );
+}
+
+// 5. Sound: fireBullet plays nothing; play it yourself when needed
+shooter.playShootSound(mob.level(), mob.position());
+```
+
+> **Framework boundary**: `modularshoot:shooters` only carries the config (numeric template + attribute binds + visuals + sound); the launch entry is `ModularShootAPI.fireBullet`; on the direction side the framework only provides `SpreadCalculator.applySpread(Vec3 lookAngle, double accuracyYaw, double accuracyPitch, RandomSource random)` (elliptical random spread; `accuracy_yaw`/`accuracy_pitch` are in degrees). Barrage patterns (fan / ring / spiral direction-set algorithms) are implemented by the content mod itself (like the `yRot` loop above).
 
 ### Mark Java API Registered
 

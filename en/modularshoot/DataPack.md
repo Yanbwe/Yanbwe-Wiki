@@ -306,6 +306,7 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 |----------|------|----------|---------|-------------|
 | `binds` | Resource path string | **Yes** | — | Points to a registered vanilla `Attribute` ID (e.g. `"minecraft:generic.max_health"`). Framework resolves the `Attribute` holder through this field. **Shared by all three paths**: mounting (gun base-value modifiers resolve their mount target), resolution (shot resolution, fire-rate gating, client prediction, `/modularshoot stats` and debug command reads) and display (tooltip values) all resolve through `binds`; may point to any registered attribute (incl. `minecraft:*`) |
 | `default_value` | Decimal number | **Yes** | — | Gun base value when not declared by the gun (participates in additive calculations). **Not the vanilla base value** |
+| `entity_types` | Entity type ID array | No | `["minecraft:player"]` | **Read-effect whitelist**: only entity types in this list have their attribute values read by the framework; entity types outside the list degrade to `0.0` on read. Defaults to player-only (preserving the pre-whitelist behavior). The mounting side pre-mounts the framework's 10 preset attributes onto **every** entity type (lazily instantiated; the cost is negligible), so this field controls only "whose value takes effect", not "who can mount" — a datapack-only change switches the effect scope without touching code. The `attribute_binds` of shooters are subject to the same whitelist (see "Shooter JSON") |
 | `description` | Text string | No | `""` | Description text |
 | `color` | Text string | No | `""` | Name color |
 | `priority` | Integer | No | `0` | Display priority |
@@ -359,6 +360,98 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 > - **Add = plug-and-play, delete = disabled**: adding an attribute_meta entry for any logical id makes gun `stats` support that key automatically (beyond the 10 preset attributes); deleting an entry disables that logical attribute's mounting and resolution (reads 0.0)
 > - **Avoid multiple entries binding the same attribute**: base modifiers share the fixed ID `modularshoot:gun_base`; multiple entries on the same attribute overwrite each other with no guaranteed winner
 > - **Degradation contract unchanged**: `binds` target not registered → metadata entry is kept, modifier not mounted, tooltip not shown, reads return 0
+> - **Effect scope is datapack-controlled**: the mounting side pre-mounts the framework's 10 preset attributes onto **every** entity type (lazily instantiated), so `entity_types` decides "whose value is read" — entities outside the whitelist read `0.0`, and a datapack-only change switches the effect scope. The player is always mounted first, explicitly. Third-party attributes are mounted on players only (the framework pre-mounts only its own attributes); when `entity_types` hits a non-player entity whose attribute body was never mounted, the read degrades to `0.0` as well
+
+## Shooter JSON (shooters)
+
+**Path**: `data/<namespace>/modularshoot/shooters/<shooter_id>.json`
+
+A **shooter definition** (`ShooterDefinition`) is the **config template** for independent firing (non-player sources: turrets, traps, boss attacks, scripted scenarios, ...): it provides a numeric template, and at firing time the content mod overlays live attribute values read from a source entity on top of it, producing a bullet snapshot handed to `ModularShootAPI.fireBullet`. The registry key (the shooter id) is supplied by the registry itself; it is not a JSON field.
+
+| JSON Key | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `stats` | Attribute ID → decimal object | **Yes** | — (**non-empty**: an empty template/empty object fails the whole entry load with `stats must not be empty`) | The snapshot's numeric template: logical attribute ID → base value. **Keys must be fully namespaced** (e.g. `"modularshoot:hit_damage"`) — unlike gun `stats`, the `modularshoot` namespace is NOT auto-completed here; bare keys fail parsing |
+| `traits` | Trait ID → boolean object | No | `{}` | Inherent trait flags on the snapshot (e.g. `"examplemod:ignite": true`). Keys must also be fully namespaced |
+| `bullet_style` | Object | No | None | Independent-firing visual style, same structure as a gun's `bullet_style` (`base` + `modifiers`). When absent, the framework default bullet appearance applies at compose time |
+| `shoot_sound` | Object | No | None | Shoot sound (see sub-table below). Absent → silent |
+| `attribute_binds` | Resource path string array | No | `[]` | Attribute bind list: at snapshot time each id is read live from the **source entity** and **overrides** the template entry (introducing new keys is allowed, matching the `extra_values` convention); an empty read keeps the **template value**. Read conditions below under "createSnapshot semantics" |
+
+**shoot_sound sub-fields** (`ShootSound` record):
+
+| JSON Key | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `id` | Resource path string | **Yes** | — | A registered sound event id (e.g. `"minecraft:entity.skeleton.shoot"`). Unregistered → playback skipped with a WARN |
+| `volume` | Decimal number | No | `1.0` | Playback volume |
+| `pitch` | Decimal number | No | `1.0` | Playback pitch |
+
+**createSnapshot semantics** (`ShooterDefinition.createSnapshot(LivingEntity source, RegistryAccess registryAccess)`):
+
+- Starts from the `stats` template and processes each `attribute_binds` id in declared order: **a value read overrides** the template entry (or introduces a new key); **an empty read keeps the template value**
+- Three read-failure cases (all keep the template value): `source` is `null` (no source entity); no `attribute_meta` entry for the logical attribute id (logged with a WARN); the source entity's type is outside the entry's `entity_types` whitelist
+- The resulting snapshot follows the independent-firing convention (`gunId`/`gunInstanceUuid`/`shooter` all `null`) and leaves the damage type `null` — the `ModularShootAPI.fireBullet` facade patches in the framework default at firing time
+- The sound is **not played automatically on firing** (`fireBullet` plays no sound): content mods call `playShootSound(Level, Vec3)` at the firing position when needed (silently skipped when no `shoot_sound` is declared)
+
+**Conflicts & degradation**:
+
+- Same ID via `registerShooter` (Java API) → Java API wins, the datapack entry is ignored with a WARN (the same registration-conflict mechanism as `registerGun`)
+- An `attribute_binds` id without an `attribute_meta` entry → WARN, **template value kept**
+- `shoot_sound.id` not in the `SOUND_EVENT` registry → WARN, playback skipped
+- Empty `stats` → the whole entry fails to load (author error, not degradation)
+
+**Path**: `data/modularshoot/modularshoot/shooters/example_bone_shooter.json` (bundled example: bone shooter — numeric template + independent visuals)
+
+```json
+{
+  "stats": {
+    "modularshoot:hit_damage": 6.0,
+    "modularshoot:bullet_speed": 2.5,
+    "modularshoot:range": 48.0,
+    "modularshoot:bullet_size": 0.25
+  },
+  "bullet_style": {
+    "base": {
+      "render_mode": "billboard",
+      "texture": "modularshoot:textures/bullet/default.png"
+    }
+  }
+}
+```
+
+**Full-field example** (`data/examplemod/modularshoot/shooters/boss_turret.json`):
+
+```json
+{
+  "stats": {
+    "modularshoot:hit_damage": 12.0,
+    "modularshoot:bullet_speed": 40.0,
+    "modularshoot:range": 96.0,
+    "modularshoot:bullet_size": 0.4
+  },
+  "traits": {
+    "examplemod:ignite": true
+  },
+  "bullet_style": {
+    "base": {
+      "render_mode": "billboard",
+      "texture": "examplemod:textures/bullet/boss_fireball.png"
+    },
+    "modifiers": [
+      { "type": "scale", "value": 1.5 },
+      { "type": "tint", "color": [1.0, 0.4, 0.1] }
+    ]
+  },
+  "shoot_sound": {
+    "id": "minecraft:entity.blaze.shoot",
+    "volume": 0.8,
+    "pitch": 1.2
+  },
+  "attribute_binds": [
+    "examplemod:boss_power"
+  ]
+}
+```
+
+> In the example above, `examplemod:boss_power` must first be registered in `attribute_meta` (including its `entity_types` whitelist). When a boss fires and its entity type is whitelisted, the snapshot's `modularshoot:hit_damage` is overridden by the boss's live `boss_power` value; otherwise the template value `12.0` is kept.
 
 ## Variant JSON
 

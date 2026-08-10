@@ -61,6 +61,7 @@ ModularShootAPI 所有公开静态方法速查。方法按功能分组。
 | 方法签名 | 参数说明 | 返回值 | 说明 |
 |---------|---------|--------|------|
 | `registerGun(ResourceLocation gunId, GunDefinition definition)` | `gunId` — 枪械定义 ID（如 `modularshoot:sniper_rifle`）；`definition` — 枪械定义对象 | `void` | 通过 Java API 注册一把枪械。调用后自动标记该 ID 为 API 注册，后续数据包 JSON 同名注册会被拒绝 |
+| `registerShooter(ResourceLocation shooterId, ShooterDefinition definition)` | `shooterId` — 发射者定义 ID（如 `modularshoot:bone_shooter`）；`definition` — 发射者定义对象 | `void` | 通过 Java API 注册一个发射者定义（独立发射配置模板，`modularshoot:shooters` 注册表）。语义与 `registerGun` 一致：自动标记 ID 为 API 注册并优先于数据包同名条目，且不受 `/reload` 影响 |
 | `registerGunItem(ItemLike item, ResourceLocation gunId)` | `item` — 要绑定的物品（如 `Items.DIAMOND_SWORD`）；`gunId` — 目标枪械定义 ID | `void` | 把指定物品绑定为枪械（等价于数据包 `gun_items` 条目，条目键 = 物品 ID）。Java API 绑定优先于数据包绑定；运行时识别需要 `RegistryAccess`（数据包注册表未加载时仅 Java API 绑定可见） |
 | `registerPluginItem(ItemLike item, ResourceLocation pluginId)` | `item` — 要绑定的物品；`pluginId` — 目标插件定义 ID | `void` | 把指定物品绑定为插件（等价于数据包 `plugin_items` 条目） |
 | `registerPluginValidator(PluginValidator validator)` | `validator` — 自定义安装校验器（函数式接口：`(Player player, ItemStack gun, ResourceLocation pluginId, RegistryAccess registryAccess) → ValidationResult`；`player` — 执行安装的玩家，`gun` — 目标枪械，`pluginId` — 候选插件定义 ID，`registryAccess` — 运行时注册表视图） | `void` | 注册自定义插件安装校验器。在框架默认校验通过后执行，返回失败则安装中止 |
@@ -116,6 +117,7 @@ DynamicOutlineTintRegistry.register(
 | `getGunDefinition(RegistryAccess registryAccess, ResourceLocation gunId)` | `registryAccess` — 运行时注册表视图；`gunId` — 枪械定义 ID | `Optional<GunDefinition>` | 查询枪械定义 |
 | `getPluginDefinition(RegistryAccess registryAccess, ResourceLocation pluginId)` | `registryAccess` — 运行时注册表视图；`pluginId` — 插件定义 ID | `Optional<PluginDefinition>` | 查询插件定义 |
 | `getPluginTypeDefinition(RegistryAccess registryAccess, ResourceLocation pluginTypeId)` | `registryAccess` — 运行时注册表视图；`pluginTypeId` — 插件种类 ID | `Optional<PluginTypeDefinition>` | 查询插件种类定义 |
+| `getShooterDefinition(RegistryAccess registryAccess, ResourceLocation shooterId)` | `registryAccess` — 运行时注册表视图；`shooterId` — 发射者定义 ID | `Optional<ShooterDefinition>` | 查询发射者定义（独立发射配置模板）。Java API 注册的条目优先于数据包同名条目 |
 
 ## 状态访问
 
@@ -140,3 +142,30 @@ DynamicOutlineTintRegistry.register(
 | `clearState(stateId)` | 清除状态（恢复默认值） |
 
 > 访问未注册的状态 ID 返回零值（int→0, string→""等），并输出 WARN 日志。类型不匹配同理。
+
+## 独立发射
+
+**独立发射**指非玩家发射源（炮塔、陷阱、Boss 攻击、脚本场景等）发射子弹的路径：快照由调用方手工构建（或从 `modularshoot:shooters` 注册表的发射者定义生成），绕过玩家射击引擎——**没有射速控制、没有射击条件（ShootPredicate）检查、没有 PreShootEvent/PostShootEvent、没有音效播放**。子弹一经注册即进入正常的 tick 循环（飞行、碰撞、伤害、特性钩子）。
+
+**快照字段约定**：独立发射快照的 `gunId` / `gunInstanceUuid` / `shooter` 三个引擎属主字段恒为 `null`（没有发射枪械；shooter 经 `fireBullet` 末参单独传入，`null` 表示无主发射源）。
+
+| 方法签名 | 参数说明 | 返回值 | 说明 |
+|---------|---------|--------|------|
+| `createBulletSnapshot()` | 无 | `BulletSnapshotBuilder` | 新建独立发射快照的链式 Builder（见下方速查表）。产物恒满足快照字段约定（gunId/gunInstanceUuid/shooter 均为 null） |
+| `fireBullet(Level level, Vec3 position, Vec3 direction, BulletSnapshot snapshot, UUID shooter)` | `level` — 发射维度；`position` — 发射位置；`direction` — 初始飞行方向（应已归一化，按原样进入飞行模拟）；`snapshot` — 子弹快照（Builder 或手工构造）；`shooter` — 发射者 UUID（可空，`null` = 无主发射源，传玩家 UUID 可归属伤害） | `BulletRecord` | 从非玩家源发射一颗子弹。**无射速控制、无射击条件检查、无射击事件、无音效**。快照携带 `null` 伤害类型时自动补框架默认伤害类型（从 `level.registryAccess()` 解析，缺失时抛 `IllegalStateException`），调用方可以完全省略伤害类型 |
+
+**BulletSnapshotBuilder 链式方法速查**（`org.yanbwe.modularshoot.bullet.BulletSnapshotBuilder`）：
+
+| 方法 | 说明 |
+|------|------|
+| `stat(ResourceLocation id, double value)` | 设置（或覆盖）一个冻结属性值。同 ID 重复调用后写覆盖先写 |
+| `trait(ResourceLocation id, boolean value)` | 设置（或覆盖）一个激活特性标志 |
+| `state(ResourceLocation id, Object value)` | 设置子弹工作记忆状态（种子值，随 `BulletS2CPacket` 初始携带；UUID 类型状态允许 `null`） |
+| `style(BulletStyle style)` | 设置独立发射视觉样式，经快照的 variant style override 通道写入——服务端 compose 在无发射枪械时将其作为视觉 base/叠加修饰符来源（缺失时用框架默认外观） |
+| `damageType(Holder<DamageType> holder)` | 显式指定伤害类型 holder。可选：不设置也能成功构建 |
+| `build()` | 构建快照，Builder 保持可复用（已构建快照防御拷贝，事后改动 Builder 不影响产物）。**damageType 可能为 `null`**（合法——`fireBullet` 门面会补默认） |
+| `build(RegistryAccess registryAccess)` | 同 `build()`，但未显式设置伤害类型时自动补框架默认（`ModularShootDamageTypes.holderOrThrow`）。解析结果缓存于 Builder，后续 `build()` 复用。`registryAccess` 不含 `DAMAGE_TYPE` 注册表（如主菜单的 `RegistryAccess.EMPTY`）时抛 `IllegalStateException` |
+
+> **build() 与 build(RegistryAccess) 的差异**：两者产出的快照在属性/特性/视觉上完全一致，唯一区别是伤害类型——`build()` 可能留空（由 `fireBullet` 门面在发射时补默认），`build(RegistryAccess)` 立即补上默认伤害类型。手头有运行时注册表视图（如 `level.registryAccess()`）时推荐后者，快照更早完整；没有（如纯脚本上下文）用 `build()` 即可。
+
+> **独立发射不播音效**：`fireBullet` 不播放任何声音。需要射击音效时，用 `ShooterDefinition.playShootSound(Level, Vec3)` 在发射位置播放（见 DataPack 文档「发射者 JSON」）。

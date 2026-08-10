@@ -1,6 +1,6 @@
 # Registry Reference
 
-ModularShoot stores all definitions in 9 dynamic registries (DataPackRegistry). All support `/reload` hot-reload and client sync.
+ModularShoot stores all definitions in 10 dynamic registries (DataPackRegistry). All support `/reload` hot-reload and client sync.
 
 
 ## Registry Overview
@@ -14,6 +14,7 @@ ModularShoot stores all definitions in 9 dynamic registries (DataPackRegistry). 
 | `modularshoot:attribute_meta` | Attribute metadata | `AttributeMeta` |
 | `modularshoot:states` | Persistent state definitions | `StateDefinition` |
 | `modularshoot:variants` | Random variant definitions | `VariantDefinition` |
+| `modularshoot:shooters` | Shooter definitions (independent-firing config templates) | `ShooterDefinition` |
 | `modularshoot:gun_items` | Item → gun bindings | `GunItemBinding` |
 | `modularshoot:plugin_items` | Item → plugin bindings | `PluginItemBinding` |
 
@@ -154,6 +155,7 @@ Registry: `modularshoot:attribute_meta`
 |-------|------|----------|---------|-------------|
 | `binds` | Resource path | **Yes** | — | Points to a registered vanilla `Attribute` ID. Framework resolves the `Attribute` holder through this field at runtime. **Shared by all three paths** (mount / resolve / display all resolve through `binds`); may be rebound to any registered vanilla attribute. Preset attributes have logical ID = body ID, `binds` points to self |
 | `defaultValue` | Decimal number | **Yes** | — | Gun base value when not declared by the gun (participates in ADD_VALUE calculation). Hot-reloadable. **Not the vanilla Attribute's base** (which is always 0) |
+| `entityTypes` | Entity type ID list | No | `[PLAYER]` (player only) | Read-effect whitelist (JSON key `entity_types`, default `["minecraft:player"]`): only entity types in this list have their attribute values read by the framework; types outside read `0.0`. The mounting side pre-mounts the framework's 10 preset attributes onto **every** entity type (lazily instantiated), so this field controls only "whose value takes effect" — a datapack-only change switches the effect scope. The `attribute_binds` of shooters are subject to the same whitelist |
 | `description` | Text string | No | `""` (empty string) | Description text |
 | `color` | Text string | No | `""` (empty string) | Attribute name color (e.g. `#FF4444`) |
 | `priority` | Integer | No | `0` | Display priority, higher sorts first |
@@ -163,6 +165,22 @@ Registry: `modularshoot:attribute_meta`
 > If the `binds` target attribute is not registered: metadata entry is retained but modifier won't mount, tooltip won't show, reads return 0.
 
 > Datapacks may rebind `binds` to any registered vanilla attribute (incl. `minecraft:*`), e.g. rebind `modularshoot:hit_damage` to `minecraft:attack_damage`. The three-path (mount / resolve / display) semantics plus the base-offset and syncable conventions are described in the [datapack format doc](DataPack.md#attribute-metadata-json).
+
+## Shooter Definition (ShooterDefinition)
+
+Registry: `modularshoot:shooters`
+
+The **config template** for independent firing (non-player sources: turrets, traps, boss attacks, scripted scenarios, ...): it provides a numeric template, and at firing time live attribute values read from a source entity are overlaid to produce a snapshot handed to `ModularShootAPI.fireBullet`. The registry key (the shooter id, e.g. `modularshoot:bone_shooter`) is supplied by the registry itself; it is not a record field.
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `stats` | Attribute ID → decimal map | **Yes** | — (non-empty) | The snapshot's numeric template. JSON keys must be fully namespaced (e.g. `"modularshoot:hit_damage"`); the `modularshoot` namespace is NOT auto-completed; an empty template fails the entry load |
+| `traits` | Trait ID → boolean map | No | Empty map | Inherent trait flags on the snapshot |
+| `bulletStyle` | Optional bullet style | No | None | Independent-firing visual style (JSON key `bullet_style`, same structure as a gun's); absent → framework default appearance |
+| `shootSound` | Optional shoot sound | No | None | Shoot sound (JSON key `shoot_sound`: `id` required, `volume`/`pitch` default `1.0`); absent → silent |
+| `attributeBinds` | Resource path list | No | Empty list | Attribute binds (JSON key `attribute_binds`): at snapshot time each id is read live from the source entity and overrides the template entry (new keys allowed); on an empty read (null source / unregistered WARN / whitelist miss) the template value is kept |
+
+> `createSnapshot(LivingEntity source, RegistryAccess registryAccess)` produces a snapshot following the independent-firing convention (`gunId`/`gunInstanceUuid`/`shooter` all `null`); the damage type is left null and patched by the `fireBullet` facade. The sound is not played automatically — call `playShootSound(Level, Vec3)`. Entries registered via the Java API (`registerShooter`) take priority over same-ID datapack entries. Full JSON field documentation in the [datapack format doc](DataPack.md#shooter-jsonshooters).
 
 ## Variant Definition (VariantDefinition)
 

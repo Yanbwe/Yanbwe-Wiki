@@ -1,6 +1,6 @@
 # 注册表参考
 
-ModularShoot 通过 9 张动态注册表（DataPackRegistry）存储所有定义。全部支持 `/reload` 热重载和客户端同步。
+ModularShoot 通过 10 张动态注册表（DataPackRegistry）存储所有定义。全部支持 `/reload` 热重载和客户端同步。
 
 
 ## 注册表概览
@@ -14,6 +14,7 @@ ModularShoot 通过 9 张动态注册表（DataPackRegistry）存储所有定义
 | `modularshoot:attribute_meta` | 属性元数据 | `AttributeMeta` |
 | `modularshoot:states` | 持久状态定义 | `StateDefinition` |
 | `modularshoot:variants` | 随机变体定义 | `VariantDefinition` |
+| `modularshoot:shooters` | 发射者定义（独立发射配置模板） | `ShooterDefinition` |
 | `modularshoot:gun_items` | 物品→枪械绑定 | `GunItemBinding` |
 | `modularshoot:plugin_items` | 物品→插件绑定 | `PluginItemBinding` |
 
@@ -170,6 +171,7 @@ DynamicOutlineTintRegistry.register(
 |------|------|------|--------|------|
 | `binds` | 资源路径 | **是** | — | 指向已注册的原版 `Attribute` ID。框架通过此字段定位 `Attribute` holder 参与修饰符挂载。**三路径共用**（挂载 / 结算 / 显示均经 `binds` 解析），可重绑到任意已注册原版属性。预置属性的逻辑 ID 与本体 ID 一致，`binds` 指向自身 |
 | `defaultValue` | 浮点数 | **是** | — | 枪械未声明该属性时的基础值（参与 ADD_VALUE 计算）。可热重载。**非原版 Attribute 的 base 值**（后者恒为 0） |
+| `entityTypes` | 实体类型 ID 列表 | 否 | `[PLAYER]`（仅玩家） | 读取生效白名单（JSON 键 `entity_types`，默认 `["minecraft:player"]`）：仅列表内实体类型的属性值被框架读取，白名单外读取 `0.0`。挂载侧已把框架 10 个预置属性预挂载到**全部**实体类型（懒实例化），本字段只控制"谁的属性值生效"——纯数据包改动即可切换生效范围。`shooters` 的 `attribute_binds` 同受此约束 |
 | `description` | 字符串 | 否 | `""`（空字符串） | 说明文本 |
 | `color` | 字符串 | 否 | `""`（空字符串） | 属性名称颜色（如 `#FF4444`） |
 | `priority` | 整数 | 否 | `0` | 显示优先级，越大越靠前 |
@@ -179,6 +181,22 @@ DynamicOutlineTintRegistry.register(
 > `binds` 指向的属性未注册时：元数据条目保留，但修饰符不挂载、tooltip 不显示、读取返回 0。
 
 > 数据包可将 `binds` 重绑到任意已注册原版属性（含 `minecraft:*`），如将 `modularshoot:hit_damage` 重绑到 `minecraft:attack_damage`。三路径（挂载/结算/显示）语义、base 偏移与 syncable 等约定见[数据包格式文档](DataPack.md#属性元数据-json)。
+
+## 发射者定义（ShooterDefinition）
+
+注册表：`modularshoot:shooters`
+
+独立发射（炮塔、陷阱、Boss 攻击、脚本场景等非玩家发射源）的**配置模板**：给定数值模板，发射时从源实体实时读取属性值覆盖生成快照，交给 `ModularShootAPI.fireBullet`。注册表键（发射者 ID，如 `modularshoot:bone_shooter`）由注册表自身提供，不是 record 字段。
+
+| 字段 | 类型 | 必需 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| `stats` | 属性ID→浮点数映射 | **是** | —（非空） | 快照数值模板。JSON 键须带完整命名空间（如 `"modularshoot:hit_damage"`），**不**自动补 `modularshoot`；空模板使条目加载失败 |
+| `traits` | 特性ID→布尔值映射 | 否 | 空映射 | 快照固有特性标志 |
+| `bulletStyle` | 可选子弹样式 | 否 | 无 | 独立发射视觉样式（JSON 键 `bullet_style`，结构同枪械）；缺失时用框架默认外观 |
+| `shootSound` | 可选发射音效 | 否 | 无 | 发射音效（JSON 键 `shoot_sound`：`id` 必填、`volume`/`pitch` 默认 `1.0`）；缺失时静音 |
+| `attributeBinds` | 资源路径列表 | 否 | 空列表 | 属性绑定（JSON 键 `attribute_binds`）：快照生成时从源实体实时读取并覆盖模板条目（可引入新键）；读不到（源为 null / 未注册 WARN / 白名单未命中）保留模板值 |
+
+> `createSnapshot(LivingEntity source, RegistryAccess registryAccess)` 生成的快照遵循独立发射约定（`gunId`/`gunInstanceUuid`/`shooter` 均 `null`），伤害类型留空由 `fireBullet` 门面补默认；音效不随发射自动播放，需调用 `playShootSound(Level, Vec3)`。Java API 经 `registerShooter` 注册的条目优先于数据包同名条目。JSON 字段完整说明见[数据包格式文档](DataPack.md#发射者-jsonshooters)。
 
 ## 变体定义（VariantDefinition）
 

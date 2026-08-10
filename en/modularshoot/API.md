@@ -62,6 +62,7 @@ Call these methods during mod initialization (constructor or `FMLCommonSetupEven
 | Method Signature | Parameters | Returns | Description |
 |-----------------|------------|---------|-------------|
 | `registerGun(ResourceLocation gunId, GunDefinition definition)` | `gunId` — gun definition ID (e.g. `modularshoot:sniper_rifle`); `definition` — gun definition object | `void` | Registers a gun via the Java API. Automatically marks the ID as API-registered; later datapack JSON with the same ID is rejected |
+| `registerShooter(ResourceLocation shooterId, ShooterDefinition definition)` | `shooterId` — shooter definition ID (e.g. `modularshoot:bone_shooter`); `definition` — shooter definition object | `void` | Registers a shooter definition (an independent-firing config template) via the Java API, in the `modularshoot:shooters` registry. Same semantics as `registerGun`: the ID is automatically marked as API-registered and takes priority over a same-ID datapack entry, and it survives `/reload` |
 | `registerGunItem(ItemLike item, ResourceLocation gunId)` | `item` — the item to bind (e.g. `Items.DIAMOND_SWORD`); `gunId` — target gun definition ID | `void` | Binds the given item as a gun (equivalent to a datapack `gun_items` entry, entry key = item ID). Java API bindings take precedence over datapack bindings; runtime recognition requires `RegistryAccess` (when datapack registries are not loaded, only Java API bindings are visible) |
 | `registerPluginItem(ItemLike item, ResourceLocation pluginId)` | `item` — the item to bind; `pluginId` — target plugin definition ID | `void` | Binds the given item as a plugin (equivalent to a datapack `plugin_items` entry) |
 | `registerPluginValidator(PluginValidator validator)` | `validator` — custom install validator (functional interface: `(Player player, ItemStack gun, ResourceLocation pluginId, RegistryAccess registryAccess) → ValidationResult`; `player` — the player performing the install, `gun` — the target gun, `pluginId` — the candidate plugin definition ID, `registryAccess` — runtime registry view) | `void` | Registers a custom plugin install validator. Runs after framework default checks pass; returning failure aborts installation |
@@ -117,6 +118,7 @@ Require a `RegistryAccess` parameter (obtained from a loaded world; registries a
 | `getGunDefinition(RegistryAccess registryAccess, ResourceLocation gunId)` | `registryAccess` — runtime registry view; `gunId` — gun definition ID | `Optional<GunDefinition>` | Looks up a gun definition |
 | `getPluginDefinition(RegistryAccess registryAccess, ResourceLocation pluginId)` | `registryAccess` — runtime registry view; `pluginId` — plugin definition ID | `Optional<PluginDefinition>` | Looks up a plugin definition |
 | `getPluginTypeDefinition(RegistryAccess registryAccess, ResourceLocation pluginTypeId)` | `registryAccess` — runtime registry view; `pluginTypeId` — plugin type ID | `Optional<PluginTypeDefinition>` | Looks up a plugin type definition |
+| `getShooterDefinition(RegistryAccess registryAccess, ResourceLocation shooterId)` | `registryAccess` — runtime registry view; `shooterId` — shooter definition ID | `Optional<ShooterDefinition>` | Looks up a shooter definition (an independent-firing config template). Java-API-registered entries take priority over same-ID datapack entries |
 
 ## State Access
 
@@ -141,3 +143,30 @@ Require a `RegistryAccess` parameter (obtained from a loaded world; registries a
 | `clearState(stateId)` | Clear state (restore default value) |
 
 > Accessing an unregistered state ID returns zero values (int→0, string→"", etc.) and logs a WARN. Same for type mismatch.
+
+## Independent Firing
+
+**Independent firing** is the non-player-source path (turret, trap, boss attack, scripted scenario, ...) for launching bullets: the snapshot is built by hand (or generated from a shooter definition in the `modularshoot:shooters` registry), bypassing the player shooting engine — **no fire-rate control, no ShootPredicate check, no PreShootEvent/PostShootEvent, no sound playback**. Once registered, the bullet enters the normal tick loop (flight, collision, damage, trait hooks).
+
+**Snapshot field conventions**: an independent-firing snapshot always carries `null` for the three engine-owned fields `gunId` / `gunInstanceUuid` / `shooter` (no firing gun exists; the shooter uuid is passed separately as `fireBullet`'s last argument, `null` for ownerless sources).
+
+| Method Signature | Parameters | Returns | Description |
+|-----------------|------------|---------|-------------|
+| `createBulletSnapshot()` | None | `BulletSnapshotBuilder` | Creates a chainable builder for independent-firing snapshots (see the quick-reference table below). The result always satisfies the snapshot field conventions (gunId/gunInstanceUuid/shooter all `null`) |
+| `fireBullet(Level level, Vec3 position, Vec3 direction, BulletSnapshot snapshot, UUID shooter)` | `level` — the dimension to fire into; `position` — launch position; `direction` — initial flight direction (should be normalized; consumed as-is by the flight simulation); `snapshot` — the bullet snapshot (builder- or hand-constructed); `shooter` — shooter uuid, nullable (`null` = ownerless source; pass a player uuid to attribute the bullet) | `BulletRecord` | Fires a bullet from a non-player source. **No fire-rate control, no ShootPredicate check, no shoot events, no sound playback**. When the snapshot carries a `null` damage type, the framework default is resolved from `level.registryAccess()` and written into the snapshot before firing (throws `IllegalStateException` if the framework damage type is missing) — callers may omit the damage type entirely |
+
+**BulletSnapshotBuilder chainable-method quick reference** (`org.yanbwe.modularshoot.bullet.BulletSnapshotBuilder`):
+
+| Method | Description |
+|--------|-------------|
+| `stat(ResourceLocation id, double value)` | Sets (or overwrites) a frozen stat value. Repeating the same ID overwrites (last-write-wins) |
+| `trait(ResourceLocation id, boolean value)` | Sets (or overwrites) an activated trait flag |
+| `state(ResourceLocation id, Object value)` | Seeds a per-bullet working-memory value (carried initially by the `BulletS2CPacket`; UUID-typed states allow `null`) |
+| `style(BulletStyle style)` | Sets the independent-firing visual style, carried via the snapshot's variant style override channel — server-side compose uses it as the visual base/modifier source when no firing gun exists (falls back to the framework default appearance) |
+| `damageType(Holder<DamageType> holder)` | Explicitly sets the damage type holder. Optional: the snapshot can be built without one |
+| `build()` | Builds the snapshot; the builder stays reusable (snapshots are defensively copied; later builder mutations never leak into built snapshots). **The damage type may be `null`** (valid — the `fireBullet` facade patches in the framework default) |
+| `build(RegistryAccess registryAccess)` | Same as `build()`, but fills in the framework default damage type (`ModularShootDamageTypes.holderOrThrow`) when none was set explicitly. The resolved holder is cached on the builder and reused by later `build()` calls. Throws `IllegalStateException` when `registryAccess` lacks the `DAMAGE_TYPE` registry (e.g. `RegistryAccess.EMPTY` on the main menu) |
+
+> **`build()` vs `build(RegistryAccess)`**: the produced snapshots are identical in stats/traits/visuals — the only difference is the damage type. `build()` may leave it `null` (the `fireBullet` facade fills in the default at firing time); `build(RegistryAccess)` fills it in immediately. When a runtime registry view is on hand (e.g. `level.registryAccess()`), prefer the latter for an earlier fully-wired snapshot; in script-only contexts `build()` suffices.
+
+> **Independent firing plays no sound**: `fireBullet` never plays any sound. For a shoot sound, call `ShooterDefinition.playShootSound(Level, Vec3)` at the firing position (see the Datapack docs, "Shooter JSON").
