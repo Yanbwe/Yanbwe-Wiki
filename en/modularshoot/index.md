@@ -2,7 +2,7 @@
 
 ModularShoot is an attribute-driven, modular assembly gun system **framework mod** for NeoForge 1.21.1.
 
-> **Framework positioning**: This mod is a **pure framework and API** — it provides registration APIs, an attribute calculation pipeline, and a shooting engine, with no production content. The bundled datapack ships only framework metadata (attribute metadata table, plugin types `barrel` / `accessory`) and no demo/test content; production content is added by other mods via the API or datapacks.
+> **Framework positioning**: This mod is a **pure framework and API** — it provides registration APIs, an attribute calculation pipeline, and a shooting engine, with no production content. The bundled datapack ships framework metadata (attribute metadata table) plus example content (example guns, plugins, variants, etc., for reference and testing); production content is added by other mods via the API or datapacks.
 
 ## Key Features
 
@@ -63,6 +63,8 @@ The framework pre-registers 10 numeric attributes (`modularshoot` namespace):
 | `block_penetration` | Blocks penetrated (0 = no penetration) | 0 |
 | `pellet_count` | Pellets per shot (rounded, then clamped to 1~32; over-limit logs a WARN; 0 or unmounted silently degrades to a single pellet) | 1.0 |
 
+> **0.1.3 new feature**: Gun/plugin definitions gained the `extra_values` namespaced numeric extension field (keys must be fully namespaced); `ModularShootAPI.getExtraValueSums` / `getExtraValue` provide one-stop queries for "gun definition base values + accumulated values of installed plugins".
+
 ## Key Events Overview
 
 | Event | Fires When | Cancellable |
@@ -75,3 +77,6 @@ The framework pre-registers 10 numeric attributes (`modularshoot` namespace):
 | `PostPluginInstallEvent` | After plugin written to component | No |
 | `PrePluginUninstallEvent` | Before plugin removal | Yes |
 | `PostPluginUninstallEvent` | After plugin removed | No |
+| `ClientBulletHitEvent` | On the client when a hit packet is received, before the default hit sound plays (client-only, NeoForge.EVENT_BUS) | Yes |
+
+> **Hit-effect hook**: `ClientBulletHitEvent` fires before the default hit sound plays on the client. Its `soundId` field is the hit sound id resolved by the server from the gun definition's `sounds` slots (entity `hit_entity` / block `hit_block` / pierce `hit_pierce`; null when not configured). The framework spawns no default hit particles — visual effects are entirely up to listeners. Cancelling the event skips the default hit sound; when not cancelled, listeners can add custom sounds/particles in their own logic.

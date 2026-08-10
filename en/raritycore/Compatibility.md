@@ -25,3 +25,12 @@ It is currently known that when certain mods are installed alongside Sinytra Con
 This mod has added a more comprehensive detection mechanism in version 1201.9.2-fix2. If the API is unavailable, the vanilla rarity conversion feature will be forcibly disabled to prevent crashes;
 
 Currently, the author is unable to reproduce the issue. If you can identify which mods are causing the problem, please promptly provide feedback to the author.
+
+## FTB Quests / FTB Library (Item Border Rendering Compatibility)
+
+RarityCore provides rendering compatibility for the FTB mod family (FTB Quests and its dependency FTB Library):
+
+- Item icons in the quest interface — task icons, reward icons, quest map, emergency items, reward notifications, and completion toasts — will now display rarity borders correctly
+- Item name colors and rarity info (level, stars) in item tooltips also work in FTB interfaces
+- Border display follows the global "Item Border Rendering" toggle and per-level style configuration, consistent with other interfaces
+- When FTB Library is not installed, this compatibility is automatically disabled with no impact on the game

@@ -30,11 +30,13 @@ ModularShoot 通过 9 张动态注册表（DataPackRegistry）存储所有定义
 | `shootTexture` | 可选资源路径 | 否 | 无（始终使用基础纹理） | 射击时切换的纹理路径 |
 | `shootTextureMode` | 枚举 | 否 | `PER_SHOT` | 射击纹理切换模式。仅在指定了 `shootTexture` 时生效 |
 | `textureScale` | 枚举 | 否 | `AUTO` | 渲染几何是否随纹理分辨率缩放。`AUTO`（16 像素 = 1 格，32×32 纹理渲染为 2 倍大）/ `FIXED`（固定 16×16 单位网格）。基础纹理与射击纹理分别按各自尺寸缩放 |
-| `stats` | 属性ID→浮点数映射 | 否 | 空映射 | 属性基础值。键为 attribute_meta 已登记条目的逻辑 id，必须带完整命名空间（如 `modularshoot:hit_damage`）。未声明的属性使用元数据表的默认值。**支持任意已登记条目**（不限于框架预置的 10 个）：数据包新增 attribute_meta 条目后，`stats` 自动支持该键 |
+| `stats` | 属性ID→浮点数映射 | 否 | 空映射 | 属性基础值。键为 attribute_meta 已登记条目的逻辑 id；裸键自动补 `modularshoot` 命名空间（如 `hit_damage` ≡ `modularshoot:hit_damage`），显式 `minecraft:` 前缀同样归一为 `modularshoot`，其他显式命名空间原样保留。未声明的属性使用元数据表的默认值。**支持任意已登记条目**（不限于框架预置的 10 个）：数据包新增 attribute_meta 条目后，`stats` 自动支持该键 |
 | `traits` | 特性ID→布尔值映射 | 否 | 空映射 | 枪械固有特性覆盖。枪械声明的特性始终覆盖所有插件 |
 | `variants` | 变体ID→浮点数映射 | 否 | 空映射 | 变体池基础权重：变体 ID → 基础权重。每发射击实时组装变体池，与插件 `addsVariants` 同变体求和，并经贡献者权重修饰符调整后加权随机选举（详见「变体定义（VariantDefinition）」） |
+| `extraValues` | 命名空间数字映射 | 否 | 空映射 | 扩展数值字段：键为 ResourceLocation（须带命名空间）、值为数字。框架只承载与按 key 求和、不解释语义；`getExtraValueSums` / `getExtraValue` 返回时与已安装插件累加值相加（枪械定义为基础值） |
 | `slots` | 种类ID→整数映射 | 否 | 空映射 | 插件插槽配置，键为插件种类 ID，值为插槽数量 |
 | `sounds` | 字符串→资源路径映射 | 否 | 空映射 | 音效绑定。预置槽位 `shoot`（射击声），可自定义槽位名称 |
+| `soundRange` | 可选浮点数 | 否 | 无（使用音效事件自带范围，默认 16 格） | 射击音效可听半径（格）覆盖。JSON 键 `sound_range`；缺省时使用音效事件自带范围（默认 16 格） |
 | `bulletStyle` | 可选子弹样式 | 否 | 无（回退框架默认外观 `ComposedBulletStyle.FALLBACK_BASE`，billboard + 默认纹理） | 子弹视觉外观配置 |
 
 ### 子弹样式（BulletStyle）
@@ -77,13 +79,14 @@ ModularShoot 通过 9 张动态注册表（DataPackRegistry）存储所有定义
 |------|------|------|--------|------|
 | `tags` | 资源路径列表 | 否 | 空列表 | 匹配用标签。与种类 tags 存在交集即可安装。空列表时无法安装（输出 WARN） |
 | `priority` | 整数 | 否 | `0` | 特性冲突优先级，越大越优先。不继承种类优先级 |
+| `visualPriority` | 可选整数 | 否 | 无（回退 `priority`） | 视觉 base 选举优先级（JSON 键 `visual_priority`）。仅在插件 bulletStyle 的 base 参与视觉组合选举时生效，不影响特性冲突裁决；缺省回退 `priority` |
 | `itemIcon` | 资源路径 | **是** | — | 插件在背包/快捷栏中的图标纹理路径 |
 | `textureScale` | 枚举 | 否 | `AUTO` | 图标渲染几何是否随纹理分辨率缩放，语义同枪械的 `textureScale`（`AUTO` / `FIXED`） |
 | `modifiers` | 修饰符列表 | 否 | 空列表 | 属性修饰符数组，安装后叠加到枪械属性 |
 | `traits` | 特性ID→布尔值映射 | 否 | 空映射 | 安装后提供的特性覆盖 |
 | `addsVariants` | 变体ID→浮点数映射 | 否 | 空映射 | 追加进枪械变体池的基础权重。安装后与枪械声明的同变体权重求和（详见「变体定义（VariantDefinition）」） |
 | `exclusiveGroup` | 可选字符串 | 否 | 无 | 互斥组 ID。同一枪上不能安装两个互斥组 ID 相同的插件 |
-| `bulletStyle` | 可选子弹样式 | 否 | 无 | 子弹样式叠加。安装后与枪械的样式**叠加组合**：base 按 priority 选举（同 priority 后装赢，无候选回退框架默认外观），modifiers 全部叠加（scale 连乘、tint 逐通道连乘、attach_layer 全部保留） |
+| `bulletStyle` | 可选子弹样式 | 否 | 无 | 子弹样式叠加。安装后与枪械的样式**叠加组合**：base 按 visual_priority 选举（缺省回退 priority；同值后装赢，无候选回退框架默认外观），modifiers 全部叠加（scale 连乘、tint 逐通道连乘、attach_layer 全部保留） |
 | `textureOverlay` | 可选纹理叠加 | 否 | 无 | 纹理叠加信息。安装后在枪械纹理上叠加图层 |
 | `gunOutline` | 可选描边规格 | 否 | 无 | 整枪描边规格（见下文「描边规格（OutlineSpec）」）。安装后围绕枪械合成纹理的最终轮廓描边，多插件按宽度从宽到窄同心嵌套 |
 | `extraValues` | 命名空间数字映射 | 否 | 空映射 | 扩展数值字段：键为 ResourceLocation、值为数字。框架只承载与按 key 求和（经 `ModularShootAPI.getExtraValueSums` / `getExtraValue` 读取），不解释语义，供集成模组携带自定义数值（如稀有度值）并在插件安装/拆卸事件中累加到枪械上 |
@@ -108,6 +111,9 @@ ModularShoot 通过 9 张动态注册表（DataPackRegistry）存储所有定义
 | `layer` | 整数 | **是** | — | 层级，越大越靠上。同层级按安装顺序（后装覆盖先装） |
 | `alignment` | 枚举 | 否 | `TOP_LEFT` | 九宫格对齐：`TOP_LEFT` / `TOP_CENTER` / `TOP_RIGHT` / `CENTER_LEFT` / `CENTER` / `CENTER_RIGHT` / `BOTTOM_LEFT` / `BOTTOM_CENTER` / `BOTTOM_RIGHT`。仅 `fit` 为 `NONE` 时生效 |
 | `fit` | 枚举 | 否 | `NONE` | 适配模式：`NONE`（不缩放，按对齐混合，超出画布的部分被裁剪并输出 WARN）/ `FILL`（双线性插值拉伸铺满画布，宽高比不同会变形）/ `CONTAIN`（等比缩放至完整可见，居中留透明边） |
+| `tint` | 4 元素浮点数组 | 否 | 白色 `[1,1,1,1]`（恒等） | 叠加层像素的逐通道 RGBA 乘数，混合前应用。白色恒等不变 |
+| `blend` | 枚举 | 否 | `NORMAL` | 与底层像素的颜色混合模式：`NORMAL`（普通 source-over 合成：不透明处替换、半透明处混色）/ `MULTIPLY`（相乘，变暗）/ `SCREEN`（反相相乘，变亮）/ `ADD`（相加并 clamp 到 1，变亮）。仅影响颜色通道，alpha 始终用普通 over 合成 |
+| `outline` | 可选描边规格 | 否 | 无 | 沿叠加层自身 alpha 轮廓描边，格式同描边规格（OutlineSpec）。描边在 tint 之后绘制，不受 tint 影响 |
 
 ### 描边规格（OutlineSpec）
 
@@ -126,7 +132,7 @@ DynamicOutlineTintRegistry.register(
     (stack, partialTick) -> /* 每帧颜色，如色相随时间旋转的彩虹 */);
 ```
 
-渲染时凡安装该插件的枪械，其描边逐帧取 provider 颜色（白色描边遮罩 × 每帧 tint，缓存纹理无需重建）；未注册 provider 的描边保持静态烘焙色。框架内置演示插件 `modularshoot:visual_gun_prism`（彩虹描边）。
+渲染时凡安装该插件的枪械，其描边逐帧取 provider 颜色（白色描边遮罩 × 每帧 tint，缓存纹理无需重建）；未注册 provider 的描边保持静态烘焙色。框架内置带 `gun_outline` 的演示插件为 `modularshoot:fragment_guard`（守护蓝光）与 `modularshoot:fragment_shining`（金色圣光），均为静态烘焙色；不内置动态描边演示，逐帧变色须由集成模组按上述方式经 `DynamicOutlineTintRegistry` 注册。
 
 ## 插件种类定义（PluginTypeDefinition）
 
@@ -168,6 +174,7 @@ DynamicOutlineTintRegistry.register(
 | `color` | 字符串 | 否 | `""`（空字符串） | 属性名称颜色（如 `#FF4444`） |
 | `priority` | 整数 | 否 | `0` | 显示优先级，越大越靠前 |
 | `forceShow` | 布尔值 | 否 | `false` | 是否强制展示。`true` 时即使值与默认值相同也在 tooltip 显示 |
+| `unit` | 可选字符串 | 否 | 无（不显示单位） | 数值显示单位的翻译键（如 `modularshoot.unit.per_second`），渲染在 tooltip 数值之后；缺省不显示单位 |
 
 > `binds` 指向的属性未注册时：元数据条目保留，但修饰符不挂载、tooltip 不显示、读取返回 0。
 
@@ -179,7 +186,7 @@ DynamicOutlineTintRegistry.register(
 
 | 字段 | 类型 | 必需 | 默认值 | 说明 |
 |------|------|------|--------|------|
-| `weightHint` | 浮点数 | 否 | `0.0` | 基础权重兜底。仅当枪械/插件都未声明该变体时使用（典型场景：仅由 `registerVariantContributor` 引入的变体）；已被枪械/插件声明的变体以声明权重为权威 |
+| `baseWeight` | 浮点数 | 否 | `0.0` | 基础权重兜底（JSON 键 `base_weight`）。仅当枪械/插件都未声明该变体时使用（典型场景：仅由 `registerVariantContributor` 引入的变体）；已被枪械/插件声明的变体以声明权重为权威 |
 | `traits` | 特性ID→布尔值映射 | 否 | 空映射 | 选中后**合并**进快照：声明的特性值写入，未声明键保留原值 |
 | `stats` | 属性ID→数值映射 | 否 | 空映射 | 选中后**只覆盖声明键**（不整体替换快照属性表） |
 | `damageType` | 可选资源路径 | 否 | 无 | 选中后覆盖 `ammo_damage_type` 预设（变体优先） |

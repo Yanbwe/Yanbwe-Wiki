@@ -61,6 +61,7 @@ import org.yanbwe.modularshoot.registry.gun.BulletStyle;
 import org.yanbwe.modularshoot.registry.gun.BulletStyle.RenderMode;
 import org.yanbwe.modularshoot.registry.gun.ScaleModifier;
 import org.yanbwe.modularshoot.registry.gun.ShootTextureMode;
+import org.yanbwe.modularshoot.registry.gun.TextureScaleMode;
 import net.minecraft.resources.ResourceLocation;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +75,7 @@ ModularShootAPI.registerGun(
         ResourceLocation.parse("examplemod:textures/gun/ar.png"),  // texture
         Optional.of(ResourceLocation.parse("examplemod:textures/gun/ar_shoot.png")), // shootTexture
         ShootTextureMode.WHILE_FIRING,                     // shootTextureMode
+        TextureScaleMode.AUTO,                             // textureScale (geometry scales with texture resolution)
         Map.of(                                             // stats
             ResourceLocation.parse("modularshoot:hit_damage"), 8.0,
             ResourceLocation.parse("modularshoot:fire_rate"), 10.0,
@@ -92,7 +94,10 @@ ModularShootAPI.registerGun(
                 Optional.empty()
             )),
             List.of(new ScaleModifier(1.0f))
-        ))
+        )),
+        Map.of(),                                           // variants (variant id → base weight)
+        Map.of(),                                           // extraValues (namespaced numeric extension fields)
+        Optional.empty()                                    // soundRange (empty = use the sound event's own range)
     )
 );
 ```
@@ -308,7 +313,14 @@ gunState.clearState(ResourceLocation.parse("examplemod:kill_count"));
 ```java
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import org.yanbwe.modularshoot.event.*;
+import org.yanbwe.modularshoot.shooting.PreShootEvent;
+import org.yanbwe.modularshoot.shooting.PostShootEvent;
+import org.yanbwe.modularshoot.shooting.GunRightClickEvent;
+import org.yanbwe.modularshoot.api.event.ActionEvent;
+import org.yanbwe.modularshoot.plugin.event.PrePluginInstallEvent;
+import org.yanbwe.modularshoot.plugin.event.PostPluginInstallEvent;
+import org.yanbwe.modularshoot.plugin.event.PrePluginUninstallEvent;
+import org.yanbwe.modularshoot.plugin.event.PostPluginUninstallEvent;
 
 @EventBusSubscriber(modid = "examplemod")
 public class EventListeners {
@@ -316,7 +328,7 @@ public class EventListeners {
     // Pre-shoot: cancel shooting (e.g. safe zone no-fire)
     @SubscribeEvent
     public static void onPreShoot(PreShootEvent event) {
-        if (isInSafeZone(event.getEntity())) {
+        if (isInSafeZone(event.getPlayer())) {
             event.setCanceled(true);
         }
     }
@@ -375,21 +387,34 @@ public class EventListeners {
 ### Independent Bullet Firing (Turrets, etc.)
 
 ```java
+import org.yanbwe.modularshoot.attribute.ModularShootAttributes;
 import org.yanbwe.modularshoot.bullet.BulletManager;
 import org.yanbwe.modularshoot.bullet.BulletSnapshot;
 import org.yanbwe.modularshoot.bullet.BulletRecord;
+import org.yanbwe.modularshoot.damage.ModularShootDamageTypes;
 import net.minecraft.world.phys.Vec3;
+import java.util.HashMap;
 
-// Build bullet snapshot
+// Build bullet snapshot: the only constructor takes 7 args (stats/traits/
+// state are defensively copied). For independent firing, gunId and
+// gunInstanceUuid are always null; the shooter uuid is passed via
+// fireBullet's last argument (null = ownerless source).
 // setStat takes a ResourceLocation; ModularShootAttributes constants are
 // DeferredHolder<Attribute, Attribute>, so pass .getKey()
-BulletSnapshot snapshot = new BulletSnapshot();
+BulletSnapshot snapshot = new BulletSnapshot(
+    new HashMap<>(),   // stats (filled below via setStat)
+    new HashMap<>(),   // traits
+    level.registryAccess().holderOrThrow(ModularShootDamageTypes.BULLET),  // damageType
+    null,              // shooter
+    null,              // gunId
+    null,              // gunInstanceUuid
+    new HashMap<>()    // state
+);
 snapshot.setStat(ModularShootAttributes.HIT_DAMAGE.getKey(), 10.0);
 snapshot.setStat(ModularShootAttributes.BULLET_SPEED.getKey(), 30.0);
 snapshot.setStat(ModularShootAttributes.RANGE.getKey(), 80.0);
 snapshot.setStat(ModularShootAttributes.BULLET_SIZE.getKey(), 0.3);
 snapshot.setStat(ModularShootAttributes.BLOCK_PENETRATION.getKey(), 3);
-snapshot.setDamageType(level.registryAccess().holderOrThrow(ModularShootDamageTypes.BULLET));
 
 // Fire from turret position
 BulletManager manager = BulletManager.get(level);

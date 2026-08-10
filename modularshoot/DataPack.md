@@ -23,11 +23,13 @@
 | `shoot_texture` | 资源路径字符串 | 否 | 无 | 射击纹理路径。不指定时射击期间始终使用基础纹理 |
 | `shoot_texture_mode` | 字符串 | 否 | `"per_shot"` | 射击纹理切换模式。`"per_shot"`（每次射击切纹理）/ `"while_firing"`（按住射击期间持续显示）。仅在指定了 `shoot_texture` 时生效 |
 | `texture_scale` | 字符串 | 否 | `"auto"` | 渲染几何是否随纹理分辨率缩放。`"auto"`（16 像素 = 1 格，32×32 纹理渲染为 2 倍大，宽高分别缩放不变形，厚度固定 1/16 格）/ `"fixed"`（固定 16×16 单位网格，大纹理仅表现为更精细） |
-| `stats` | 属性ID→浮点数对象 | 否 | `{}` | 属性基础值。键**必须带完整命名空间**（如 `"modularshoot:hit_damage": 50.0`）。不出现的属性使用元数据表默认值 |
+| `stats` | 属性ID→浮点数对象 | 否 | `{}` | 属性基础值。键为属性 ID：裸键（无冒号）自动补 `modularshoot` 命名空间（如 `"hit_damage"` ≡ `"modularshoot:hit_damage"`），显式 `minecraft:` 前缀同样归一为 `modularshoot`，其他显式命名空间原样保留。不出现的属性使用元数据表默认值 |
 | `traits` | 特性ID→布尔值对象 | 否 | `{}` | 枪械固有特性覆盖。无特性时留空对象 `{}` |
-| `variants` | 变体ID→浮点数对象 | 否 | `{}` | 变体池基础权重：变体 ID → 权重。如 `"variants": { "modularshoot:demo_fireball": 0.5, "modularshoot:demo_heavy": 1.5 }`。每发射击实时组装池，与插件的 `adds_variants` 同变体求和，并经贡献者权重修饰符调整后加权随机选举（详见「变体 JSON」） |
+| `variants` | 变体ID→浮点数对象 | 否 | `{}` | 变体池基础权重：变体 ID → 权重。如 `"variants": { "modularshoot:example_fireball": 0.5, "modularshoot:example_heavy_blade": 1.5 }`。每发射击实时组装池，与插件的 `adds_variants` 同变体求和，并经贡献者权重修饰符调整后加权随机选举（详见「变体 JSON」） |
+| `extra_values` | 命名空间数字对象 | 否 | `{}` | 扩展数值字段：键为 ResourceLocation（须带命名空间）、值为数字。框架只承载并按 key 求和、不解释语义；`ModularShootAPI.getExtraValueSums` / `getExtraValue` 读取时与已安装插件累加值相加（枪械定义为基础值） |
 | `slots` | 种类ID→整数对象 | 否 | `{}` | 插件插槽配置，键为插件种类 ID，值为插槽数量 |
 | `sounds` | 字符串→资源路径对象 | 否 | `{}` | 音效绑定，键为槽位名、值为音效 ID。支持槽位：`shoot`（射击音效）、`hit_entity`/`hit_block`/`hit_pierce`（命中音效，随命中包下发客户端播放）、`plugin_install`（插件安装音效）；**未配置的槽位一律静音**。如 `"shoot": "modularshoot:gun.rifle.shoot"`（槽位详见下表） |
+| `sound_range` | 浮点数 | 否 | 无（音效自带范围，默认 16 格） | 音效可闻半径覆盖（格）。未声明时由音效事件自带 range（默认 16 格）决定。如 `"sound_range": 24` |
 | `bullet_style` | 对象 | 否 | 无 | 子弹视觉样式（见下表） |
 
 **`sounds` 槽位说明**：
@@ -137,21 +139,22 @@
 
 | JSON 键 | 类型 | 必需 | 默认值 | 说明 |
 |---------|------|------|--------|------|
-| `name` | 字符串 | 否 | 无 | 显示名称，支持 `§` 颜色代码 |
+| `name` | 字符串 | 否 | 无 | 显示名称，支持 `§` 颜色代码和 `lang:` 翻译键前缀 |
 | `tags` | 字符串数组 | 否 | `[]` | 匹配用标签列表（如 `["c:barrel", "examplemod:barrel"]`）。空数组时无法匹配任何种类 |
 | `priority` | 整数 | 否 | `0` | 特性冲突优先级，越大越优先 |
 | `item_icon` | 资源路径字符串 | **是** | — | 物品图标纹理路径 |
 | `texture_scale` | 字符串 | 否 | `"auto"` | 图标渲染几何是否随纹理分辨率缩放，语义同枪械的 `texture_scale`（`"auto"` / `"fixed"`） |
 | `modifiers` | 对象数组 | 否 | `[]` | 属性修饰符列表（见下表） |
-| `traits` | 特性ID→布尔值对象 | 否 | `{}` | 安装后提供的特性覆盖 |
-| `adds_variants` | 变体ID→浮点数对象 | 否 | `{}` | 追加进枪械变体池的基础权重。与枪械声明的同变体权重求和。如 `"adds_variants": { "modularshoot:demo_fireball": 10.0 }`（详见「变体 JSON」） |
+| `traits` | 特性ID→布尔值对象 | 否 | `{}` | 安装后提供的特性覆盖。键须带完整命名空间——裸键会静默落入 `minecraft` 命名空间（与枪械侧自动补 `modularshoot` 不对称） |
+| `adds_variants` | 变体ID→浮点数对象 | 否 | `{}` | 追加进枪械变体池的基础权重。与枪械声明的同变体权重求和。如 `"adds_variants": { "modularshoot:example_fireball": 0.5 }`。键须带完整命名空间——裸键会静默落入 `minecraft` 命名空间（详见「变体 JSON」） |
 | `exclusive_group` | 字符串 | 否 | 无 | 互斥组 ID。同一枪上同组插件不可共存 |
-| `bullet_style` | 对象 | 否 | 无 | 子弹样式（格式同枪械的 `bullet_style`）。**叠加组合**：插件与枪械的 base 按 priority（同 priority 后装赢）选出赢家，modifiers 全部叠加 |
+| `bullet_style` | 对象 | 否 | 无 | 子弹样式（格式同枪械的 `bullet_style`）。**叠加组合**：插件与枪械的 base 按 `visual_priority`（未声明时回退 `priority`；同值后装赢）选举出赢家，modifiers 全部叠加 |
+| `visual_priority` | 整数 | 否 | 无（回退 `priority`） | 插件 `bullet_style` 的 base 参与视觉选举的专用优先级；未声明时回退 `priority`。同值按安装顺序后装赢 |
 | `texture_overlay` | 对象 | 否 | 无 | 纹理叠加（见下表） |
 | `gun_outline` | 对象 | 否 | 无 | 整枪描边：对合成结果（基础纹理 + 所有叠加图层）的轮廓描边。`{ "color": [r,g,b], "alpha": 0.9, "width": 3 }`。**多插件可叠加**：按 `width` 从宽到窄逐层绘制，形成同心嵌套的多层描边；同宽按安装顺序后装覆盖先装。静态描边颜色烘焙进合成纹理；如需**逐帧变色描边**（如彩虹），集成模组可在客户端以本插件 id 向 `DynamicOutlineTintRegistry` 注册 provider（数据包无需任何改动，见 API 文档）。**不受纹理边界限制**：描边绘制在轮廓外侧，即使纹理内容顶满 16×16 画布边缘，框架也会自动扩展画布，描边在物品正面、背面与侧面完整可见，无需在纹理中预留描边空间 |
-| `extra_values` | 命名空间数字对象 | 否 | `{}` | 扩展数值字段：键为 ResourceLocation（须带命名空间）、值为数字。框架只承载与按 key 求和、不解释语义。集成模组可在插件安装/拆卸事件中经 `ModularShootAPI.getExtraValueSums` 读取全部已安装插件的累加值，并翻译到自身系统（如稀有度核心写入稀有度组件） |
-| `brief` | 字符串 | 否 | 无 | 一行简介 |
-| `description` | 字符串 | 否 | 无 | 多行详细描述 |
+| `extra_values` | 命名空间数字对象 | 否 | `{}` | 扩展数值字段：键为 ResourceLocation（须带命名空间）、值为数字。框架只承载并按 key 求和、不解释语义。集成模组可在插件安装/拆卸事件中经 `ModularShootAPI.getExtraValueSums` 读取枪械的 `extra_values` 总额（枪械定义基础值 + 已安装插件累加值），并翻译到自身系统（如稀有度核心写入稀有度组件） |
+| `brief` | 字符串 | 否 | 无 | 一行简介，支持 `lang:` 翻译键前缀 |
+| `description` | 字符串 | 否 | 无 | 多行详细描述，支持 `lang:` 翻译键前缀 |
 | `color` | 字符串 | 否 | 无 | 名称颜色（如 `"#FF4444"`） |
 
 ### modifiers 子字段
@@ -321,6 +324,7 @@
 | `color` | 字符串 | 否 | `""` | 名称颜色 |
 | `priority` | 整数 | 否 | `0` | 显示优先级 |
 | `force_show` | 布尔值 | 否 | `false` | 是否强制展示 |
+| `unit` | 字符串 | 否 | 无 | 数值后显示的计量单位翻译键（如 `"modularshoot.unit.per_second"`）；缺省不显示 |
 
 **路径**：`data/examplemod/modularshoot/attribute_meta/custom_recoil.json`
 
@@ -376,7 +380,7 @@
 
 | JSON 键 | 类型 | 必需 | 默认值 | 说明 |
 |---------|------|------|--------|------|
-| `weight_hint` | 浮点数 | 否 | `0.0` | 基础权重兜底。仅当枪械/插件都未声明该变体时使用（典型场景：仅由 `registerVariantContributor` 引入的变体）；已被枪械/插件声明的变体以声明权重为权威 |
+| `base_weight` | 浮点数 | 否 | `0.0` | 基础权重兜底。仅当枪械/插件都未声明该变体时使用（典型场景：仅由 `registerVariantContributor` 引入的变体）；已被枪械/插件声明的变体以声明权重为权威 |
 | `traits` | 特性ID→布尔值对象 | 否 | `{}` | 选中后**合并**进快照：声明的特性值写入，未声明键保留原值 |
 | `stats` | 属性ID→数值对象 | 否 | `{}` | 选中后**只覆盖声明键**（不整体替换快照属性表） |
 | `damage_type` | 资源路径字符串 | 否 | 无 | 选中后覆盖 `ammo_damage_type` 预设（变体优先） |
@@ -388,7 +392,7 @@
 |------|------|---------|
 | 枪械声明 | 枪械 JSON `variants` | 基础权重 |
 | 插件声明 | 插件 JSON `adds_variants` | 与枪械同变体**求和** |
-| 贡献者修饰符 | `registerVariantContributor` 经 `sink.add` 声明的 `AttributeModifier` | 原版三阶段：`ADD_VALUE` 加算 → `ADD_MULTIPLIED_BASE` 只乘基础权重 → `ADD_MULTIPLIED_TOTAL` 乘整体 |
+| 贡献者修饰符 | `registerVariantContributor` 经 `sink.add` 声明的 `AttributeModifier` | 原版三阶段：`ADD_VALUE` 加算 → `ADD_MULTIPLIED_BASE` 乘「基础 + ADD_VALUE」 → `ADD_MULTIPLIED_TOTAL` 乘整体 |
 | 默认普通弹兜底 | 隐式（不写入任何 JSON） | 枪械**未声明** `variants` 时，池中默认存在权重 `1.0` 的"普通子弹"候选，参与概率计算 |
 
 > 零基础且无加值时权重恒为 0——"火元素饰品对非火枪无效"。最终权重 ≤ 0 的变体不参与选举。
@@ -401,35 +405,44 @@
 - 单候选池恒 100%（无论权重多少）；两候选池权重相等（如 `1 : 1`）时各 50%
 - 某变体概率 50% ⟺ 其权重 = 其余所有候选权重之和
 
-示例：普通枪 + 火球插件 `adds_variants: 1.0` → 池 {火球 1.0, 普通弹 1.0} → 火球恰 50%；`test_gun` 声明 `demo_fireball 0.5 : demo_heavy 1.5` → 池总权重 2.0 → 火球 25%。最终权重 = 基础权重经三阶段计算（`ADD_VALUE` 加算 → `ADD_MULTIPLIED_BASE` 只乘基础 → `ADD_MULTIPLIED_TOTAL` 乘整体），受 `registerVariantContributor` 修饰符影响。
+示例：普通枪（未声明 `variants`）+ 火球插件 `adds_variants: 1.0` → 池 {火球 1.0, 普通弹 1.0} → 火球恰 50%；若枪械声明 `"variants": { "modularshoot:example_fireball": 0.5, "modularshoot:example_heavy_blade": 1.5 }` → 池总权重 2.0 → 火球 25%。最终权重 = 基础权重经三阶段计算（`ADD_VALUE` 加算 → `ADD_MULTIPLIED_BASE` 乘「基础 + ADD_VALUE」→ `ADD_MULTIPLIED_TOTAL` 乘整体），受 `registerVariantContributor` 修饰符影响。
 
-> **插件描述规范**：插件 JSON 的 `description`（玩家 tooltip 可见）不要写裸权重数值，应写算好的概率（如"火球出现概率提升至约 88%"）。演示插件 `demo_fire_magic` 已示范。
+> **插件描述规范**：插件 JSON 的 `description`（玩家 tooltip 可见）不要写裸权重数值，应写算好的概率或定性描述（如"火球出现概率大幅提升"）。随包插件 `modularshoot:fragment_fire` 已示范（其 `description` 经 `lang:` 解析为"子弹染上烈焰，火球出现概率大幅提升"）。
 
 **逐弹丸语义**：变体对每颗弹丸**独立 roll**（一次选举只作用于本颗），霰弹中可混合出现不同变体或普通弹；权重全 0 或空池时本颗静默退化为普通弹。互斥单值字段（`damage_type` / 视觉 `base`）必须走变体池；可叠加效果走 `registerShootEffect`。
 
-> **随包多弹丸演示**：测试枪 `modularshoot:test_gun` 的 `stats` 含 `"modularshoot:pellet_count": 3.0`（单发射 3 颗弹丸），`variants` 声明 demo_fireball 0.5 / demo_heavy 1.5（基础火球概率 25%）；演示插件 `demo_pellet_barrel`（枪管）通过修饰符使 `pellet_count` +2（3 发变 5 发），`demo_fire_magic`（配件）通过 `adds_variants` 使火球权重 +10（装后约 88%）。
+> **随包多弹丸演示**：枪械 `modularshoot:blood_sword` 的 `stats` 含 `"modularshoot:pellet_count": 5.0`（单发射 5 颗弹丸，每颗独立 roll）；火球插件 `modularshoot:fragment_fire` 通过 `adds_variants` 向变体池追加 `"modularshoot:example_fireball": 0.5`——装在未声明 `variants` 的 `blood_sword` 上时池 = {火球 0.5, 普通弹 1.0} → 火球 ≈ 33%；`modularshoot:composite_cane` 则直接声明 `"variants": { "modularshoot:example_fireball": 0.5 }`（声明即权威、无普通弹兜底，单候选池恒 100%）。
 
-**路径**：`data/modularshoot/modularshoot/variants/demo_fireball.json`（框架随包演示：火焰 trait + 火焰伤害类型 + 火球视觉）
+**路径**：`data/modularshoot/modularshoot/variants/example_fireball.json`（框架随包演示：高伤害 + 火焰伤害类型 + 火球视觉）
 
 ```json
 {
-  "weight_hint": 1,
-  "traits": { "modularshoot:visual_fire": true },
+  "base_weight": 0.0,
   "stats": { "modularshoot:hit_damage": 15.0 },
   "damage_type": "minecraft:in_fire",
   "bullet_style_override": {
-    "base": { "render_mode": "billboard", "texture": "modularshoot:textures/bullet/test_bullet_plain.png" },
-    "modifiers": [ { "type": "tint", "color": [1.0, 0.4, 0.1] } ]
+    "base": { "render_mode": "billboard", "texture": "modularshoot:textures/bullet/default.png" },
+    "modifiers": [
+      { "type": "tint", "color": [1.0, 0.4, 0.1, 1.0] },
+      { "type": "scale", "value": 1.3 }
+    ]
   }
 }
 ```
 
-**路径**：`data/modularshoot/modularshoot/variants/demo_heavy.json`（随包演示：仅覆盖伤害 25，无视觉覆盖）
+**路径**：`data/modularshoot/modularshoot/variants/example_heavy_blade.json`（随包演示：重刃——覆盖伤害与弹体尺寸，带暗红视觉）
 
 ```json
 {
-  "weight_hint": 0.2,
-  "stats": { "modularshoot:hit_damage": 25.0 }
+  "base_weight": 0.0,
+  "stats": { "modularshoot:hit_damage": 18.0, "modularshoot:bullet_size": 0.75 },
+  "bullet_style_override": {
+    "base": { "render_mode": "billboard", "texture": "modularshoot:textures/bullet/default.png" },
+    "modifiers": [
+      { "type": "tint", "color": [0.75, 0.1, 0.1, 1.0] },
+      { "type": "scale", "value": 1.5 }
+    ]
+  }
 }
 ```
 

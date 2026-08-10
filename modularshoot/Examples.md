@@ -61,6 +61,7 @@ import org.yanbwe.modularshoot.registry.gun.BulletStyle;
 import org.yanbwe.modularshoot.registry.gun.BulletStyle.RenderMode;
 import org.yanbwe.modularshoot.registry.gun.ScaleModifier;
 import org.yanbwe.modularshoot.registry.gun.ShootTextureMode;
+import org.yanbwe.modularshoot.registry.gun.TextureScaleMode;
 import net.minecraft.resources.ResourceLocation;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +75,7 @@ ModularShootAPI.registerGun(
         ResourceLocation.parse("examplemod:textures/gun/ar.png"),  // texture
         Optional.of(ResourceLocation.parse("examplemod:textures/gun/ar_shoot.png")), // shootTexture
         ShootTextureMode.WHILE_FIRING,                     // shootTextureMode
+        TextureScaleMode.AUTO,                             // textureScale（几何随纹理分辨率自适应缩放）
         Map.of(                                             // stats
             ResourceLocation.parse("modularshoot:hit_damage"), 8.0,
             ResourceLocation.parse("modularshoot:fire_rate"), 10.0,
@@ -88,11 +90,14 @@ ModularShootAPI.registerGun(
         Optional.of(new BulletStyle(                        // bulletStyle（v2：base + modifiers 叠加结构）
             Optional.of(new BulletStyle.Base(               // base：渲染模式 + 纹理/模型二选一
                 RenderMode.BILLBOARD,
-                Optional.of(ResourceLocation.parse("modularshoot:textures/bullet/test_bullet_plain.png")),
+                Optional.of(ResourceLocation.parse("modularshoot:textures/bullet/default.png")),
                 Optional.empty()                             // model：3d 模式才填
             )),
             List.of(new ScaleModifier(1.0f))                // modifiers：scale/tint/attach_layer 叠加修饰符
-        ))
+        )),
+        Map.of(),                                           // variants（变体 ID → 基础权重，喂给每射击变体池）
+        Map.of(),                                           // extraValues（命名空间数字扩展字段）
+        Optional.empty()                                    // soundRange（留空 = 用音效事件自身范围）
     )
 );
 ```
@@ -302,7 +307,14 @@ gunState.clearState(ResourceLocation.parse("examplemod:kill_count"));
 ```java
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import org.yanbwe.modularshoot.event.*;
+import org.yanbwe.modularshoot.shooting.PreShootEvent;
+import org.yanbwe.modularshoot.shooting.PostShootEvent;
+import org.yanbwe.modularshoot.shooting.GunRightClickEvent;
+import org.yanbwe.modularshoot.api.event.ActionEvent;
+import org.yanbwe.modularshoot.plugin.event.PrePluginInstallEvent;
+import org.yanbwe.modularshoot.plugin.event.PostPluginInstallEvent;
+import org.yanbwe.modularshoot.plugin.event.PrePluginUninstallEvent;
+import org.yanbwe.modularshoot.plugin.event.PostPluginUninstallEvent;
 
 @EventBusSubscriber(modid = "examplemod")
 public class EventListeners {
@@ -369,20 +381,31 @@ public class EventListeners {
 ### 独立发射子弹（炮塔等）
 
 ```java
+import org.yanbwe.modularshoot.attribute.ModularShootAttributes;
 import org.yanbwe.modularshoot.bullet.BulletManager;
 import org.yanbwe.modularshoot.bullet.BulletSnapshot;
 import org.yanbwe.modularshoot.bullet.BulletRecord;
+import org.yanbwe.modularshoot.damage.ModularShootDamageTypes;
 import net.minecraft.world.phys.Vec3;
+import java.util.HashMap;
 
-// 构造子弹快照
+// 构造子弹快照：唯一 7 参构造（stats/traits/state 内部防御拷贝）
+// 独立发射约定：gunId / gunInstanceUuid 恒为 null，shooter 经 fireBullet 末参传入（null = 无主发射源）
 // setStat 接收 ResourceLocation；ModularShootAttributes 常量是 DeferredHolder<Attribute, Attribute>，需 .getKey()
-BulletSnapshot snapshot = new BulletSnapshot();
+BulletSnapshot snapshot = new BulletSnapshot(
+    new HashMap<>(),   // stats（随后用 setStat 填充）
+    new HashMap<>(),   // traits
+    level.registryAccess().holderOrThrow(ModularShootDamageTypes.BULLET),  // damageType
+    null,              // shooter
+    null,              // gunId
+    null,              // gunInstanceUuid
+    new HashMap<>()    // state
+);
 snapshot.setStat(ModularShootAttributes.HIT_DAMAGE.getKey(), 10.0);
 snapshot.setStat(ModularShootAttributes.BULLET_SPEED.getKey(), 30.0);
 snapshot.setStat(ModularShootAttributes.RANGE.getKey(), 80.0);
 snapshot.setStat(ModularShootAttributes.BULLET_SIZE.getKey(), 0.3);
 snapshot.setStat(ModularShootAttributes.BLOCK_PENETRATION.getKey(), 3);
-snapshot.setDamageType(level.registryAccess().holderOrThrow(ModularShootDamageTypes.BULLET));
 
 // 从炮塔位置发射
 BulletManager manager = BulletManager.get(level);

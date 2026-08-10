@@ -4,7 +4,7 @@
 
 ModularShoot 是一个基于属性驱动、模块化组装的枪械系统**框架模组**，运行于 NeoForge 1.21.1。
 
-> **框架定位**：本模组定位为**纯框架与 API**（注册 API、属性计算管线、射击引擎），不提供生产内容。随包数据包仅附带框架元数据（属性元数据表、插件种类 barrel/accessory），不附带演示/测试内容；生产内容由其他模组通过 API 或数据包添加。
+> **框架定位**：本模组定位为**纯框架与 API**（注册 API、属性计算管线、射击引擎），不提供生产内容。随包数据包附带框架元数据（属性元数据表）与示例内容（示例枪械、示例插件、示例变体等，供参考与测试）；生产内容由其他模组通过 API 或数据包添加。
 
 ## 核心特点
 
@@ -65,6 +65,8 @@ ModularShoot 是一个基于属性驱动、模块化组装的枪械系统**框�
 | `block_penetration` | 穿透方块数（0 不穿透） | 0 |
 | `pellet_count` | 单次射击弹丸数量（四舍五入后钳制到 1~32，超上限 WARN；0 或未挂载时静默退化为单弹丸） | 1.0 |
 
+> **0.1.3 新特性**：枪械/插件定义新增 `extra_values` 命名空间数值扩展字段（键须带完整命名空间）；`ModularShootAPI.getExtraValueSums` / `getExtraValue` 可一站式查询"枪械定义基础值 + 已安装插件累计值"。
+
 ## 关键事件一览
 
 | 事件 | 触发时机 | 可取消 |
@@ -77,6 +79,6 @@ ModularShoot 是一个基于属性驱动、模块化组装的枪械系统**框�
 | `PostPluginInstallEvent` | 插件写入组件后 | 否 |
 | `PrePluginUninstallEvent` | 插件拆卸前 | 是 |
 | `PostPluginUninstallEvent` | 插件拆卸后 | 否 |
-| `ClientBulletHitEvent` | 客户端收到命中包、播放默认特效前（仅客户端，NeoForge.EVENT_BUS） | 是 |
+| `ClientBulletHitEvent` | 客户端收到命中包、播放默认命中音效前（仅客户端，NeoForge.EVENT_BUS） | 是 |
 
-> **命中特效钩子**：`ClientBulletHitEvent` 在客户端播放命中特效前触发，字段含 `soundId`（服务端从枪械 `sounds` 槽位解析的命中音效 ID——实体 `hit_entity`/方块 `hit_block`/穿透 `hit_pierce`，未配置为 null）；取消则跳过默认粒子与音效，未取消时可在监听逻辑中追加自定义音效/粒子。
+> **命中特效钩子**：`ClientBulletHitEvent` 在客户端播放默认命中音效前触发，字段含 `soundId`（服务端从枪械 `sounds` 槽位解析的命中音效 ID——实体 `hit_entity`/方块 `hit_block`/穿透 `hit_pierce`，未配置为 null）。框架不生成任何默认命中粒子，视觉特效完全由监听方实现；取消事件则跳过默认命中音效，未取消时可在监听逻辑中追加自定义音效/粒子。

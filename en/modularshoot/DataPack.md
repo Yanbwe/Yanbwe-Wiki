@@ -21,11 +21,13 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 | `shoot_texture` | Resource path string | No | None | Shooting texture path. Uses base texture throughout if omitted |
 | `shoot_texture_mode` | Text string | No | `"per_shot"` | Texture swap mode. `"per_shot"` (swap per shot) / `"while_firing"` (hold while firing). Only effective when `shoot_texture` is specified |
 | `texture_scale` | Text string | No | `"auto"` | Whether the render geometry scales with the texture resolution. `"auto"` (16 px = 1 grid cell; a 32×32 texture renders 2× larger; width/height scale independently without distortion; extrusion thickness stays 1/16 cell) / `"fixed"` (fixed 16×16 unit grid; large textures only look sharper) |
-| `stats` | Attribute ID → decimal object | No | `{}` | Attribute base values. Keys **must** include full namespace (e.g. `"modularshoot:hit_damage": 50.0`). Missing attributes use metadata table defaults |
+| `stats` | Attribute ID → decimal object | No | `{}` | Attribute base values. Keys are attribute IDs: bare keys (no colon) are auto-completed to the `modularshoot` namespace (e.g. `"hit_damage"` ≡ `"modularshoot:hit_damage"`), an explicit `minecraft:` prefix is normalised to `modularshoot` as well, and other explicit namespaces pass through verbatim. Missing attributes use metadata table defaults |
 | `traits` | Trait ID → boolean object | No | `{}` | Gun inherent trait overrides. Empty `{}` if no traits |
-| `variants` | Variant ID → decimal object | No | `{}` | Variant pool base weights: variant ID → weight. E.g. `"variants": { "modularshoot:demo_fireball": 0.5, "modularshoot:demo_heavy": 1.5 }`. The pool is assembled fresh per shot, summed with plugins' `adds_variants`, adjusted by contributor weight modifiers, then rolled weighted-random (see "Variant JSON") |
+| `variants` | Variant ID → decimal object | No | `{}` | Variant pool base weights: variant ID → weight. E.g. `"variants": { "modularshoot:example_fireball": 0.5, "modularshoot:example_heavy_blade": 1.5 }`. The pool is assembled fresh per shot, summed with plugins' `adds_variants`, adjusted by contributor weight modifiers, then rolled weighted-random (see "Variant JSON") |
+| `extra_values` | Namespaced-number object | No | `{}` | Extension numeric fields: keys are ResourceLocations (must be namespaced), values are numbers. The framework only carries and sums them per key without interpreting their meaning; `ModularShootAPI.getExtraValueSums` / `getExtraValue` return them summed with installed plugins' accumulated values (the gun definition provides the base) |
 | `slots` | Plugin type ID → integer object | No | `{}` | Plugin slot config. Key is plugin type ID, value is slot count |
 | `sounds` | String → resource path object | No | `{}` | Sound bindings. E.g. `"shoot": "modularshoot:gun.rifle.shoot"` |
+| `sound_range` | Decimal number | No | None (the sound event's own range, default 16 blocks) | Audible-radius override in blocks. When absent, the sound event's own range (default 16 blocks) is used. E.g. `"sound_range": 24` |
 | `bullet_style` | Object | No | None | Bullet visual style (see sub-table below) |
 
 ### bullet_style Sub-fields
@@ -123,21 +125,22 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 
 | JSON Key | Type | Required | Default | Description |
 |----------|------|----------|---------|-------------|
-| `name` | Text string | No | None | Display name. Supports `§` color codes |
+| `name` | Text string | No | None | Display name. Supports `§` color codes and `lang:` translation key prefix |
 | `tags` | String array | No | `[]` | Matching tag list (e.g. `["c:barrel", "examplemod:barrel"]`). Empty array matches no types |
 | `priority` | Integer | No | `0` | Trait conflict priority, higher wins |
 | `item_icon` | Resource path string | **Yes** | — | Item icon texture path |
 | `texture_scale` | Text string | No | `"auto"` | Whether the icon geometry scales with the texture resolution; same semantics as the gun's `texture_scale` (`"auto"` / `"fixed"`) |
 | `modifiers` | Object array | No | `[]` | Attribute modifier list (see sub-table below) |
-| `traits` | Trait ID → boolean object | No | `{}` | Trait overrides provided on install |
-| `adds_variants` | Variant ID → decimal object | No | `{}` | Base weights appended to the gun's variant pool. Summed with the gun-declared weight of the same variant. E.g. `"adds_variants": { "modularshoot:demo_fireball": 10.0 }` (see "Variant JSON") |
+| `traits` | Trait ID → boolean object | No | `{}` | Trait overrides provided on install. Keys must be fully namespaced — bare keys silently resolve to the `minecraft` namespace (asymmetric with the gun side, which auto-completes `modularshoot`) |
+| `adds_variants` | Variant ID → decimal object | No | `{}` | Base weights appended to the gun's variant pool. Summed with the gun-declared weight of the same variant. E.g. `"adds_variants": { "modularshoot:example_fireball": 0.5 }`. Keys must be fully namespaced — bare keys silently resolve to the `minecraft` namespace (see "Variant JSON") |
 | `exclusive_group` | Text string | No | None | Mutual exclusion group ID. Same-group on same gun = can't coexist |
-| `bullet_style` | Object | No | None | Bullet style (same format as gun's `bullet_style`). **Stacks**: plugin vs gun base picks a winner by priority (later-installed wins ties); all modifiers stack |
+| `bullet_style` | Object | No | None | Bullet style (same format as gun's `bullet_style`). **Stacks**: plugin vs gun base picks a winner by `visual_priority` (falling back to `priority` when undeclared; ties broken by install order, later wins); all modifiers stack |
+| `visual_priority` | Integer | No | None (falls back to `priority`) | Dedicated election priority for this plugin's `bullet_style` base in the visual base election; falls back to `priority` when undeclared. Ties broken by install order (later wins) |
 | `texture_overlay` | Object | No | None | Texture overlay (see sub-table below) |
 | `gun_outline` | Object | No | None | Whole-gun outline: strokes the silhouette of the composited result (base texture + all overlay layers). Format: `{ "color": [r,g,b], "alpha": 0.9, "width": 3 }`. **Multiple plugins stack**: drawn widest-first, forming concentrically nested rings; ties broken by installation order (later install paints over earlier). The static colour is baked into the composite texture; for a **per-frame colour-shifting outline** (e.g. rainbow), an integration mod can register a provider for this plugin id in `DynamicOutlineTintRegistry` on the client (no datapack changes needed, see the API docs) |
-| `extra_values` | Namespaced-number object | No | `{}` | Extension numeric fields: keys are ResourceLocations (must be namespaced), values are numbers. The framework only carries and sums them per key without interpreting their meaning. Integration mods can read the accumulated totals of a gun via `ModularShootAPI.getExtraValueSums` in plugin install/uninstall events and translate them into their own systems (e.g. writing a rarity component) |
-| `brief` | Text string | No | None | One-line summary |
-| `description` | Text string | No | None | Multi-line detailed description |
+| `extra_values` | Namespaced-number object | No | `{}` | Extension numeric fields: keys are ResourceLocations (must be namespaced), values are numbers. The framework only carries and sums them per key without interpreting their meaning. Integration mods can read a gun's `extra_values` totals (gun-definition base plus installed plugins' accumulated values) via `ModularShootAPI.getExtraValueSums` in plugin install/uninstall events and translate them into their own systems (e.g. writing a rarity component) |
+| `brief` | Text string | No | None | One-line summary. Supports the `lang:` translation key prefix |
+| `description` | Text string | No | None | Multi-line detailed description. Supports the `lang:` translation key prefix |
 | `color` | Text string | No | None | Name color (e.g. `"#FF4444"`) |
 
 ### modifiers Sub-fields
@@ -307,6 +310,7 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 | `color` | Text string | No | `""` | Name color |
 | `priority` | Integer | No | `0` | Display priority |
 | `force_show` | Boolean | No | `false` | Force display |
+| `unit` | Text string | No | None | Translation key for the unit displayed after the numeric value (e.g. `"modularshoot.unit.per_second"`); absent → no unit shown |
 
 **Path**: `data/examplemod/modularshoot/attribute_meta/custom_recoil.json`
 
@@ -362,7 +366,7 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 
 | JSON Key | Type | Required | Default | Description |
 |----------|------|----------|---------|-------------|
-| `weight_hint` | Decimal number | No | `0.0` | Base weight fallback. Used only when *no* gun/plugin declares this variant in its pool (typical for variants introduced solely via `registerVariantContributor`); declared gun/plugin weights are authoritative |
+| `base_weight` | Decimal number | No | `0.0` | Base weight fallback. Used only when *no* gun/plugin declares this variant in its pool (typical for variants introduced solely via `registerVariantContributor`); declared gun/plugin weights are authoritative |
 | `traits` | Trait ID → boolean object | No | `{}` | **Merged** into the snapshot when selected: declared trait values are written, unlisted keys are kept |
 | `stats` | Attribute ID → decimal object | No | `{}` | When selected, **overrides only the declared keys** (does not replace the whole snapshot stat table) |
 | `damage_type` | Resource path string | No | None | When present, overrides the `ammo_damage_type` preset (variant takes precedence) |
@@ -374,7 +378,7 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 |--------|----------|------------|
 | Gun declaration | Gun JSON `variants` | Base weight |
 | Plugin declaration | Plugin JSON `adds_variants` | **Summed** with the gun's weight of the same variant |
-| Contributor modifiers | `AttributeModifier`s declared via `registerVariantContributor` / `sink.add` | Vanilla three stages: `ADD_VALUE` (flat add) → `ADD_MULTIPLIED_BASE` (multiplies only the base weight) → `ADD_MULTIPLIED_TOTAL` (scales the whole) |
+| Contributor modifiers | `AttributeModifier`s declared via `registerVariantContributor` / `sink.add` | Vanilla three stages: `ADD_VALUE` (flat add) → `ADD_MULTIPLIED_BASE` (multiplies base + ADD_VALUE) → `ADD_MULTIPLIED_TOTAL` (scales the whole) |
 | Default normal-bullet fallback | Implicit (not written into any JSON) | When the gun declares **no** `variants`, the pool implicitly contains a "normal bullet" candidate with weight `1.0`, participating in the probability calculation |
 
 > A zero base with no ADD_VALUE modifier always resolves to `0` — "a fire trinket is useless on a non-fire gun". Variants with a final weight ≤ 0 never participate in the roll.
@@ -387,35 +391,44 @@ Register content via datapack JSON. Equivalent to and sharing information with J
 - A single-candidate pool always rolls 100% (no matter the weight); a two-candidate pool with equal weights (e.g. `1 : 1`) gives 50% each
 - A variant hits 50% ⟺ its weight equals the sum of all the other candidates' weights
 
-Examples: a normal gun + fireball plugin `adds_variants: 1.0` → pool {fireball 1.0, normal bullet 1.0} → exactly 50%; `test_gun` declares `demo_fireball 0.5 : demo_heavy 1.5` → pool total 2.0 → fireball 25%. The final weight = the base weight computed through the three stages (`ADD_VALUE` add → `ADD_MULTIPLIED_BASE` multiplies only the base → `ADD_MULTIPLIED_TOTAL` scales the whole), influenced by `registerVariantContributor` modifiers.
+Examples: a normal gun (no `variants` declared) + a fireball plugin `adds_variants: 1.0` → pool {fireball 1.0, normal bullet 1.0} → exactly 50%; if a gun declares `"variants": { "modularshoot:example_fireball": 0.5, "modularshoot:example_heavy_blade": 1.5 }` → pool total 2.0 → fireball 25%. The final weight = the base weight computed through the three stages (`ADD_VALUE` add → `ADD_MULTIPLIED_BASE` multiplies base + ADD_VALUE → `ADD_MULTIPLIED_TOTAL` scales the whole), influenced by `registerVariantContributor` modifiers.
 
-> **Plugin description guideline**: a plugin JSON's `description` (visible in the player tooltip) should not state raw weight numbers — write the computed probability instead (e.g. "fireball chance raised to ≈88%"). The demo plugin `demo_fire_magic` demonstrates this.
+> **Plugin description guideline**: a plugin JSON's `description` (visible in the player tooltip) should not state raw weight numbers — write the computed probability or a qualitative statement instead (e.g. "the fireball chance rises sharply"). The bundled plugin `modularshoot:fragment_fire` demonstrates this (its `description` resolves via `lang:` to "Bullets catch fire and the fireball chance rises sharply").
 
 **Per-pellet semantics**: the variant is rolled **independently per pellet** (one election affects only that pellet), so a shotgun blast can mix different variants or normal pellets; an all-zero-weight or empty pool silently yields a normal pellet. Mutually-exclusive single-value fields (`damage_type` / visual `base`) must go through the variant pool; stackable effects should use `registerShootEffect`.
 
-> **Bundled multi-pellet demo**: the test gun `modularshoot:test_gun` declares `"modularshoot:pellet_count": 3.0` in its `stats` (3 pellets per shot) and `variants` demo_fireball 0.5 / demo_heavy 1.5 (25% base fireball chance); the demo plugin `demo_pellet_barrel` (barrel) adds +2 to `pellet_count` via a modifier (3 → 5 pellets), while `demo_fire_magic` (accessory) adds +10 fireball weight via `adds_variants` (≈88% after install).
+> **Bundled multi-pellet demo**: the gun `modularshoot:blood_sword` declares `"modularshoot:pellet_count": 5.0` in its `stats` (5 pellets per shot, each rolled independently); the fireball plugin `modularshoot:fragment_fire` appends `"modularshoot:example_fireball": 0.5` to the pool via `adds_variants` — on `blood_sword`, which declares no `variants`, the pool becomes {fireball 0.5, normal bullet 1.0} → ≈33% fireball; `modularshoot:composite_cane` instead declares `"variants": { "modularshoot:example_fireball": 0.5 }` (declared weights are authoritative, no normal-bullet fallback → single-candidate pool rolls 100%).
 
-**Path**: `data/modularshoot/modularshoot/variants/demo_fireball.json` (bundled demo: fire trait + fire damage type + fireball visuals)
+**Path**: `data/modularshoot/modularshoot/variants/example_fireball.json` (bundled demo: high damage + fire damage type + fireball visuals)
 
 ```json
 {
-  "weight_hint": 1,
-  "traits": { "modularshoot:visual_fire": true },
+  "base_weight": 0.0,
   "stats": { "modularshoot:hit_damage": 15.0 },
   "damage_type": "minecraft:in_fire",
   "bullet_style_override": {
-    "base": { "render_mode": "billboard", "texture": "modularshoot:textures/bullet/test_bullet_plain.png" },
-    "modifiers": [ { "type": "tint", "color": [1.0, 0.4, 0.1] } ]
+    "base": { "render_mode": "billboard", "texture": "modularshoot:textures/bullet/default.png" },
+    "modifiers": [
+      { "type": "tint", "color": [1.0, 0.4, 0.1, 1.0] },
+      { "type": "scale", "value": 1.3 }
+    ]
   }
 }
 ```
 
-**Path**: `data/modularshoot/modularshoot/variants/demo_heavy.json` (bundled demo: overrides damage to 25 only, no visual override)
+**Path**: `data/modularshoot/modularshoot/variants/example_heavy_blade.json` (bundled demo: heavy blade — overrides damage and bullet size, dark-red visuals)
 
 ```json
 {
-  "weight_hint": 0.2,
-  "stats": { "modularshoot:hit_damage": 25.0 }
+  "base_weight": 0.0,
+  "stats": { "modularshoot:hit_damage": 18.0, "modularshoot:bullet_size": 0.75 },
+  "bullet_style_override": {
+    "base": { "render_mode": "billboard", "texture": "modularshoot:textures/bullet/default.png" },
+    "modifiers": [
+      { "type": "tint", "color": [0.75, 0.1, 0.1, 1.0] },
+      { "type": "scale", "value": 1.5 }
+    ]
+  }
 }
 ```
 

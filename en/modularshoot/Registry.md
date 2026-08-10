@@ -30,11 +30,13 @@ Registry: `modularshoot:guns`
 | `shootTexture` | Optional resource path | No | None (always uses base texture) | Texture swapped to while firing |
 | `shootTextureMode` | Enum | No | `PER_SHOT` | Texture swap timing. Only effective when `shootTexture` is specified |
 | `textureScale` | Enum | No | `AUTO` | Whether the render geometry scales with the texture resolution. `AUTO` (16 px = 1 grid cell; a 32×32 texture renders 2× larger) / `FIXED` (fixed 16×16 unit grid). Base and shoot textures scale independently by their own size |
-| `stats` | Attribute ID → decimal map | No | Empty map | Attribute base values. Keys are the logical ids of attribute_meta-registered entries and **must** include full namespace (e.g. `modularshoot:hit_damage`). Unspecified attributes use the metadata table default. **Any registered entry is supported** (beyond the 10 preset attributes): adding an attribute_meta entry makes `stats` support that key automatically |
+| `stats` | Attribute ID → decimal map | No | Empty map | Attribute base values. Keys are the logical ids of attribute_meta-registered entries; bare keys (no colon) auto-resolve to the `modularshoot` namespace (e.g. `hit_damage` ≡ `modularshoot:hit_damage`), and an explicit `minecraft:` prefix is normalised to `modularshoot` as well; other explicit namespaces pass through verbatim. Unspecified attributes use the metadata table default. **Any registered entry is supported** (beyond the 10 preset attributes): adding an attribute_meta entry makes `stats` support that key automatically |
 | `traits` | Trait ID → boolean map | No | Empty map | Gun inherent trait overrides. Gun-declared traits always override all plugins |
 | `variants` | Variant ID → decimal map | No | Empty map | Variant pool base weights: variant ID → base weight. The pool is assembled fresh for every shot, summed with plugins' `addsVariants` per variant, adjusted by contributor weight modifiers, then rolled weighted-random (see "Variant Definition (VariantDefinition)") |
+| `extraValues` | Namespaced-number map | No | Empty map | Extension numeric fields: keys are ResourceLocations (must be namespaced), values are numbers. The framework only carries and sums them per key without interpreting their meaning; `getExtraValueSums` / `getExtraValue` return them summed with installed plugins' accumulated values (the gun definition provides the base) |
 | `slots` | Plugin type ID → integer map | No | Empty map | Plugin slot configuration. Key is plugin type ID, value is slot count |
 | `sounds` | String → resource path map | No | Empty map | Sound bindings. Predefined slot: `shoot` (firing sound). Custom slot names supported |
+| `soundRange` | Optional decimal | No | None (uses the sound event's own range, default 16 blocks) | Audible radius override in blocks for the firing sound. JSON key `sound_range`; when absent, the sound event's own range (default 16) is used |
 | `bulletStyle` | Optional bullet style | No | None (falls back to framework default appearance `ComposedBulletStyle.FALLBACK_BASE`, billboard + default texture) | Bullet visual appearance config |
 
 ### BulletStyle
@@ -61,13 +63,14 @@ Registry: `modularshoot:plugins`
 |-------|------|----------|---------|-------------|
 | `tags` | List of resource paths | No | Empty list | Matching tags. Install requires intersection with a type's tags. Empty list prevents installation (logs WARN) |
 | `priority` | Integer | No | `0` | Trait conflict priority, higher wins. Does **not** inherit type priority |
+| `visualPriority` | Optional integer | No | None (falls back to `priority`) | Visual base-election priority; JSON key `visual_priority`. Consulted only when this plugin's bullet style base competes in the visual composition election — it never affects trait-conflict resolution. When absent, falls back to `priority` |
 | `itemIcon` | Resource path | **Yes** | — | Plugin icon texture shown in inventory/hotbar |
 | `textureScale` | Enum | No | `AUTO` | Whether the icon geometry scales with the texture resolution; same semantics as the gun's `textureScale` (`AUTO` / `FIXED`) |
 | `modifiers` | List of modifiers | No | Empty list | Attribute modifier array. Applied to gun on installation |
 | `traits` | Trait ID → boolean map | No | Empty map | Trait overrides provided after installation |
 | `addsVariants` | Variant ID → decimal map | No | Empty map | Base weights appended to the gun's variant pool. Summed with the gun-declared weight of the same variant once installed (see "Variant Definition (VariantDefinition)") |
 | `exclusiveGroup` | Optional text string | No | None | Mutual exclusion group ID. Two plugins with the same group ID cannot coexist on the same gun |
-| `bulletStyle` | Optional bullet style | No | None | Bullet style contribution. **Stacks**: base candidates are elected by priority (same priority: later-installed wins; when no candidate, the framework fallback appearance is used); all modifiers stack (scale multiplies, tint multiplies channel-wise, attach layers are all kept) |
+| `bulletStyle` | Optional bullet style | No | None | Bullet style contribution. **Stacks**: base candidates are elected by visual_priority (falling back to priority when absent; equal values: later-installed wins; when no candidate, the framework fallback appearance is used); all modifiers stack (scale multiplies, tint multiplies channel-wise, attach layers are all kept) |
 | `textureOverlay` | Optional texture overlay | No | None | Texture overlay info. Layers stacked over the gun's base texture after install |
 | `gunOutline` | Optional outline spec | No | None | Whole-gun outline spec (see "Outline Spec (OutlineSpec)" below). Strokes the silhouette of the final composited gun texture; multiple plugins nest concentrically, widest first |
 | `extraValues` | Namespaced-number map | No | Empty map | Extension numeric fields: keys are ResourceLocations, values are numbers. The framework only carries and sums them per key (read via `ModularShootAPI.getExtraValueSums` / `getExtraValue`) without interpreting their meaning — integration mods use them to carry custom values (e.g. rarity) and accumulate them onto the gun in plugin install/uninstall events |
@@ -92,6 +95,9 @@ Registry: `modularshoot:plugins`
 | `layer` | Integer | **Yes** | — | Z-order, higher renders on top. Same layer: later-installed covers earlier |
 | `alignment` | Enum | No | `TOP_LEFT` | Nine-grid alignment: `TOP_LEFT` / `TOP_CENTER` / `TOP_RIGHT` / `CENTER_LEFT` / `CENTER` / `CENTER_RIGHT` / `BOTTOM_LEFT` / `BOTTOM_CENTER` / `BOTTOM_RIGHT`. Only effective when `fit` is `NONE` |
 | `fit` | Enum | No | `NONE` | Fit mode: `NONE` (no resampling, blended at the aligned position, parts beyond the canvas are clipped with a WARN) / `FILL` (bilinearly stretched to cover the whole canvas; distorted when aspect ratios differ) / `CONTAIN` (uniformly scaled to be fully visible, centred with transparent margins) |
+| `tint` | 4-element float array | No | White `[1,1,1,1]` (identity) | Per-channel RGBA multiplier applied to the overlay's pixels before blending. White is the identity |
+| `blend` | Enum | No | `NORMAL` | Colour mixing mode against the underlying pixels: `NORMAL` (ordinary source-over compositing — opaque pixels replace the base, translucent ones blend) / `MULTIPLY` (multiplies, darkens) / `SCREEN` (inverse-multiplies, brightens) / `ADD` (adds, clamped to 1, brightens). Only colour channels are affected; alpha always uses ordinary over compositing |
+| `outline` | Optional outline spec | No | None | Stroke painted along the overlay's own alpha silhouette; same format as the outline spec (OutlineSpec). Applied after the tint, so it is never tinted |
 
 ### Outline Spec (OutlineSpec)
 
@@ -110,7 +116,7 @@ DynamicOutlineTintRegistry.register(
     (stack, partialTick) -> /* per-frame colour, e.g. a rainbow hue rotating over time */);
 ```
 
-Every gun with that plugin installed then renders its outline with the provider's per-frame colour (white outline mask × per-frame tint; cached textures are never rebuilt). Outlines without a registered provider keep their static baked colour. The framework ships a built-in demo plugin `modularshoot:visual_gun_prism` (rainbow outline).
+Every gun with that plugin installed then renders its outline with the provider's per-frame colour (white outline mask × per-frame tint; cached textures are never rebuilt). Outlines without a registered provider keep their static baked colour. The built-in demo plugins with `gun_outline` are `modularshoot:fragment_guard` (guardian blue) and `modularshoot:fragment_shining` (golden holy light), both statically baked; the framework ships no dynamic-outline demo plugin — per-frame recolouring requires an integration mod to register a provider via `DynamicOutlineTintRegistry` as shown above.
 
 ## Plugin Type Definition (PluginTypeDefinition)
 
@@ -152,6 +158,7 @@ Registry: `modularshoot:attribute_meta`
 | `color` | Text string | No | `""` (empty string) | Attribute name color (e.g. `#FF4444`) |
 | `priority` | Integer | No | `0` | Display priority, higher sorts first |
 | `forceShow` | Boolean | No | `false` | Force display. When `true`, shown in tooltip even if value equals default |
+| `unit` | Optional text string | No | None (no unit shown) | Translation key for the value's display unit (e.g. `modularshoot.unit.per_second`), rendered after the numeric value in the tooltip. When absent, no unit is shown |
 
 > If the `binds` target attribute is not registered: metadata entry is retained but modifier won't mount, tooltip won't show, reads return 0.
 
@@ -163,7 +170,7 @@ Registry: `modularshoot:variants`
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
-| `weightHint` | Decimal number | No | `0.0` | Base weight fallback. Used only when *no* gun/plugin declares this variant in its pool (typical for variants introduced solely via `registerVariantContributor`); declared gun/plugin weights are authoritative |
+| `baseWeight` | Decimal number | No | `0.0` | Base weight fallback; JSON key `base_weight`. Used only when *no* gun/plugin declares this variant in its pool (typical for variants introduced solely via `registerVariantContributor`); declared gun/plugin weights are authoritative |
 | `traits` | Trait ID → boolean map | No | Empty map | **Merged** into the snapshot when selected: declared trait values are written, unlisted keys are kept |
 | `stats` | Attribute ID → decimal map | No | Empty map | When selected, **overrides only the declared keys** (does not replace the whole snapshot stat table) |
 | `damageType` | Optional resource path | No | None | When present, overrides the `ammo_damage_type` preset (variant takes precedence) |

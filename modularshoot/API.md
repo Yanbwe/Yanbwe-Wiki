@@ -25,8 +25,8 @@ ModularShootAPI 所有公开静态方法速查。方法按功能分组。
 | `resolveGunId(ItemStack stack, RegistryAccess access)` | `stack` — 物品堆叠；`access` — 运行时注册表视图 | `Optional<ResourceLocation>` | 双通道解析枪械定义 ID：组件优先，绑定表兜底。绑定枪械未附加组件时经绑定表也能解析 |
 | `resolvePluginId(ItemStack stack, RegistryAccess access)` | 同上（插件版本） | `Optional<ResourceLocation>` | 双通道解析插件定义 ID。绑定插件（无组件）的推荐读取方式 |
 | `getInstalledPlugins(ItemStack gun)` | `gun` — 枪械物品堆叠 | `List<PluginInstance>`（不可变） | 查询枪械已安装的插件列表。非枪械或无已安装插件时返回空列表 |
-| `getExtraValueSums(ItemStack gun, RegistryAccess registryAccess)` | `gun` — 枪械物品堆叠；`registryAccess` — 运行时注册表视图（需已加载世界） | `Map<ResourceLocation, Double>`（不可变） | 汇总枪械上所有**有效**插件（定义仍存在者）的 `extra_values`，按命名空间键求和。失效插件被过滤（与属性管线同一降级口径），未声明过的键不出现在结果中 |
-| `getExtraValue(ItemStack gun, ResourceLocation key, RegistryAccess registryAccess)` | `gun` — 枪械物品堆叠；`key` — 要查询的扩展字段键；`registryAccess` — 运行时注册表视图 | `double` | 便捷单键查询：`key` 在枪械上的累加值，未声明时返回 `0.0` |
+| `getExtraValueSums(ItemStack gun, RegistryAccess registryAccess)` | `gun` — 枪械物品堆叠；`registryAccess` — 运行时注册表视图（需已加载世界） | `Map<ResourceLocation, Double>`（不可变） | 汇总枪械的 `extra_values` 总额：枪械定义**基础值** + 枪械上所有**有效**插件（定义仍存在者）的 `extra_values`，按命名空间键求和。失效插件与失效枪械定义均被过滤（与属性管线同一降级口径），未声明过的键不出现在结果中 |
+| `getExtraValue(ItemStack gun, ResourceLocation key, RegistryAccess registryAccess)` | `gun` — 枪械物品堆叠；`key` — 要查询的扩展字段键；`registryAccess` — 运行时注册表视图 | `double` | 便捷单键查询：`key` 在枪械上的总额（枪械定义基础值 + 插件累加值），未声明时返回 `0.0` |
 
 ## 拆卸 API
 
@@ -42,9 +42,9 @@ ModularShootAPI 所有公开静态方法速查。方法按功能分组。
 > **向后兼容**：上述方法保留了含 `RegistryAccess` 参数的旧签名（`@Deprecated`），旧签名仍可用但不推荐。新签名降低了调用门槛，`RegistryAccess` 从 `player.level().registryAccess()` 自动获取。
 
 参数说明：
-- **`player`**：拆卸操作的玩家上下文。`returnItems` 为 `true` 时，返还到玩家物品栏（满则掉落）；否则直接删除
+- **`player`**：拆卸操作的玩家上下文。`returnItems` 为 `true` 时，返还到玩家物品栏（满则掉落；降级插件除外）；否则直接删除
 - **`force`**：`true` 强制拆卸（忽略 `locked` 标记）；`false` 跳过锁定插件
-- **`returnItems`**：`true` 返还拆卸的插件物品给玩家；`false` 直接销毁
+- **`returnItems`**：`true` 返还拆卸的插件物品给玩家；`false` 直接销毁。例外：定义已失效（降级）的插件即使 `returnItems` 为 `true` 也不返还、直接销毁
 
 ## 锁定 API
 
@@ -63,10 +63,10 @@ ModularShootAPI 所有公开静态方法速查。方法按功能分组。
 | `registerGun(ResourceLocation gunId, GunDefinition definition)` | `gunId` — 枪械定义 ID（如 `modularshoot:sniper_rifle`）；`definition` — 枪械定义对象 | `void` | 通过 Java API 注册一把枪械。调用后自动标记该 ID 为 API 注册，后续数据包 JSON 同名注册会被拒绝 |
 | `registerGunItem(ItemLike item, ResourceLocation gunId)` | `item` — 要绑定的物品（如 `Items.DIAMOND_SWORD`）；`gunId` — 目标枪械定义 ID | `void` | 把指定物品绑定为枪械（等价于数据包 `gun_items` 条目，条目键 = 物品 ID）。Java API 绑定优先于数据包绑定；运行时识别需要 `RegistryAccess`（数据包注册表未加载时仅 Java API 绑定可见） |
 | `registerPluginItem(ItemLike item, ResourceLocation pluginId)` | `item` — 要绑定的物品；`pluginId` — 目标插件定义 ID | `void` | 把指定物品绑定为插件（等价于数据包 `plugin_items` 条目） |
-| `registerPluginValidator(PluginValidator validator)` | `validator` — 自定义安装校验器（函数式接口：`(ItemStack, ResourceLocation) → ValidationResult`） | `void` | 注册自定义插件安装校验器。在框架默认校验通过后执行，返回失败则安装中止 |
+| `registerPluginValidator(PluginValidator validator)` | `validator` — 自定义安装校验器（函数式接口：`(Player player, ItemStack gun, ResourceLocation pluginId, RegistryAccess registryAccess) → ValidationResult`；`player` — 执行安装的玩家，`gun` — 目标枪械，`pluginId` — 候选插件定义 ID，`registryAccess` — 运行时注册表视图） | `void` | 注册自定义插件安装校验器。在框架默认校验通过后执行，返回失败则安装中止 |
 | `registerShootPredicate(ShootPredicate predicate)` | `predicate` — 射击条件判断器（函数式接口：`(Player, ItemStack) → ShootPredicateResult`） | `void` | 注册射击条件判断器。射速控制通过后执行，返回失败阻止射击并显示原因。框架默认注册 0 个 |
 | `registerShootEffect(ShootEffect effect)` | `effect` — 射击效果贡献者（函数式接口：`(Player player, ItemStack gun, BulletSnapshot snapshot, int pelletIndex, int totalPellets) → void`） | `void` | 注册逐弹丸射击效果贡献者。在每颗弹丸快照 `copy()` 之后、散布采样之前按注册顺序执行，后注册者可见前序修改（`pelletIndex` 可用作逐颗分化种子）。**使用红线**：推荐 `setTrait`（布尔可共存）/ `multiplyStat`（倍率乘算）/ `setStat`（确定性覆盖）；**禁止** `setDamageType` 与视觉 `base` 覆盖——单值互斥字段的互斥场景必须走变体池（技术上不阻止，但会产生字段级碎片化）。框架默认注册 0 个 |
-| `registerVariantContributor(VariantContributor contributor)` | `contributor` — 变体权重贡献者（函数式接口：`(VariantContributionSink sink) → void`；经 `sink.add(ResourceLocation variantId, AttributeModifier modifier)` 声明"变体 ID → 权重修饰符"） | `void` | 注册变体权重贡献者，为每发射击实时组装的变体池注入权重修饰符（不持久化）。修饰符复用原版 `AttributeModifier` record + Operation 三阶段语义：`ADD_VALUE` 加算 → `ADD_MULTIPLIED_BASE` 只乘基础权重 → `ADD_MULTIPLIED_TOTAL` 乘整体（零基础且无加值时结果恒 0——"火元素饰品对非火枪无效"）。仅由贡献者引入的变体以自身 `weight_hint` 作为基础权重（缺省 0.0），且与默认普通弹兜底（权重 `1.0`）按比例竞争——枪械未声明 `variants`（且该枪仅此一个贡献变体）时，该变体概率 = 最终权重 /（最终权重 + 1.0）；已被枪械/插件声明的变体以声明权重为权威。框架默认注册 0 个 |
+| `registerVariantContributor(VariantContributor contributor)` | `contributor` — 变体权重贡献者（函数式接口：`(VariantContributionSink sink) → void`；经 `sink.add(ResourceLocation variantId, AttributeModifier modifier)` 声明"变体 ID → 权重修饰符"） | `void` | 注册变体权重贡献者，为每发射击实时组装的变体池注入权重修饰符（不持久化）。修饰符复用原版 `AttributeModifier` record + Operation 三阶段语义：`ADD_VALUE` 加算 → `ADD_MULTIPLIED_BASE` 只乘基础权重 → `ADD_MULTIPLIED_TOTAL` 乘整体（零基础且无加值时结果恒 0——"火元素饰品对非火枪无效"）。仅由贡献者引入的变体以自身 `base_weight` 作为基础权重（缺省 0.0），且与默认普通弹兜底（权重 `1.0`）按比例竞争——枪械未声明 `variants`（且该枪仅此一个贡献变体）时，该变体概率 = 最终权重 /（最终权重 + 1.0）；已被枪械/插件声明的变体以声明权重为权威。框架默认注册 0 个 |
 | `registerTraitHook(ResourceLocation traitId, TraitHookType type, T callback)` | `traitId` — 特性 ID；`type` — 钩子类型枚举（`ON_TICK`/`ON_HIT`/`ON_BLOCK_HIT`/`ON_EXPIRE`/`ON_REMOVE`/`ON_VISUAL_TICK`）；`callback` — 回调实现，类型须与 `type` 匹配 | `void` | 为指定特性注册运行时钩子回调。同一特性可注册多个回调，按注册顺序执行 |
 | `registerDamageHandler(DamageHandler handler)` | `handler` — 伤害后处理器（函数式接口：`(BulletRecord, Entity, double) → double`） | `void` | 注册全局伤害处理器，在子弹命中后、应用伤害前执行。按注册顺序链式调用，前一返回值作为后一输入 |
 | `markJavaApiRegistered(ResourceKey<Registry<T>> registryKey, ResourceLocation id)` | `registryKey` — 注册表键（如 `ModularShootRegistries.GUNS_KEY`）；`id` — 条目标识符 | `void` | 标记某 ID 已由 Java API 注册（防止数据包 JSON 冲突覆盖）。通常在 `registerGun` 等 API 内部自动调用 |
@@ -80,7 +80,7 @@ ModularShootAPI 所有公开静态方法速查。方法按功能分组。
 | `ON_BLOCK_HIT` | onBlockHit | `(BulletRecord, BulletSnapshot, BlockPos, Direction)` | 服务端 |
 | `ON_EXPIRE` | onExpire | `(BulletRecord, BulletSnapshot)` | 服务端 |
 | `ON_REMOVE` | onRemove | `(BulletRecord, BulletSnapshot, RemoveReason)` | 服务端 |
-| `ON_VISUAL_TICK` | onVisualTick | 客户端渲染对象（`BulletRenderObject`） | 仅客户端 |
+| `ON_VISUAL_TICK` | onVisualTick | 快照 `ClientBulletSnapshot` + 渲染对象 `BulletRenderObject`（均以 `Object` 传入，需强转） | 仅客户端 |
 
 > **onVisualTick 契约（修饰符叠加系统）**：子弹的视觉组合（base / scale / tint / 附加层）在**创建瞬间冻结**并缓存于 `BulletRecord.composedStyle`（服务端）→ 经 `BulletS2CPacket` 传给客户端 `BulletRenderObject`。飞行中的 `onVisualTick` 钩子要改视觉，应**直接修改 `BulletRenderObject`**（`setScale` / `setComposedTint` / `setLayers` / 换纹理等），不要试图改 `BulletSnapshot` 期望触发重新组合——组合不会在飞行中重算。
 
@@ -105,7 +105,7 @@ DynamicOutlineTintRegistry.register(
     });
 ```
 
-第一人称、第三人称与背包 GUI 统一生效。插件数据包 JSON 无需任何改动（`gun_outline` 照常声明，颜色仅作静态回退）。框架内置演示插件 `modularshoot:visual_gun_prism`。
+第一人称、第三人称与背包 GUI 统一生效。插件数据包 JSON 无需任何改动（`gun_outline` 照常声明，颜色仅作静态回退）。框架不内置动态描边演示插件——内置带 `gun_outline` 的插件（如 `modularshoot:fragment_guard`、`modularshoot:fragment_shining`）均使用静态烘焙色；需要动态描边时，为任何声明了 `gun_outline` 的插件通过 `DynamicOutlineTintRegistry.register` 注册每帧颜色提供器即可。
 
 ## 注册表查询
 
@@ -121,7 +121,7 @@ DynamicOutlineTintRegistry.register(
 
 | 方法签名 | 参数说明 | 返回值 | 说明 |
 |---------|---------|--------|------|
-| `getState(ItemStack gun, Player player)` | `gun` — 枪械物品堆叠；`player` — 玩家上下文（用于解析运行时注册表） | `GunState`（可空） | 获取枪械实例的 per-gun 状态读写视图。非枪械返回 `null`。提供 `getInt`/`setInt`/`getDouble`/`setDouble`/`getBoolean`/`setBoolean`/`getString`/`setString`/`getUuid`/`setUuid`/`hasState`/`clearState` 等类型化方法 |
+| `getState(ItemStack gun, Player player)` | `gun` — 枪械物品堆叠；`player` — 玩家上下文（用于解析运行时注册表） | `GunState`（可空） | 获取枪械实例的 per-gun 状态读写视图。非枪械返回 `null`。提供 `getInt`/`setInt`/`getLong`/`setLong`/`getDouble`/`setDouble`/`getFloat`/`setFloat`/`getBoolean`/`setBoolean`/`getString`/`setString`/`getUuid`/`setUuid`/`hasState`/`clearState` 等类型化方法 |
 | `getPlayerState(Player player)` | `player` — 玩家 | `PlayerState` | 获取玩家 per-player 状态读写视图。API 与 `GunState` 一致，仅归属对象不同 |
 | `resolveGunFromSnapshot(BulletSnapshot snapshot, Level level)` | `snapshot` — 子弹快照；`level` — 世界实例（可空） | `ItemStack`（可空） | 从子弹快照回溯发射时所用枪械的 ItemStack。通过 gunInstanceUuid + shooter UUID 在玩家背包中查找。独立发射（炮塔等）、玩家离线、枪已丢弃时返回 `null` |
 

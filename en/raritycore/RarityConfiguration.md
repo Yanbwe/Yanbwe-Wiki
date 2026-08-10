@@ -135,6 +135,14 @@ After enabling edit mode, you can modify item rarities as follows:
    /raritycore edit disable
    ```
 
+> **TACZ Integration**: When the TACZ (Timeless and Classics Zero) mod is installed, clicking a TACZ gun/attachment/ammo in Normal mode will **not** write to `FinalRarity.json`. Instead, RarityCore automatically generates a matching rule based on the sub-item ID (GunId/AttachmentId/AmmoId).
+>
+> This is because TACZ guns, attachments and ammo share the same base item ID (e.g. `tacz:modern_kinetic_gun`) and can only be distinguished by their sub-item ID.
+>
+> - Generated rules are saved to `config/raritycore/item_data_matches/editTacZ_*.json` and take effect immediately
+> - Re-editing the same sub-item **overwrites** the corresponding rule instead of piling up files
+> - Deleting rarity (`rarity=0`) is not supported for TACZ sub-items
+
 ## **Rarity Priority**
 
 Item rarity retrieval follows this priority order (from highest to lowest):
