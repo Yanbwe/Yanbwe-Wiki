@@ -90,6 +90,33 @@ Controls damage number opacity based on the **damage source**.
 | `hideFullHealthHeal` | boolean | `true` | Hide healing numbers when entity is at full HP |
 | `killOnlyOnMobDeath` | boolean | `false` | Only show "kill" text on fatal hits (suppress damage number) |
 | `killOnlyFullHealth` | boolean | `false` | When `killOnlyOnMobDeath` is enabled, only apply to one-shot kills (full-HP targets) |
+| `displayScope` | string | `"all"` | Which damage numbers to show: `all` (everything) / `selfDealt` (own damage only) / `selfRelated` (own damage + damage taken) |
+| `hideBehindWall` | boolean | `false` | Hide numbers when fully solid opaque blocks block the line between camera and trigger point (glass, leaves etc. do not count) |
+
+> `displayScope` and `hideBehindWall` are disabled by default and do not change existing behavior.
+
+## Number Abbreviation
+
+Abbreviates large damage values, e.g. `1200 → 1.2k`, `1500000 → 1.5M`.
+
+```json
+"numberAbbreviation": {
+    "enabled": false,
+    "threshold": 1000.0,
+    "suffixes": ["k", "M", "B", "T"],
+    "decimalPlaces": 1
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | boolean | `false` | Enable abbreviation (disabled by default) |
+| `threshold` | float | `1000.0` | Values below this are never abbreviated |
+| `suffixes` | string array | `["k","M","B","T"]` | Suffixes per 1000× step, ascending |
+| `decimalPlaces` | int | `1` | Decimal places kept after abbreviation (e.g. `1.2k`, `1.23k`) |
+
+- Integer results drop decimals (`2000 → 2k`); non-integers keep `decimalPlaces` digits
+- Applies to both floating numbers and the total-damage panel
 
 ## Distance Scale
 

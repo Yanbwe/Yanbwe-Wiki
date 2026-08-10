@@ -168,6 +168,33 @@ config/stylizeddamage/common.json
 | `hideFullHealthHeal` | 布尔值 | `true` | 满血生物回血时不显示跳字 |
 | `killOnlyOnMobDeath` | 布尔值 | `false` | 生物被击杀时只显示 kill 文字，不显示具体伤害数字 |
 | `killOnlyFullHealth` | 布尔值 | `false` | 上一项开启时，仅对满血被秒杀的情况生效 |
+| `displayScope` | 字符串 | `"all"` | 跳字显示范围：`all`（全部）/ `selfDealt`（仅自己造成）/ `selfRelated`（自己造成+自己受到） |
+| `hideBehindWall` | 布尔值 | `false` | 跳字触发点与相机之间被完全固体不透明方块遮挡时不显示（玻璃、树叶等半透明方块不算遮挡） |
+
+> `displayScope` 与 `hideBehindWall` 默认均不开启，不影响原有显示行为。
+
+### 数字缩进（numberAbbreviation）
+
+将大数值自动缩进显示，例如 `1200 → 1.2k`、`1500000 → 1.5M`，使大数字更易读。
+
+```json
+"numberAbbreviation": {
+    "enabled": false,
+    "threshold": 1000.0,
+    "suffixes": ["k", "M", "B", "T"],
+    "decimalPlaces": 1
+}
+```
+
+| 配置项 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| `enabled` | 布尔值 | `false` | 是否启用数字缩进（默认关闭） |
+| `threshold` | 浮点数 | `1000.0` | 低于此值的伤害不缩进 |
+| `suffixes` | 字符串数组 | `["k","M","B","T"]` | 每 1000 倍递增的后缀，按升序排列 |
+| `decimalPlaces` | 整数 | `1` | 缩进后保留的小数位数（如 `1.2k`、`1.23k`） |
+
+- 整数结果不显示小数（`2000 → 2k`），非整数按 `decimalPlaces` 保留小数
+- 同时作用于浮动跳字与总伤害面板（totalDamage）
 
 ### 距离缩放
 
