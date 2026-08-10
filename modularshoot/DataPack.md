@@ -147,6 +147,7 @@
 | `modifiers` | 对象数组 | 否 | `[]` | 属性修饰符列表（见下表） |
 | `traits` | 特性ID→布尔值对象 | 否 | `{}` | 安装后提供的特性覆盖。键须带完整命名空间——裸键会静默落入 `minecraft` 命名空间（与枪械侧自动补 `modularshoot` 不对称） |
 | `adds_variants` | 变体ID→浮点数对象 | 否 | `{}` | 追加进枪械变体池的基础权重。与枪械声明的同变体权重求和。如 `"adds_variants": { "modularshoot:example_fireball": 0.5 }`。键须带完整命名空间——裸键会静默落入 `minecraft` 命名空间（详见「变体 JSON」） |
+| `adds_slots` | 槽位类型ID→整数对象 | 否 | `{}` | 槽位扩展：安装后增加指定槽位数量，或**创造**枪械原本没有的槽位类型。有效键集 = 枪械 `slots` ∪ 已装插件 `adds_slots` 键；有效容量 = 枪械值 + Σ 已装插件贡献。值为任意整数（负数表示占用槽位，容量≤已装时不可再装）。如 `"adds_slots": { "combat": 1, "modularshoot:accessory": 1 }`（裸键自动补 `modularshoot` 命名空间，与枪械 `slots` 规则一致）。键须引用 `plugin_types` 注册表。安装匹配与 tooltip 插件栏均按有效槽位计算；卸载规则见 API 文档「卸载超编预检」 |
 | `exclusive_group` | 字符串 | 否 | 无 | 互斥组 ID。同一枪上同组插件不可共存 |
 | `bullet_style` | 对象 | 否 | 无 | 子弹样式（格式同枪械的 `bullet_style`）。**叠加组合**：插件与枪械的 base 按 `visual_priority`（未声明时回退 `priority`；同值后装赢）选举出赢家，modifiers 全部叠加 |
 | `visual_priority` | 整数 | 否 | 无（回退 `priority`） | 插件 `bullet_style` 的 base 参与视觉选举的专用优先级；未声明时回退 `priority`。同值按安装顺序后装赢 |

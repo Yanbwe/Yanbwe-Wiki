@@ -43,8 +43,16 @@ ModularShootAPI 所有公开静态方法速查。方法按功能分组。
 
 参数说明：
 - **`player`**：拆卸操作的玩家上下文。`returnItems` 为 `true` 时，返还到玩家物品栏（满则掉落；降级插件除外）；否则直接删除
-- **`force`**：`true` 强制拆卸（忽略 `locked` 标记）；`false` 跳过锁定插件
+- **`force`**：`true` 强制拆卸（忽略 `locked` 标记，且绕过超编预检）；`false` 跳过锁定插件，并拒绝会导致槽位超编的拆卸
 - **`returnItems`**：`true` 返还拆卸的插件物品给玩家；`false` 直接销毁。例外：定义已失效（降级）的插件即使 `returnItems` 为 `true` 也不返还、直接销毁
+
+## 卸载超编预检（`adds_slots`）
+
+安装过 `adds_slots` 插件的枪械，其有效槽位容量 = 枪械基础值 + 全部已装插件的贡献（见 DataPack「插件 JSON」）。拆卸加槽插件会移除其容量贡献，可能导致某槽位类型超编：
+
+- **非 `force`**：`uninstallPlugin` 在拆卸前模拟卸载后的容量，若任意槽位类型超编则**拒绝**拆卸，返回 `reason = WOULD_OVERFLOW`（插件未移除、不返还、不触发事件）；`uninstallRandomPlugin` 的候选会过滤掉会触发超编的插件；批量拆卸逐个执行，被拒的项记录 `WOULD_OVERFLOW`，其余照常
+- **`force`**：绕过预检直接拆卸；超编的插件**滞留保留**（功能不受影响），但该槽位显示已满、无法再装入新插件
+- `uninstallAllPlugins` 全部拆卸后无剩余插件，永不触发超编
 
 ## 锁定 API
 

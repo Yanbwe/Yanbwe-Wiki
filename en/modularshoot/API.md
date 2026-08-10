@@ -43,8 +43,16 @@ All uninstall methods automatically refresh the `ATTRIBUTE_MODIFIERS` component 
 
 Parameter details:
 - **`player`**: Player context for the operation. When `returnItems` is `true`, uninstalled plugins are returned to the player's inventory (dropped if full; degraded plugins excepted); otherwise deleted
-- **`force`**: `true` to force-uninstall (ignores `locked` flag); `false` to skip locked plugins
+- **`force`**: `true` to force-uninstall (ignores `locked` flag and bypasses the overflow pre-check); `false` to skip locked plugins and reject uninstalls that would overflow a slot type
 - **`returnItems`**: `true` to return the uninstalled plugin as an item to the player; `false` to destroy it. Exception: plugins whose definition is missing (degraded) are destroyed outright even when `returnItems` is `true`
+
+## Overflow pre-check (`adds_slots`)
+
+A gun with `adds_slots` plugins has an effective slot capacity of gun base + all installed plugins' contributions (see DataPack "Plugin JSON"). Uninstalling a slot-adding plugin removes its contribution, which may leave some slot type over capacity:
+
+- **Non-`force`**: `uninstallPlugin` simulates the capacity after removal and **rejects** the uninstall when any slot type would overflow, returning `reason = WOULD_OVERFLOW` (plugin not removed, not returned, no events fired); `uninstallRandomPlugin` filters candidates that would overflow; batch uninstalls run per-plugin — rejected ones report `WOULD_OVERFLOW`, the rest proceed
+- **`force`**: bypasses the pre-check and removes the plugin; the over-capacity plugins **stay in place** (fully functional), but the slot shows as full and can no longer accept new plugins
+- `uninstallAllPlugins` removes everything, leaving no plugins — it can never overflow
 
 ## Lock API
 
