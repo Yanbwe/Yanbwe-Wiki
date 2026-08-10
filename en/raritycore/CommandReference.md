@@ -70,7 +70,7 @@ All `/raritycore` subcommands require OP permission (permission level 2).
 | `/raritycore edit parameter ignore "<aa\|bb\|cc>"` | Exclude NBT tags, separated by `\|` | FullMatch |
 
 **GUI Operations:**
-- When edit mode is active, a floating panel appears in the top-left corner
+- When edit mode is active, a floating panel appears in the top-left corner; drag the empty area of the panel to reposition it (position is session-only and resets to the top-left on restart)
 - Click the mode name to toggle Normal/FullMatch
 - `[-]` `[+]` buttons adjust rarity level
 - `Ctrl+1`~`Ctrl+7` select level, `Ctrl+0` clear rarity

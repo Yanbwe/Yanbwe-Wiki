@@ -106,12 +106,13 @@ Creates **NBT match config files** using all of the item's current NBT tags as m
 
 ### GUI Panel
 
-When edit mode is active, a floating panel appears in the top-left corner of all GUIs:
+When edit mode is active, a floating panel appears in the top-left corner of all GUIs (drag the empty area of the panel to reposition it; it cannot be dragged off-screen. The position is memory-only and resets to the top-left on restart):
 
 - **Current mode** (Normal/FullMatch) — click to toggle
 - **Rarity level** — `[-]` `[+]` buttons for quick adjustment
 - **FullMatch extra params**: AutoReload, StrContains, Ignore (display only)
 - `Ctrl+H` to collapse/expand the panel
+- Drag the empty area of the panel to move it
 
 ## 3. Tag-Based Batch Rarity Assignment
 

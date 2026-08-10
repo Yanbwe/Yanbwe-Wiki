@@ -83,6 +83,14 @@
 - `rarity=0` 表示「无稀有度」(等同于删除)
 - 快捷键: `Ctrl+1`~`Ctrl+7` 选择等级,`Ctrl+0` 清除稀有度
 
+> **TACZ 联动**: 当安装 TACZ (Timeless and Classics Zero) 模组时,Normal 模式下点击 TACZ 的枪械/配件/子弹**不会**写入 `FinalRarity.json`,而是自动生成基于子物品 ID (GunId/AttachmentId/AmmoId) 的匹配配置。
+>
+> 这是因为 TACZ 的枪械、配件、子弹共用同一个物品 ID (如 `tacz:modern_kinetic_gun`),需要通过子物品 ID 区分。
+>
+> - 生成的规则保存在 `config/raritycore/item_data_matches/editTacZ_*.json`,写入后立即生效
+> - 重复编辑同一子物品会**覆盖更新**对应规则,不累积文件
+> - TACZ 子物品不支持 `rarity=0` 删除
+
 ### FullMatch 模式
 
 创建 **NBT 匹配配置文件**,将物品当前的所有 NBT 标签作为匹配条件生成规则文件。
@@ -107,13 +115,14 @@
 
 ### GUI 面板
 
-编辑模式开启后,所有 GUI 左上角会显示浮动面板:
+编辑模式开启后,所有 GUI 左上角会显示浮动面板(默认为左上角,可按住面板空白区域拖动调整位置,面板不会拖出屏幕;位置仅内存保存,重启后复位):
 
 - **当前模式** (Normal/FullMatch) — 点击可切换
 - **稀有度等级** — `[-]` `[+]` 按钮直接调整
 - **FullMatch 额外参数**: AutoReload、StrContains、Ignore(仅展示)
 - `Ctrl+H` 折叠/展开面板
 - 面板鼠标事件不穿透到下层 GUI
+- 按住面板空白区域拖动可移动面板位置
 
 然后 shift+右键 任意物品即可编辑
 
