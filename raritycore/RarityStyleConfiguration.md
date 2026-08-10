@@ -68,7 +68,9 @@ config/raritycore/RarityStyle.json
 | `enableTooltip` | 布尔 | `true` | 是否在工具提示中插入稀有度信息（旧 `enableTooltipInsert`） |
 | `tooltipColorEnabled` | 布尔 | `true` | 工具提示颜色总开关（旧 `enableTooltipColor`），与字段的 `colored` 取与生效 |
 
-> 其余旧 `client.json` 的开关（`itemBorderStyle`、`useTextureBorder`、`enableItemNameColor`、`skipUnconfiguredItems`、`starDisplay` 等）已移入 `defaults` 下，启动时 `client.json` 仅保留 `enableCacheSystem`。
+> 其余旧 `client.json` 的开关（`itemBorderStyle`、`useTextureBorder`、`enableItemNameColor`、`skipUnconfiguredItems`、`starDisplay` 等）已移入 `defaults` 下，启动时 `client.json` 仅保留 `enableCacheSystem` 与 `enableIronSpellsAdapter`（1.21.1 另保留 `enableSophisticatedCoreAdapter`）。
+>
+> `enableIronSpellsAdapter`（布尔，默认 `true`）：铁魔法（Iron's Spells 'n Spellbooks）稀有度联动开关。开启时，法术卷轴/法书会按 `irons_spellbooks:spell_container` 中的法术等级动态映射稀有度；关闭后该适配器整体停用，法术卷轴不再按法术等级映射稀有度，但铁魔法物品的静态映射（数据包中的固定配置）不受影响，仍正常生效。此开关仅 1.20.1 / 1.21.1 提供。
 
 ## defaults：默认值与继承根
 
