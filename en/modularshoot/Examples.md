@@ -105,7 +105,8 @@ ModularShootAPI.registerGun(
 ### Register a Plugin Validator
 
 ```java
-ModularShootAPI.registerPluginValidator((gun, pluginId) -> {
+// Functional interface: validate(Player player, ItemStack gun, ResourceLocation pluginId, RegistryAccess registryAccess)
+ModularShootAPI.registerPluginValidator((player, gun, pluginId, registryAccess) -> {
     if (pluginId.getPath().contains("rocket")
             && ModularShootAPI.getGunId(gun).getPath().contains("pistol")) {
         return ValidationResult.error("Pistols cannot equip rocket ammo");

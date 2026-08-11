@@ -105,7 +105,8 @@ ModularShootAPI.registerGun(
 ### 注册插件验证器
 
 ```java
-ModularShootAPI.registerPluginValidator((gun, pluginId) -> {
+// 函数式接口：validate(Player player, ItemStack gun, ResourceLocation pluginId, RegistryAccess registryAccess)
+ModularShootAPI.registerPluginValidator((player, gun, pluginId, registryAccess) -> {
     if (pluginId.getPath().contains("rocket")
             && ModularShootAPI.getGunId(gun).getPath().contains("pistol")) {
         return ValidationResult.error("手枪不能安装火箭弹");

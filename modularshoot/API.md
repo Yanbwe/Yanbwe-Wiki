@@ -69,6 +69,7 @@ ModularShootAPI 所有公开静态方法速查。方法按功能分组。
 | 方法签名 | 参数说明 | 返回值 | 说明 |
 |---------|---------|--------|------|
 | `registerGun(ResourceLocation gunId, GunDefinition definition)` | `gunId` — 枪械定义 ID（如 `modularshoot:sniper_rifle`）；`definition` — 枪械定义对象 | `void` | 通过 Java API 注册一把枪械。调用后自动标记该 ID 为 API 注册，后续数据包 JSON 同名注册会被拒绝 |
+| `registerGunDefinitionProvider(GunDefinitionProvider provider)` | `provider` — 动态枪械定义提供者（函数式接口：`ResourceLocation → Optional<GunDefinition>`；返回空表示不处理该 ID） | `void` | 注册动态枪械定义提供者。`getGun` 查询顺序：Java API 注册 → 提供者（按注册顺序，首个非空结果胜出）→ 数据包注册表。支持 per-player / 运行时生成的动态定义（如"玩家即枪"类玩法，ID 可编码上下文如 `player:<uuid>`），框架内所有定义查询点零改动受益；未注册提供者时行为不变 |
 | `registerShooter(ResourceLocation shooterId, ShooterDefinition definition)` | `shooterId` — 发射者定义 ID（如 `modularshoot:bone_shooter`）；`definition` — 发射者定义对象 | `void` | 通过 Java API 注册一个发射者定义（独立发射配置模板，`modularshoot:shooters` 注册表）。语义与 `registerGun` 一致：自动标记 ID 为 API 注册并优先于数据包同名条目，且不受 `/reload` 影响 |
 | `registerGunItem(ItemLike item, ResourceLocation gunId)` | `item` — 要绑定的物品（如 `Items.DIAMOND_SWORD`）；`gunId` — 目标枪械定义 ID | `void` | 把指定物品绑定为枪械（等价于数据包 `gun_items` 条目，条目键 = 物品 ID）。Java API 绑定优先于数据包绑定；运行时识别需要 `RegistryAccess`（数据包注册表未加载时仅 Java API 绑定可见） |
 | `registerPluginItem(ItemLike item, ResourceLocation pluginId)` | `item` — 要绑定的物品；`pluginId` — 目标插件定义 ID | `void` | 把指定物品绑定为插件（等价于数据包 `plugin_items` 条目） |

@@ -23,21 +23,22 @@ ModularShoot is an attribute-driven, modular assembly gun system **framework mod
 | Doc | For | Content |
 |-----|-----|---------|
 | [API Reference](./API.md) | Devs calling framework functions in code | Quick-reference tables for all ModularShootAPI public methods |
-| [Registry Reference](./Registry.md) | Devs understanding definition fields | All 9 dynamic registries and field details for each definition type |
+| [Registry Reference](./Registry.md) | Devs understanding definition fields | All 10 dynamic registries and field details for each definition type |
 | [Datapack Registration](./DataPack.md) | Devs using JSON to register content | Datapack JSON file paths, fields, and format reference |
 | [Command Reference](./CommandReference.md) | Devs using debug commands | `/modularshoot` subcommand quick reference |
 | [Examples](./Examples.md) | Devs wanting to see code directly | All Java API and JSON examples in one place |
 
-## 9 Framework Registries
+## 10 Framework Registries
 
 | Registry ID | Purpose | Registration Method |
 |-------------|---------|-------------------|
 | `modularshoot:guns` | Gun definitions | Java API / Datapack JSON |
-| `modularshoot:plugins` | Plugin definitions | Java API / Datapack JSON |
-| `modularshoot:plugin_types` | Plugin type (category) definitions | Java API / Datapack JSON |
-| `modularshoot:traits` | Boolean trait definitions | Java API / Datapack JSON |
-| `modularshoot:states` | Persistent state definitions | Java API / Datapack JSON |
+| `modularshoot:plugins` | Plugin definitions | Datapack JSON |
+| `modularshoot:plugin_types` | Plugin type (category) definitions | Datapack JSON |
+| `modularshoot:traits` | Boolean trait definitions | Datapack JSON |
+| `modularshoot:states` | Persistent state definitions | Datapack JSON |
 | `modularshoot:variants` | Random variant definitions | Datapack JSON |
+| `modularshoot:shooters` | Shooter definitions (independent-firing config templates) | Java API / Datapack JSON |
 | `modularshoot:attribute_meta` | Attribute metadata (defaults, display info, bindings) | Datapack JSON |
 | `modularshoot:gun_items` | Item → gun bindings (bind other mods' items as guns) | Java API / Datapack JSON |
 | `modularshoot:plugin_items` | Item → plugin bindings (bind other mods' items as plugins) | Java API / Datapack JSON |

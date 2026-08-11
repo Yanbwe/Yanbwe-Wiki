@@ -86,6 +86,7 @@ ModularShoot 通过 10 张动态注册表（DataPackRegistry）存储所有定�
 | `modifiers` | 修饰符列表 | 否 | 空列表 | 属性修饰符数组，安装后叠加到枪械属性 |
 | `traits` | 特性ID→布尔值映射 | 否 | 空映射 | 安装后提供的特性覆盖 |
 | `addsVariants` | 变体ID→浮点数映射 | 否 | 空映射 | 追加进枪械变体池的基础权重。安装后与枪械声明的同变体权重求和（详见「变体定义（VariantDefinition）」） |
+| `addsSlots` | 种类ID→整数映射 | 否 | 空映射 | 槽位扩展（JSON 键 `adds_slots`）：安装后增加指定槽位数量，或**创造**枪械原本没有的槽位类型。有效键集 = 枪械 `slots` ∪ 已装插件 `adds_slots` 键；有效容量 = 枪械值 + Σ 已装插件贡献。值为任意整数（负数表示占用槽位，容量 ≤ 已装数量时该槽位不可再装）。键须引用 `plugin_types` 注册表；裸键自动补 `modularshoot` 命名空间（与枪械 `slots` 规则一致）。安装匹配与 tooltip 插件栏均按有效槽位计算；卸载超编预检见 API 文档「卸载超编预检」 |
 | `exclusiveGroup` | 可选字符串 | 否 | 无 | 互斥组 ID。同一枪上不能安装两个互斥组 ID 相同的插件 |
 | `bulletStyle` | 可选子弹样式 | 否 | 无 | 子弹样式叠加。安装后与枪械的样式**叠加组合**：base 按 visual_priority 选举（缺省回退 priority；同值后装赢，无候选回退框架默认外观），modifiers 全部叠加（scale 连乘、tint 逐通道连乘、attach_layer 全部保留） |
 | `textureOverlay` | 可选纹理叠加 | 否 | 无 | 纹理叠加信息。安装后在枪械纹理上叠加图层 |

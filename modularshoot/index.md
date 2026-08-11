@@ -25,21 +25,22 @@ ModularShoot 是一个基于属性驱动、模块化组装的枪械系统**框�
 | 文档 | 适合人群 | 内容 |
 |------|---------|------|
 | [API 参考](./API.md) | 想用代码调用框架功能的开发者 | ModularShootAPI 所有公开方法速查表 |
-| [注册表参考](./Registry.md) | 想了解定义字段含义的开发者 | 9 张动态注册表及每种定义的字段详解 |
+| [注册表参考](./Registry.md) | 想了解定义字段含义的开发者 | 10 张动态注册表及每种定义的字段详解 |
 | [数据包注册](./DataPack.md) | 想用 JSON 注册内容的开发者 | 数据包 JSON 文件路径、字段与格式说明 |
 | [命令参考](./CommandReference.md) | 想用调试命令的开发者 | `/modularshoot` 子命令速查 |
 | [示例集](./Examples.md) | 想直接看代码的开发者 | Java API 和 JSON 的所有集中示例 |
 
-## 9 张框架注册表
+## 10 张框架注册表
 
 | 注册表 ID | 用途 | 注册方式 |
 |-----------|------|---------|
 | `modularshoot:guns` | 枪械定义 | Java API / 数据包 JSON |
-| `modularshoot:plugins` | 插件定义 | Java API / 数据包 JSON |
-| `modularshoot:plugin_types` | 插件种类定义 | Java API / 数据包 JSON |
-| `modularshoot:traits` | 布尔特性定义 | Java API / 数据包 JSON |
-| `modularshoot:states` | 持久状态定义 | Java API / 数据包 JSON |
+| `modularshoot:plugins` | 插件定义 | 数据包 JSON |
+| `modularshoot:plugin_types` | 插件种类定义 | 数据包 JSON |
+| `modularshoot:traits` | 布尔特性定义 | 数据包 JSON |
+| `modularshoot:states` | 持久状态定义 | 数据包 JSON |
 | `modularshoot:variants` | 随机变体定义 | 数据包 JSON |
+| `modularshoot:shooters` | 发射者定义（独立发射配置模板） | Java API / 数据包 JSON |
 | `modularshoot:attribute_meta` | 属性元数据（默认值、显示信息、绑定） | 数据包 JSON |
 | `modularshoot:gun_items` | 物品→枪械绑定（把其他模组物品绑定为枪械） | Java API / 数据包 JSON |
 | `modularshoot:plugin_items` | 物品→插件绑定（把其他模组物品绑定为插件） | Java API / 数据包 JSON |
