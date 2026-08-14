@@ -27,6 +27,14 @@ ModularShootAPI 所有公开静态方法速查。方法按功能分组。
 | `getInstalledPlugins(ItemStack gun)` | `gun` — 枪械物品堆叠 | `List<PluginInstance>`（不可变） | 查询枪械已安装的插件列表。非枪械或无已安装插件时返回空列表 |
 | `getExtraValueSums(ItemStack gun, RegistryAccess registryAccess)` | `gun` — 枪械物品堆叠；`registryAccess` — 运行时注册表视图（需已加载世界） | `Map<ResourceLocation, Double>`（不可变） | 汇总枪械的 `extra_values` 总额：枪械定义**基础值** + 枪械上所有**有效**插件（定义仍存在者）的 `extra_values`，按命名空间键求和。失效插件与失效枪械定义均被过滤（与属性管线同一降级口径），未声明过的键不出现在结果中 |
 | `getExtraValue(ItemStack gun, ResourceLocation key, RegistryAccess registryAccess)` | `gun` — 枪械物品堆叠；`key` — 要查询的扩展字段键；`registryAccess` — 运行时注册表视图 | `double` | 便捷单键查询：`key` 在枪械上的总额（枪械定义基础值 + 插件累加值），未声明时返回 `0.0` |
+| `getEffectiveSlots(ItemStack gun, RegistryAccess access)` | `gun` — 枪械物品堆叠；`access` — 运行时注册表视图 | `Map<ResourceLocation, Integer>`（不可变） | 查询枪械当前**有效插槽**（种类 → 容量）：键集 = 枪械基础 slots ∪ 已装插件 adds_slots 键，容量 = 基础值 + Σ 已装插件贡献（负数保留原语义）。非枪械或定义缺失时返回空映射。与安装匹配 / 卸载预检共用同一聚合实现，UI 渲染安装区时无需自行拼装 |
+
+## 安装 API
+
+| 方法签名 | 参数说明 | 返回值 | 说明 |
+|---------|---------|--------|------|
+| `installPlugin(ItemStack gun, ItemStack pluginStack, Player player)` | `gun` — 目标枪械（不会被修改）；`pluginStack` — 插件物品堆叠（不会被修改）；`player` — 执行安装的玩家（不可为 null） | `PluginInstallService.InstallResult` | 程序化安装插件（自动化、管理工具、任务奖励等）。校验 tag 匹配、空槽、互斥组、自定义校验器与安装前事件，通过后在**副本**上写入并消耗 1 个插件，返回安装后的枪械副本与消耗后的插件副本，由调用方写回容器/背包 |
+| `installPlugin(ItemStack gun, ItemStack pluginStack, Player player, @Nullable ResourceLocation preferredTypeId)` | 同上，另加 `preferredTypeId` — 优先种类提示（可空） | `PluginInstallService.InstallResult` | 带**优先种类提示**的安装（如 UI 把插件拖到某个种类安装区）。提示命中（该种类 tag 匹配且有空闲插槽）时直接装入该种类；未命中或传 `null` 时行为与三参版本完全一致。提示只是偏好、不能绕过任何校验；三参版本内部委托本版本 |
 
 ## 拆卸 API
 
