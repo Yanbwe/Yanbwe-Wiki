@@ -2,8 +2,6 @@
 
 Quick reference for all public static methods in ModularShootAPI. Methods grouped by function.
 
-> **0.2.0 breaking changes**: the deprecated explicit-`RegistryAccess` uninstall overloads and the 3-parameter `setPluginLocked` have been removed; `BulletManager#fireBullet` has been removed — use `ModularShootAPI.fireBullet` for independent firing. See the relevant sections below.
-
 
 ## Item Checks
 
@@ -49,7 +47,7 @@ All uninstall methods automatically refresh the `ATTRIBUTE_MODIFIERS` component 
 | `uninstallPluginsByType(ItemStack gun, Player player, ResourceLocation pluginTypeId, boolean force, boolean returnItems)` | `gun` — target gun; `player` — player context; `pluginTypeId` — plugin type ID to match; `force` — ignore lock; `returnItems` — return items | `List<UninstallResult>` | Uninstalls all plugins of the specified type. Returns empty list when no match |
 | `uninstallAllPlugins(ItemStack gun, Player player, boolean force, boolean returnItems)` | `gun` — target gun; `player` — player context; `force` — ignore lock; `returnItems` — return items | `List<UninstallResult>` | Uninstalls all installed plugins. Returns empty list when none installed |
 
-> **0.2.0 change**: the old overloads with an explicit `RegistryAccess` parameter have been removed. When you need an explicit `RegistryAccess` or a `null` player context, call the corresponding `PluginUninstallService` methods directly.
+> When you need an explicit `RegistryAccess` or a `null` player context, call the corresponding `PluginUninstallService` methods directly.
 
 Parameter details:
 - **`player`**: Player context for the operation. When `returnItems` is `true`, uninstalled plugins are returned to the player's inventory (dropped if full; degraded plugins excepted); otherwise deleted
@@ -71,7 +69,7 @@ A gun with `adds_slots` plugins has an effective slot capacity of gun base + all
 | `setPluginLocked(ItemStack gun, UUID instanceUuid, boolean locked, RegistryAccess registryAccess)` | `gun` — gun item; `instanceUuid` — plugin instance UUID; `locked` — `true` to lock / `false` to unlock; `registryAccess` — runtime registry view | `void` | Locks or unlocks a specific installed plugin and refreshes the `ATTRIBUTE_MODIFIERS` component. Locked plugins are skipped by normal uninstall (`force=false`) |
 | `isPluginLocked(ItemStack gun, UUID instanceUuid)` | `gun` — gun item; `instanceUuid` — plugin instance UUID | `boolean` | Queries whether the specified plugin is locked. Returns `false` when plugin doesn't exist or is unlocked |
 
-> **0.2.0 change**: the old 3-parameter `setPluginLocked(ItemStack, UUID, boolean)` overload has been removed. Always use the 4-parameter overload above.
+> The old 3-parameter `setPluginLocked` overload has been removed; always use the 4-parameter overload above.
 
 ## Registration API
 

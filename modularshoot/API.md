@@ -2,8 +2,6 @@
 
 ModularShootAPI 所有公开静态方法速查。方法按功能分组。
 
-> **0.2.0 破坏性变更**：显式 `RegistryAccess` 的卸载旧重载与 3 参 `setPluginLocked` 已移除；`BulletManager#fireBullet` 已移除，独立发弹请使用 `ModularShootAPI.fireBullet`。详见本文对应小节。
-
 
 ## 物品判断
 
@@ -49,7 +47,7 @@ ModularShootAPI 所有公开静态方法速查。方法按功能分组。
 | `uninstallPluginsByType(ItemStack gun, Player player, ResourceLocation pluginTypeId, boolean force, boolean returnItems)` | `gun` — 目标枪械；`player` — 玩家上下文；`pluginTypeId` — 要拆卸的插件种类 ID；`force` — 是否忽略锁定；`returnItems` — 是否返还物品 | `List<UninstallResult>` | 拆卸所有属于指定种类的插件。无匹配时返回空列表 |
 | `uninstallAllPlugins(ItemStack gun, Player player, boolean force, boolean returnItems)` | `gun` — 目标枪械；`player` — 玩家上下文；`force` — 是否忽略锁定；`returnItems` — 是否返还物品 | `List<UninstallResult>` | 拆卸所有已安装插件。无插件时返回空列表 |
 
-> **0.2.0 变更**：含显式 `RegistryAccess` 的旧重载已移除，不再可用。需要显式 `RegistryAccess` 或 `player` 为 `null` 时，请直接调用 `PluginUninstallService` 中对应方法。
+> 需要显式 `RegistryAccess` 或 `player` 为 `null` 时，请直接调用 `PluginUninstallService` 中对应方法。
 
 参数说明：
 - **`player`**：拆卸操作的玩家上下文。`returnItems` 为 `true` 时，返还到玩家物品栏（满则掉落；降级插件除外）；否则直接删除
@@ -71,7 +69,7 @@ ModularShootAPI 所有公开静态方法速查。方法按功能分组。
 | `setPluginLocked(ItemStack gun, UUID instanceUuid, boolean locked, RegistryAccess registryAccess)` | `gun` — 枪械物品；`instanceUuid` — 插件实例 UUID；`locked` — `true` 锁定 / `false` 解锁；`registryAccess` — 运行时注册表视图 | `void` | 锁定或解锁指定已安装插件，成功后自动刷新 `ATTRIBUTE_MODIFIERS` 组件。锁定后普通拆卸（`force=false`）跳过该插件 |
 | `isPluginLocked(ItemStack gun, UUID instanceUuid)` | `gun` — 枪械物品；`instanceUuid` — 插件实例 UUID | `boolean` | 查询指定插件是否已锁定。插件不存在或未锁定时返回 `false` |
 
-> **0.2.0 变更**：旧 3 参 `setPluginLocked(ItemStack, UUID, boolean)` 已移除。请始终使用上面的 4 参版本。
+> 旧三参 `setPluginLocked` 已移除，请使用上面的 4 参版本。
 
 ## 注册 API
 

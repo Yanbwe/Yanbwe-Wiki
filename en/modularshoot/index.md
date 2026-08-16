@@ -1,7 +1,5 @@
 # ModularShoot
 
-> **Current version: 0.2.0**. This version contains breaking API changes and a network protocol upgrade (see [API Reference](./API.md) and the changelog).
-
 ModularShoot is an attribute-driven, modular assembly gun system **framework mod** for NeoForge 1.21.1.
 
 > **Framework positioning**: This mod is a **pure framework and API** — it provides registration APIs, an attribute calculation pipeline, and a shooting engine, with no production content. The bundled datapack ships framework metadata (attribute metadata table) plus example content (example guns, plugins, variants, etc., for reference and testing); production content is added by other mods via the API or datapacks.
