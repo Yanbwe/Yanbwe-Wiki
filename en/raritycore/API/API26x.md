@@ -1,0 +1,506 @@
+# RarityCore API Documentation (26.X)
+
+**For versions 26.1 / 26.2 (V14)**
+
+> The 26.X API surface is aligned with 1.21.1. Due to Minecraft version differences, the resource location type is `Identifier` instead of 1.21.1's `ResourceLocation`.
+> 26.X has no KubeJS binding; the KubeJS documentation applies to 1.21.1 only.
+
+**Maven Dependency**
+
+**Recommended: Modrinth Maven (no authentication required)**
+
+```gradle
+repositories {
+    mavenCentral()
+    maven {
+        name = "Modrinth"
+        url = "https://api.modrinth.com/maven"
+        content {
+            includeGroup "maven.modrinth"
+        }
+    }
+}
+
+dependencies {
+    // 26.1 version
+    implementation "maven.modrinth:raritycore:2601.<version>"
+    // 26.2 version
+    // implementation "maven.modrinth:raritycore:2602.<version>"
+}
+```
+
+<details>
+<summary>Alternative: GitHub Packages (requires token)</summary>
+
+```gradle
+repositories {
+    mavenCentral()
+    maven {
+        url = "https://maven.pkg.github.com/Yanbwe/RarityCore"
+        credentials {
+            username = "your-github-username"
+            password = "your-github-personal-access-token"
+        }
+    }
+}
+
+dependencies {
+    implementation "org.yanbwe:raritycore:2601.<version>"
+    // 26.2 version
+    // implementation "org.yanbwe:raritycore:2602.<version>"
+}
+```
+
+Token requires `read:packages` scope. Store credentials in `~/.gradle/gradle.properties`:
+
+```properties
+gpr.user=your-github-username
+gpr.key=your-personal-access-token
+```
+
+</details>
+
+RarityCore provides a unified formal API entry `RarityCoreAPI` for direct use by other mods. Visual rendering configuration is managed by `RarityStyle.json`.[Details →](/en/raritycore/RarityStyleConfiguration)
+
+## Formal API: RarityCoreAPI
+
+**Package path**: `org.yanbwe.raritycore.api.RarityCoreAPI`
+
+### Core API
+
+The following interfaces cover rarity registration, queries, validation and color/texture retrieval, covering most daily calls.
+
+#### Rarity Registration & Queries
+
+```java
+// Register item rarity (1+, sync to clients)
+RarityCoreAPI.registerRarity(item, 5);
+
+// Register item rarity (optional sync)
+RarityCoreAPI.registerRarity(item, 5, true);
+
+// Unregister item rarity
+RarityCoreAPI.unregisterRarity(item);
+
+// Get ItemStack rarity (full priority chain)
+int rarity = RarityCoreAPI.getRarity(itemStack);
+
+// Get Item rarity
+int rarity = RarityCoreAPI.getRarity(item);
+
+// Get normalized rarity (only clamps <1)
+int r = RarityCoreAPI.getNormalizedRarity(itemStack);
+int r2 = RarityCoreAPI.getNormalizedRarity(item);
+
+// Get localized tooltip
+String tip = RarityCoreAPI.getLocalizedTooltip(itemStack);
+String tip2 = RarityCoreAPI.getLocalizedTooltip(item);
+
+// Get read-only registry map
+Map<Identifier, Integer> map = RarityCoreAPI.getRegistryMap();
+
+// Check if item has a configured rarity
+boolean has1 = RarityCoreAPI.hasConfiguredRarity(item);
+boolean has2 = RarityCoreAPI.hasConfiguredRarity(item, itemStack);  // includes component check
+
+// Prune invalid entries
+int removed = RarityCoreAPI.pruneInvalidEntries();
+```
+
+#### Batch Registration
+
+```java
+// Batch registration (no per-entry sync; syncs once at the end and fires RarityRegistryChangedEvent)
+Map<Item, Integer> entries = new HashMap<>();
+entries.put(Items.DIAMOND_SWORD, 5);
+entries.put(Items.NETHERITE_INGOT, 5);
+RarityCoreAPI.registerRarities(entries);
+```
+
+#### Validation
+
+```java
+RarityCoreAPI.isValidRarity(5);   // true (only checks ≥1)
+RarityCoreAPI.isValidRarity(9);   // true (no upper limit)
+RarityCoreAPI.normalizeRarity(10); // 10 (not clamped)
+RarityCoreAPI.normalizeRarity(0);  // 1
+RarityCoreAPI.validateRarity(5);   // validate & normalize rarity (same as normalizeRarity)
+```
+
+#### Colors & Textures
+
+```java
+// Get per-rarity RGB color from RarityStyle.json (with inheritance resolution)
+int rgb = RarityCoreAPI.getRarityColor(5);
+
+// Get per-rarity texture path
+String tex = RarityCoreAPI.getRarityTexture(5);
+
+// Get built-in color table RGB (without RarityStyle inheritance resolution)
+int builtin = RarityCoreAPI.getRarityRgbColor(5);
+
+// Parse "#RRGGBB" string to RGB int
+int rgb = RarityCoreAPI.parseColor("#FFAA00");
+
+// Format RGB int to "#RRGGBB"
+String hex = RarityCoreAPI.formatColor(0xFFAA00);
+```
+
+### Advanced API
+
+The following interfaces target specific scenarios: Tag rules, traversal queries, switches, DataComponent control, style reads/writes and network sync.
+
+#### Tag Rarity
+
+```java
+// Get highest Tag rule rarity for item (0=no match)
+int r = RarityCoreAPI.getTagRarity(item);
+
+// Number of loaded Tag rules
+int count = RarityCoreAPI.getTagRuleCount();
+```
+
+#### Traversal Queries
+
+```java
+// All items / item IDs resolved to the given rarity level
+List<Item> items = RarityCoreAPI.getItemsByRarity(5);
+List<Identifier> ids = RarityCoreAPI.getItemIdsByRarity(5);
+
+// Set of rarity levels that ever appeared (manual ∪ auto ∪ no-rarity fallback)
+Set<Integer> rarities = RarityCoreAPI.getConfiguredRarities();
+
+// Items / item IDs matching any of the given levels
+List<Item> items2 = RarityCoreAPI.getItemsByRarities(Set.of(5, 6));
+List<Identifier> ids2 = RarityCoreAPI.getItemIdsByRarities(Set.of(5, 6));
+
+// Item count for the given level
+int count = RarityCoreAPI.getRarityCount(5);
+
+// Snapshot of all resolved rarities (auto ∪ manual, manual overrides auto)
+Map<Identifier, Integer> all = RarityCoreAPI.getAllRarityEntries();
+```
+
+#### Global Switches
+
+```java
+// Global border rendering master switch
+RarityCoreAPI.isBorderEnabled();
+
+// Global tooltip master switch
+RarityCoreAPI.isTooltipEnabled();
+
+// Global tooltip coloring switch
+RarityCoreAPI.isTooltipColorEnabled();
+```
+
+#### Per-level Switches
+
+```java
+// Per-level border switch
+RarityCoreAPI.isLevelRendererEnabled(5);
+
+// Per-level tooltip switch
+RarityCoreAPI.isLevelTooltipEnabled(5);
+
+// Per-level name color switch
+RarityCoreAPI.isLevelNameColorEnabled(5);
+
+// Name color master switch (checks level 1)
+RarityCoreAPI.isNameColorEnabled();
+```
+
+#### No-rarity Fallback
+
+```java
+// Whether to skip rendering for items without rarity
+RarityCoreAPI.isNoRaritySkip();
+
+// Default rarity for items without rarity (default: 1)
+RarityCoreAPI.getNoRarityDefaultRarity();
+```
+
+#### Component Rarity Control (DataComponent)
+
+```java
+// Whether DataComponent (CUSTOM_DATA) rarity control is enabled
+RarityCoreAPI.isNbtRarityControlEnabled();
+
+// Read raritycore rarity from item's CUSTOM_DATA (returns 0 if Level=0)
+int level = RarityCoreAPI.getComponentRarity(itemStack);
+
+// Call after writing/removing component rarity to immediately invalidate
+// the item's cache (ID cache + component cache), avoiding stale visuals from
+// the type-level ID cache fast path (up to ~30-60 minutes)
+RarityCoreAPI.invalidateItem(itemStack);
+```
+
+#### Style Queries
+
+```java
+RarityCoreAPI.getTooltipContent(5);        // tooltip content for the level
+RarityCoreAPI.getLevelTranslationKey(5);   // translation key of the level segment
+RarityCoreAPI.getLevelFallbackKey(5);      // fallback key of the level segment
+RarityCoreAPI.getStarConfig(5);            // star config for the level (StarSegmentConfig)
+RarityCoreAPI.isBorderUseTexture(5);       // whether the level border uses a texture
+RarityCoreAPI.getBorderStyle(5);           // border style for the level (1=solid, 0=hollow)
+RarityCoreAPI.getBorderFallback();         // border fallback texture
+```
+
+#### Style Writes
+
+All write methods save to `RarityStyle.json` immediately.
+
+```java
+// Master switches
+RarityCoreAPI.setBorderEnabled(true);
+RarityCoreAPI.setTooltipEnabled(true);
+RarityCoreAPI.setTooltipColorEnabled(true);
+
+// No-rarity fallback
+RarityCoreAPI.setNoRaritySkip(false);
+RarityCoreAPI.setNoRarityDefaultRarity(1);
+
+// Per-level border / tooltip / star
+RarityCoreAPI.setBorderUseTexture(5, true);
+RarityCoreAPI.setBorderStyle(5, 1);
+RarityCoreAPI.setTooltipContent(5, "[@{level}] @{star}");
+RarityCoreAPI.setStarMode(5, "repeat");
+RarityCoreAPI.setStarRepeatChar(5, "★");
+```
+
+#### Batch Style Writes
+
+```java
+// Setters do not save per-call while batching; endStyleBatch saves once when depth reaches 0
+RarityCoreAPI.beginStyleBatch();
+RarityCoreAPI.setStarMode(5, "custom");
+RarityCoreAPI.setStarRepeatChar(5, "♥");
+RarityCoreAPI.endStyleBatch();
+
+// Apply a patch (null fields keep existing values)
+RarityStyleConfigManager.StylePatch patch = new RarityStyleConfigManager.StylePatch(5);
+patch.starMode = "custom";
+RarityCoreAPI.setStyle(patch);
+
+// Immutable snapshot of the effective style for a level (border/tooltip/star merged)
+RarityStyleConfigManager.StyleSnapshot snap = RarityCoreAPI.getStyleSnapshot(5);
+```
+
+#### Network Sync
+
+```java
+// Full sync
+RarityCoreAPI.syncToClients();
+
+// Full sync with retry
+RarityCoreAPI.syncToClientsWithRetry();
+
+// Incremental sync
+RarityCoreAPI.syncIncrementalChangesToClients();
+
+// Pending change count
+int pending = RarityCoreAPI.getPendingChangeCount();
+```
+
+#### Constants & Version Detection
+
+```java
+RarityCoreAPI.MIN_RARITY;          // 1
+RarityCoreAPI.MAX_RARITY;          // 7 (built-in preset tier count, not a rarity cap)
+RarityCoreAPI.DEFAULT_RGB_COLOR;   // default RGB color
+RarityCoreAPI.API_VERSION;         // 1400 (feature detection, decoupled from mod version)
+
+RarityCoreAPI.isAvailable();       // whether the mod is available
+String ver = RarityCoreAPI.getModVersion();     // mod version string
+int cfgVer = RarityCoreAPI.getConfigVersion();  // config version (increments on every reload)
+```
+
+#### Config Reload
+
+```java
+// Trigger a full config reload (programmatic)
+RarityCoreAPI.reloadConfigs();
+```
+
+### Deprecated Aliases
+
+The following old names are marked `@Deprecated` but still callable (they forward to the canonical methods):
+
+| Old name | Canonical name |
+|----------|----------------|
+| `getColor(int)` | `getRarityColor(int)` |
+| `getTexture(int)` | `getRarityTexture(int)` |
+| `isBorderEnabled(int)` | `isLevelRendererEnabled(int)` |
+| `isTooltipEnabled(int)` | `isLevelTooltipEnabled(int)` |
+| `isNameColorEnabled(int)` | `isLevelNameColorEnabled(int)` |
+| `isComponentRarityControlEnabled()` | `isNbtRarityControlEnabled()` |
+| `isBorderRenderingEnabled()` | `isBorderEnabled()` |
+| `isTooltipInsertEnabled()` | `isTooltipEnabled()` |
+
+### 26.X Legacy Compatibility Aliases
+
+The following methods do not exist in 1.21.1. They are 26.X early API and are marked `@Deprecated` for compatibility only:
+
+| Old method | Suggested replacement |
+|------------|------------------------|
+| `getItemRarityMap()` | `getRegistryMap()` |
+| `getAutoRarityMap()` | `getAllRarityEntries()` |
+| `register(item, rarity)` | `registerRarity(item, rarity)` |
+| `unregister(item)` | `unregisterRarity(item)` |
+| `setAllBorderUseTexture(boolean)` | `setBorderUseTexture(level, boolean)` |
+
+### Rarity Priority Chain (26.X)
+
+```
+Component Control (CUSTOM_DATA.raritycore.Level>0)  ← Highest
+  ↓
+RarityQueryEvent Override
+  ↓
+Item Data Matching
+  ↓
+ITEM_RARITY_MAP (FinalRarity.json + datapacks)
+  ↓
+TagRarity (TagRarity.json)
+  ↓
+AUTO_RARITY_MAP (auto-calculated)
+  ↓
+Vanilla getRarity()
+  ↓
+No-rarity fallback (default: 1)
+```
+
+> 26.X does not have the Apotheosis / Iron's Spells adapters found in 1.21.1, so they are not part of the priority chain.
+
+## Legacy API Classes (Still Available)
+
+The following classes are still available, but migration to `RarityCoreAPI` is recommended:
+
+| Old Class | New Replacement |
+|-----------|----------------|
+| `RarityRegistry.register()` | `RarityCoreAPI.registerRarity()` |
+| `RarityRegistry.getRarity()` | `RarityCoreAPI.getRarity()` |
+| `RarityColorUtil.getRarityChatColor()` | `RarityCoreAPI.getRarityColor()` |
+| `RarityValidator.normalizeRarity()` | `RarityCoreAPI.normalizeRarity()` |
+| `ClientConfigManager.isEnable*()` | `RarityCoreAPI.is*()` |
+
+`ClientConfigManager` deprecated delegation methods are retained as internal bridges. Use `RarityCoreAPI` for public calls.
+
+## Events
+
+RarityCore provides the following NeoForge events, listenable via `NeoForge.EVENT_BUS`:
+
+### RarityChangeEvent
+
+Fired when item rarity is registered/updated/removed.
+
+```java
+@SubscribeEvent
+public void onRarityChange(RarityChangeEvent event) {
+    Item item = event.getItem();
+    Integer oldRarity = event.getOldRarity();
+    Integer newRarity = event.getNewRarity();
+    RarityChangeEvent.ChangeType type = event.getChangeType(); // REGISTER / UPDATE / REMOVE
+}
+```
+
+### RarityQueryEvent
+
+Fired during rarity lookup, allows overriding the result. Implements `ICancellableEvent`.
+
+```java
+@SubscribeEvent
+public void onRarityQuery(RarityQueryEvent event) {
+    ItemStack stack = event.getItemStack();
+    int rarity = event.getOriginalRarity(); // current result
+    event.setOverriddenRarity(5);            // override
+    event.setCanceled(true);                 // must cancel for override to take effect
+    String source = event.getSource();        // component/itemdata/itemmap/tag/autorarity/vanilla/default
+}
+```
+
+### RarityTooltipEvent
+
+Fired during tooltip construction, allows appending custom text.
+
+```java
+@SubscribeEvent
+public void onRarityTooltip(RarityTooltipEvent event) {
+    event.getTooltipComponents().add(Component.literal("Custom info"));
+    int rarity = event.getRarity();
+}
+```
+
+### RarityConfigReloadEvent
+
+Fired after a full config reload completes, split into client-side and server-side reloads.
+
+```java
+@SubscribeEvent
+public void onClientReload(RarityConfigReloadEvent.Client event) {
+    // Client-side config reload completed
+}
+
+@SubscribeEvent
+public void onServerReload(RarityConfigReloadEvent.Server event) {
+    // Full config reload completed
+}
+```
+
+### RarityStyleChangedEvent
+
+Fired after a visual style setting is written and persisted via the API, letting listeners refresh caches and rendering.
+
+```java
+@SubscribeEvent
+public void onStyleChanged(RarityStyleChangedEvent event) {
+    int rarity = event.getRarity();                              // affected level (0 = global/no-rarity fallback)
+    RarityStyleChangedEvent.ChangeTarget t = event.getTarget();  // BORDER_ENABLED / BORDER_STYLE, etc.
+}
+```
+
+### RarityStyleReloadEvent
+
+Fired after RarityStyle config is reloaded due to file changes (distinct from RarityStyleChangedEvent, which is fired by API writes).
+
+```java
+@SubscribeEvent
+public void onStyleReload(RarityStyleReloadEvent event) {
+    int rarity = event.getRarity();   // affected level (negative = all levels)
+    boolean ext = event.isExternal(); // true if triggered by external file changes
+}
+```
+
+### RarityRegistryChangedEvent
+
+Fired once after `RarityCoreAPI.registerRarities()` batch registration, publishing all changes at once.
+
+```java
+@SubscribeEvent
+public void onRegistryChanged(RarityRegistryChangedEvent event) {
+    Map<Identifier, Integer> changed = event.getChangedEntries(); // added or modified entries
+    Set<Identifier> removed = event.getRemovedEntries();           // removed entries
+}
+```
+
+## Usage Examples
+
+```java
+import org.yanbwe.raritycore.api.RarityCoreAPI;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ItemStack;
+
+// Register
+RarityCoreAPI.registerRarity(Items.DIAMOND_SWORD, 5);
+
+// Query
+int r = RarityCoreAPI.getNormalizedRarity(new ItemStack(Items.DIAMOND_SWORD));
+// r = 5
+
+// Color
+int rgb = RarityCoreAPI.getRarityColor(5); // 0xFFCC00 (bright gold)
+
+// Register rarity level 8+
+RarityCoreAPI.registerRarity(Items.NETHER_STAR, 8);
+RarityCoreAPI.isValidRarity(8); // true
+```

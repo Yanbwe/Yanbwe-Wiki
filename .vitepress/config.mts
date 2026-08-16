@@ -56,7 +56,8 @@ export default defineConfig({
             items: [
               { text: 'API 1.20.1', link: '/raritycore/API/API1201' },
               { text: 'API 1.20.1（旧版）', link: '/raritycore/API/old/API1201' },
-              { text: 'API 1.21.1', link: '/raritycore/API/API1211' }
+              { text: 'API 1.21.1', link: '/raritycore/API/API1211' },
+              { text: 'API 26.X', link: '/raritycore/API/API26x' }
             ]
           },
           { text: '兼容性问题', link: '/raritycore/Compatibility' },
@@ -227,7 +228,8 @@ export default defineConfig({
                 items: [
                   { text: 'API 1.20.1', link: '/en/raritycore/API/API1201' },
                   { text: 'API 1.20.1 (Legacy)', link: '/en/raritycore/API/old/API1201' },
-                  { text: 'API 1.21.1', link: '/en/raritycore/API/API1211' }
+                  { text: 'API 1.21.1', link: '/en/raritycore/API/API1211' },
+                  { text: 'API 26.X', link: '/en/raritycore/API/API26x' }
                 ]
               },
               { text: 'Compatibility', link: '/en/raritycore/Compatibility' },
