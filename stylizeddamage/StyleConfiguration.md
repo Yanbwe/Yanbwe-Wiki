@@ -23,13 +23,13 @@ config/stylizeddamage/styles/<样式名>.json
 | `sound` | 字符串/null | `null` | 跳字出现音效 |
 | `prefix` | 字符串 | `""` | 文字前缀 |
 | `suffix` | 字符串 | `""` | 文字后缀 |
-| `icon` | 字符串/null | `null` | 图标纹理路径 |
-| `iconPosition` | 字符串 | `"left"` | 图标位置：`"left"` 或 `"right"` |
+| `icon` | 字符串/null | `""`（空字符串，等同无图标） | 图标纹理路径 |
+| `iconPosition` | 字符串 | `"right"` | 图标位置：`"left"` 或 `"right"` |
 | `iconOffsetX` | 浮点数 | `0` | 跳字图标水平微调像素偏移 |
-| `iconOffsetY` | 浮点数 | `0` | 跳字图标垂直微调像素偏移 |
+| `iconOffsetY` | 浮点数 | `4` | 跳字图标垂直微调像素偏移 |
 | `hudIconOffsetX` | 浮点数 | `0` | 总伤害 HUD 图标水平微调像素偏移（独立于 `iconOffsetX`） |
 | `hudIconOffsetY` | 浮点数 | `0` | 总伤害 HUD 图标垂直微调像素偏移（独立于 `iconOffsetY`） |
-| `killText` | 字符串/null | `null` | kill 型跳字显示的文本（替代伤害数字） |
+| `killText` | 字符串/null | `"kill!"`（生成默认文件值；省略时按 `null` 处理，显示伤害数字） | kill 型跳字显示的文本（替代伤害数字） |
 | `bypassDisplayOpacity` | 布尔值 | `false` | 为 `true` 时无视全局 `displayOpacity` 配置 |
 | `decimalPlaces` | 整数 | `1` | 伤害数字保留的小数位数；整型伤害（如 `12.0`）仍显示为整数，小数伤害按该位数四舍五入；小于 `0` 时回退为 `1` |
 | `animation` | 对象 | — | 动画配置（见下文） |
@@ -143,6 +143,8 @@ config/stylizeddamage/styles/<样式名>.json
 | `holdOffsetPerStep` | 浮点数 | `10` | 每步增加的停留 tick 数 |
 | `holdMax` | 浮点数 | `20` | 最大额外停留 tick 数 |
 
+> **注意**：模组生成的默认 `default.json` 中 `holdOffsetPerStep` 为 `5`；如果用户自建样式省略整个 `damageScale` 块，代码回退默认值为 `10`。为避免歧义，建议在样式文件中显式填写该字段。
+
 ### 计算公式
 
 ```
@@ -199,7 +201,7 @@ config/stylizeddamage/styles/<样式名>.json
   "iconOffsetX": 0,
   "iconOffsetY": 4,
   "hudIconOffsetX": 0,
-  "hudIconOffsetY": 4,
+  "hudIconOffsetY": 0,
   "decimalPlaces": 1,
   "damageScale": {
     "enabled": true,
@@ -208,11 +210,11 @@ config/stylizeddamage/styles/<样式名>.json
     "sizeOffsetPerStep": 1,
     "maxSize": 2.5,
     "holdBase": 0,
-    "holdOffsetPerStep": 10,
+    "holdOffsetPerStep": 5,
     "holdMax": 20
   },
   "animation": {
-    "hold": 5,
+    "hold": 0,
     "position": {
       "enter": {
         "type": "normal",

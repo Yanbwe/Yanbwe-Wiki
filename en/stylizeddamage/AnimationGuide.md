@@ -72,12 +72,12 @@ The exit phase starts after the **longest enter duration** across all modules, e
 
 ## Lifecycle Example
 
-With default style (max enter=40, hold=10):
+With the current default style (max enter=5, hold=0, longest exit=10):
 
 ```
-Tick 0-40:  Enter animations (varying durations)
-            Shorter enters hold until the longest finishes
-Tick 40-50: Hold (10 ticks)
-Tick 50-90: Exit animations play in sync
-Tick 90:    Removed
+Tick 0-5:  Enter animations (position/size/opacity)
+           Shorter enters hold until the longest finishes
+Tick 5:    Hold (0 ticks)
+Tick 5-15: Exit animations (size/opacity) play in sync
+Tick 15:   Removed
 ```

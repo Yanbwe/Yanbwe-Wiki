@@ -198,12 +198,25 @@ config/stylizeddamage/common.json
 
 ### 距离缩放
 
+当前配置使用嵌套对象：
+
+```json
+"distanceScale": {
+  "segment": 10.0,
+  "factor": 0.2,
+  "min": 0.3,
+  "maxDisplayDistance": 64.0
+}
+```
+
 | 配置项 | 类型 | 默认值 | 说明 |
 |--------|------|--------|------|
-| `distanceScaleSegment` | 浮点数 | `10.0` | 距离倍数段（格） |
-| `distanceScaleFactor` | 浮点数 | `0.2` | 每段的缩小系数 |
-| `distanceScaleMin` | 浮点数 | `0.3` | 最小缩放倍率 |
+| `segment` | 浮点数 | `10.0` | 距离倍数段（格） |
+| `factor` | 浮点数 | `0.2` | 每段的缩小系数 |
+| `min` | 浮点数 | `0.3` | 最小缩放倍率 |
 | `maxDisplayDistance` | 浮点数 | `64.0` | 最大显示距离（格） |
+
+> 旧版扁平字段 `distanceScaleSegment` / `distanceScaleFactor` / `distanceScaleMin` / `maxDisplayDistance` 仍会被兼容读取，但新生成/推荐写法为上方嵌套格式。
 
 距离缩放公式：
 

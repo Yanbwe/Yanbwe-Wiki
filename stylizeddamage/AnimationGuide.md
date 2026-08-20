@@ -199,14 +199,14 @@
 
 ## 完整生命周期示意
 
-以默认样式为例（max enter=40, hold=10）：
+以当前默认样式为例（max enter=5, hold=0, 最长 exit=10）：
 
 ```
-Tick 0-40:  位置进入(30tick) + 大小进入(40tick) + 透明度进入(10tick)
-            短 enter 的模块在最长 enter(40tick) 结束前保持停留
-Tick 40-50: 停留（hold=10 tick）
-Tick 50-90: 大小退出(40tick) + 透明度退出(40tick) 同时进行
-Tick 90:    移除
+Tick 0-5:   位置进入(5tick) + 大小进入(5tick) + 透明度进入(5tick)
+            短 enter 的模块在最长 enter(5tick) 结束前保持停留
+Tick 5:     停留（hold=0 tick）
+Tick 5-15:  大小退出(10tick) + 透明度退出(10tick) 同时进行
+Tick 15:    移除
 ```
 
 动画引擎每 tick 更新所有模块状态，`isComplete()` 为 true 时自动移除跳字。

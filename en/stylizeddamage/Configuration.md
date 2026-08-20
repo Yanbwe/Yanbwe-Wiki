@@ -120,12 +120,25 @@ Abbreviates large damage values, e.g. `1200 → 1.2k`, `1500000 → 1.5M`.
 
 ## Distance Scale
 
+The current configuration uses a nested object:
+
+```json
+"distanceScale": {
+  "segment": 10.0,
+  "factor": 0.2,
+  "min": 0.3,
+  "maxDisplayDistance": 64.0
+}
+```
+
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `distanceScaleSegment` | float | `10.0` | Distance segment (blocks) |
-| `distanceScaleFactor` | float | `0.2` | Scale factor per segment |
-| `distanceScaleMin` | float | `0.3` | Minimum scale multiplier |
+| `segment` | float | `10.0` | Distance segment (blocks) |
+| `factor` | float | `0.2` | Scale factor per segment |
+| `min` | float | `0.3` | Minimum scale multiplier |
 | `maxDisplayDistance` | float | `64.0` | Maximum display distance (blocks) |
+
+> Legacy flat fields `distanceScaleSegment` / `distanceScaleFactor` / `distanceScaleMin` / `maxDisplayDistance` are still accepted for compatibility, but the nested format above is the recommended/current generated form.
 
 ## Total Damage Panel
 

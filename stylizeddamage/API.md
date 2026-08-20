@@ -4,25 +4,26 @@ StylizedDamage 提供 Java API，其他模组可通过硬依赖或软依赖方�
 
 ## 入口点
 
-`StylizedDamageAPI` 是唯一的 API 入口，通过静态方法获取实例：
+`StylizedDamageAPI` 是唯一的 API 入口，完整类名为 `com.stylizeddamage.common.api.StylizedDamageAPI`。通过静态方法获取实例：
 
 ```java
+import com.stylizeddamage.common.api.StylizedDamageAPI;
+
 StylizedDamageAPI api = StylizedDamageAPI.getInstance();
 ```
 
+> 注意：`com.stylizeddamage.api.StylizedDamageAPI` 是早期的占位类，当前未实现，请勿使用。
+
 ## 注册时机
 
-所有 API 调用应在模组初始化阶段完成。推荐通过监听 `StylizedDamageRegisterEvent` 事件注册：
+所有 API 调用应在模组初始化阶段完成。当前版本的 Forge 1.20.1 与 NeoForge 1.21.1 均**尚未实际发布 `StylizedDamageRegisterEvent`**（代码中仅预留了该事件类，平台集成待完善）。因此现阶段第三方模组应直接通过 `StylizedDamageAPI.getInstance()` 获取实例并注册：
 
 ```java
-@SubscribeEvent
-public void onStylizedDamageRegister(StylizedDamageRegisterEvent event) {
-    StylizedDamageAPI api = event.getAPI();
-    // 在此注册样式和选择器...
-}
+StylizedDamageAPI api = StylizedDamageAPI.getInstance();
+api.createStyle("my_style").register();
 ```
 
-> **注意**：`StylizedDamageRegisterEvent` 事件总线集成功能在 26.1 版本中暂时通过直接调用方式处理，后续版本将完善事件总线支持。
+> 未来版本计划提供事件总线集成，届时可通过监听 `StylizedDamageRegisterEvent` 注册样式和选择器。
 
 ## 样式注册
 
@@ -31,7 +32,7 @@ public void onStylizedDamageRegister(StylizedDamageRegisterEvent event) {
 ```java
 api.createStyle("my_style")
     .color("#FF4444")
-    .fontSize(1.2)
+    .fontSize(1.2f)
     .fontStyle("bold")
     .shadow(true)
     .outlineColor("#000000")
@@ -48,7 +49,7 @@ api.createStyle("my_style")
 
 | 方法 | 参数 | 说明 |
 |------|------|------|
-| `.color(String)` | 颜色字符串 | 支持 `#RRGGBB`、`gradient:*`、`rainbow:*` |
+| `.color(String)` | 颜色字符串 | 支持 `#RRGGBB`、`#AARRGGBB`、`rainbow:speed:N` |
 | `.fontSize(float)` | 倍率 | 字体大小，默认 1.0 |
 | `.fontStyle(String)` | 枚举值 | `normal`/`bold`/`italic`/`bold_italic` |
 | `.shadow(boolean)` | 开关 | 文字阴影 |
@@ -75,16 +76,16 @@ api.createStyle("my_style")
 AnimationConfig anim = api.createAnimation()
     .hold(6)
     .position()
-        .enter("normal", 8, easeInOut())
-        .startOffset(direction(90, 12))
-        .targetOffset(xy(0, 0))
+        .enter("normal", 8, AnimationBuilder.easeInOut())
+        .startOffset(AnimationBuilder.direction(90, 12))
+        .targetOffset(AnimationBuilder.xy(0, 0))
         .exitNone()
     .size()
-        .enter("normal", 6, easeInOut(), 0.3, 0)
-        .exit("normal", 10, easeInOut(), -0.5)
+        .enter("normal", 6, AnimationBuilder.easeInOut(), 0.3, 0)
+        .exit("normal", 10, AnimationBuilder.easeInOut(), -0.5)
     .opacity()
-        .enter("normal", 4, easeInOut(), 0, 1)
-        .exit("normal", 12, easeInOut(), 0)
+        .enter("normal", 4, AnimationBuilder.easeInOut(), 0, 1)
+        .exit("normal", 12, AnimationBuilder.easeInOut(), 0)
     .done();
 ```
 
@@ -98,6 +99,8 @@ AnimationConfig anim = api.createAnimation()
 | `linear()` | 创建线性 easing |
 | `direction(angle, distance)` | 方向偏移 |
 | `xy(x, y)` | XY 绝对值偏移 |
+
+> 这些辅助方法都是 `AnimationBuilder` 的静态方法，调用时需写 `AnimationBuilder.xxx()`，或先 `import static com.stylizeddamage.common.api.AnimationBuilder.*;` 后才能直接使用。
 
 ## 选择器绑定
 
