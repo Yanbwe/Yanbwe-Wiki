@@ -27,11 +27,9 @@ import org.yanbwe.modularshoot.ModularShootAPI;
 import net.minecraft.resources.ResourceLocation;
 import java.util.UUID;
 
-// 获取枪械 ID
-ResourceLocation gunId = ModularShootAPI.getGunId(gunStack);
-if (gunId != null) {
-    System.out.println("枪械 ID：" + gunId);
-}
+// 获取枪械 ID（0.3.0 起返回 Optional）
+ModularShootAPI.getGunId(gunStack).ifPresent(gunId ->
+    System.out.println("枪械 ID：" + gunId));
 
 // 获取完整枪械数据
 ModularShootAPI.getGunData(gunStack).ifPresent(data -> {
@@ -102,13 +100,86 @@ ModularShootAPI.registerGun(
 );
 ```
 
+### 注册插件（Java API，0.3.0 新增）
+
+```java
+import org.yanbwe.modularshoot.ModularShootAPI;
+import org.yanbwe.modularshoot.plugin.PluginDefinition;
+import org.yanbwe.modularshoot.plugin.PluginModifier;
+import org.yanbwe.modularshoot.registry.gun.TextureScaleMode;
+
+// 程序化注册一个插件（随机战利品、动态词缀等玩法）：
+// 语义与 registerGun 一致——优先于数据包同名条目，不受 /reload 影响。
+ModularShootAPI.registerPlugin(
+    ResourceLocation.parse("examplemod:rapid_affix"),
+    new PluginDefinition(
+        List.of(ResourceLocation.parse("examplemod:barrel")),   // tags（与种类 tags 交集匹配）
+        0,                                                       // priority
+        ResourceLocation.parse("examplemod:textures/plugin/rapid.png"), // itemIcon
+        TextureScaleMode.AUTO,                                   // textureScale
+        List.of(new PluginModifier(
+            "modularshoot:fire_rate",
+            PluginModifier.Operation.ADD_VALUE, 2.0)),           // modifiers
+        Map.of(),                                                // traits
+        Optional.empty(),                                        // exclusiveGroup
+        Optional.empty(),                                        // bulletStyle
+        Optional.empty(),                                        // textureOverlay
+        Optional.empty(),                                        // gunOutline
+        Map.of(),                                                // extraValues
+        Optional.of("§e急速词缀"),                              // name
+        Optional.of("射速 +2"),                                 // brief
+        Optional.empty(),                                        // description
+        Optional.empty(),                                        // color
+        Map.of(),                                                // addsSlots
+        Map.of(),                                                // addsVariants
+        Optional.empty()                                         // visualPriority
+    )
+);
+
+// 动态定义提供者（查询时计算，适合按上下文生成的插件）：
+ModularShootAPI.registerPluginDefinitionProvider(pluginId -> {
+    if (pluginId.getNamespace().equals("examplemod")
+            && pluginId.getPath().startsWith("loot_affix_")) {
+        return Optional.of(buildLootAffix(pluginId)); // 你自己的生成逻辑（须双端确定性一致）
+    }
+    return Optional.empty(); // 不处理的 ID 回退下一来源
+});
+```
+
+### 子弹同步扩展通道（0.3.0 新增）
+
+```java
+import org.yanbwe.modularshoot.network.BulletSyncExtraRegistry;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.Map;
+
+// 双端注册（索引即线路身份，两端顺序必须一致）：
+public static final int SPIN_INDEX = BulletSyncExtraRegistry.register(bullet -> {
+    ByteBuffer buf = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN);
+    buf.putFloat(MyMod.getSpinSpeed(bullet)); // 你的服务端数据源；返回 null/空数组 = 该子弹无数据
+    return buf.array();
+});
+
+// 客户端消费（如 ON_VISUAL_TICK 钩子内，或经 BulletRenderManager.getRenderObject(id).getExtra()）：
+Map<Integer, byte[]> parts = BulletSyncExtraRegistry.split(renderObject.getExtra());
+byte[] spin = parts.get(MyMod.SPIN_INDEX);
+if (spin != null) {
+    float speed = ByteBuffer.wrap(spin).order(ByteOrder.LITTLE_ENDIAN).getFloat();
+    // 应用到渲染对象（如驱动自定义模型旋转）
+}
+```
+
 ### 注册插件验证器
 
 ```java
 // 函数式接口：validate(Player player, ItemStack gun, ResourceLocation pluginId, RegistryAccess registryAccess)
 ModularShootAPI.registerPluginValidator((player, gun, pluginId, registryAccess) -> {
-    if (pluginId.getPath().contains("rocket")
-            && ModularShootAPI.getGunId(gun).getPath().contains("pistol")) {
+    // 注：0.3.0 起 getGunId 返回 Optional
+    boolean isPistol = ModularShootAPI.getGunId(gun)
+            .map(id -> id.getPath().contains("pistol"))
+            .orElse(false);
+    if (pluginId.getPath().contains("rocket") && isPistol) {
         return ValidationResult.error("手枪不能安装火箭弹");
     }
     return ValidationResult.success();
@@ -278,10 +349,11 @@ import org.yanbwe.modularshoot.ModularShootAPI;
 import org.yanbwe.modularshoot.state.GunState;
 import org.yanbwe.modularshoot.state.PlayerState;
 
-// per-gun 状态：读写枪械上的击杀计数
-GunState gunState = ModularShootAPI.getState(gunStack, player);
-int kills = gunState.getInt(ResourceLocation.parse("examplemod:kill_count"));
-gunState.setInt(ResourceLocation.parse("examplemod:kill_count"), kills + 1);
+// per-gun 状态：读写枪械上的击杀计数（0.3.0 起 getState 返回 Optional）
+ModularShootAPI.getState(gunStack, player).ifPresent(gunState -> {
+    int kills = gunState.getInt(ResourceLocation.parse("examplemod:kill_count"));
+    gunState.setInt(ResourceLocation.parse("examplemod:kill_count"), kills + 1);
+});
 
 // per-player 状态：读写玩家上的连续爆头计数
 PlayerState playerState = ModularShootAPI.getPlayerState(player);

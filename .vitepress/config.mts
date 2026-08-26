@@ -93,6 +93,7 @@ export default defineConfig({
           { text: 'API 参考', link: '/modularshoot/API' },
           { text: '注册指南', link: '/modularshoot/Registry' },
           { text: '数据包格式', link: '/modularshoot/DataPack' },
+          { text: '配置指南', link: '/modularshoot/Configuration' },
           { text: '命令参考', link: '/modularshoot/CommandReference' },
           { text: '代码示例', link: '/modularshoot/Examples' }
         ]
@@ -265,6 +266,7 @@ export default defineConfig({
               { text: 'API Reference', link: '/en/modularshoot/API' },
               { text: 'Registry Guide', link: '/en/modularshoot/Registry' },
               { text: 'Datapack Format', link: '/en/modularshoot/DataPack' },
+              { text: 'Configuration', link: '/en/modularshoot/Configuration' },
               { text: 'Command Reference', link: '/en/modularshoot/CommandReference' },
               { text: 'Code Examples', link: '/en/modularshoot/Examples' }
             ]

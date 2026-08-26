@@ -27,6 +27,7 @@ ModularShoot 是一个基于属性驱动、模块化组装的枪械系统**框�
 | [API 参考](./API.md) | 想用代码调用框架功能的开发者 | ModularShootAPI 所有公开方法速查表 |
 | [注册表参考](./Registry.md) | 想了解定义字段含义的开发者 | 10 张动态注册表及每种定义的字段详解 |
 | [数据包注册](./DataPack.md) | 想用 JSON 注册内容的开发者 | 数据包 JSON 文件路径、字段与格式说明 |
+| [配置指南](./Configuration.md) | 想调节客户端/服务器行为的玩家与服主 | 客户端与公共配置文件全部选项 |
 | [命令参考](./CommandReference.md) | 想用调试命令的开发者 | `/modularshoot` 子命令速查 |
 | [示例集](./Examples.md) | 想直接看代码的开发者 | Java API 和 JSON 的所有集中示例 |
 
@@ -35,7 +36,7 @@ ModularShoot 是一个基于属性驱动、模块化组装的枪械系统**框�
 | 注册表 ID | 用途 | 注册方式 |
 |-----------|------|---------|
 | `modularshoot:guns` | 枪械定义 | Java API / 数据包 JSON |
-| `modularshoot:plugins` | 插件定义 | 数据包 JSON |
+| `modularshoot:plugins` | 插件定义 | Java API / 数据包 JSON |
 | `modularshoot:plugin_types` | 插件种类定义 | 数据包 JSON |
 | `modularshoot:traits` | 布尔特性定义 | 数据包 JSON |
 | `modularshoot:states` | 持久状态定义 | 数据包 JSON |
@@ -66,7 +67,11 @@ ModularShoot 是一个基于属性驱动、模块化组装的枪械系统**框�
 | `block_penetration` | 穿透方块数（0 不穿透） | 0 |
 | `pellet_count` | 单次射击弹丸数量（四舍五入后钳制到 1~32，超上限 WARN；0 或未挂载时静默退化为单弹丸） | 1.0 |
 
-> **0.1.3 新特性**：枪械/插件定义新增 `extra_values` 命名空间数值扩展字段（键须带完整命名空间）；`ModularShootAPI.getExtraValueSums` / `getExtraValue` 可一站式查询"枪械定义基础值 + 已安装插件累计值"。
+> **0.1.3 新特性**：枪械/插件定义新增 `extra_values` 命名空间数值扩展字段（键须带完整命名空间）；`ModularShootAPI.getExtraValueSums` / `getExtraValue` 可一站式查询“枪械定义基础值 + 已安装插件累计值”。
+
+> **0.3.0 新特性**：插件支持 Java API 注册与动态定义提供者（`registerPlugin` / `registerPluginDefinitionProvider`，随机战利品插件等程序化玩法）；新增子弹同步扩展通道（`BulletSyncExtraRegistry`，为每颗子弹附带自定义数据并在客户端读取）；子弹同步距离分档/频率/全量同步间隔移入 `modularshoot-common.toml` 可调（见[配置指南](./Configuration.md)）。
+>
+> ⚠️ **0.3.0 破坏性变更**：网络协议升至 4（与旧版不互通，联机需两端同时升级）；`getGunId` / `getState` 改为返回 `Optional`；插件安装前事件构造变化（新增选中槽位种类与自定义取消原因）。
 
 ## 关键事件一览
 
@@ -76,7 +81,7 @@ ModularShoot 是一个基于属性驱动、模块化组装的枪械系统**框�
 | `PostShootEvent` | 所有弹丸注册后（携带本次射击的全部弹丸，经 `getBullets()` 获取） | 否 |
 | `GunRightClickEvent` | 非 GUI 中右键枪械 | 是 |
 | `ActionEvent` | 按下动作键（默认 R） | 是 |
-| `PrePluginInstallEvent` | 插件安装校验通过后 | 是 |
+| `PrePluginInstallEvent` | 插件安装校验通过后（携带框架选中的槽位种类 `getSelectedTypeId()`；可用 `cancel(Component)` 取消并附带自定义原因） | 是 |
 | `PostPluginInstallEvent` | 插件写入组件后 | 否 |
 | `PrePluginUninstallEvent` | 插件拆卸前 | 是 |
 | `PostPluginUninstallEvent` | 插件拆卸后 | 否 |

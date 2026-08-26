@@ -27,11 +27,9 @@ import org.yanbwe.modularshoot.ModularShootAPI;
 import net.minecraft.resources.ResourceLocation;
 import java.util.UUID;
 
-// Get gun ID
-ResourceLocation gunId = ModularShootAPI.getGunId(gunStack);
-if (gunId != null) {
-    System.out.println("Gun ID: " + gunId);
-}
+// Get gun ID (returns Optional since 0.3.0)
+ModularShootAPI.getGunId(gunStack).ifPresent(gunId ->
+    System.out.println("Gun ID: " + gunId));
 
 // Get full gun data
 ModularShootAPI.getGunData(gunStack).ifPresent(data -> {
@@ -102,13 +100,86 @@ ModularShootAPI.registerGun(
 );
 ```
 
+### Register a Plugin (Java API, new in 0.3.0)
+
+```java
+import org.yanbwe.modularshoot.ModularShootAPI;
+import org.yanbwe.modularshoot.plugin.PluginDefinition;
+import org.yanbwe.modularshoot.plugin.PluginModifier;
+import org.yanbwe.modularshoot.registry.gun.TextureScaleMode;
+
+// Register a plugin programmatically (random loot affixes, dynamic modifiers, etc.):
+// same semantics as registerGun — takes priority over same-id datapack entries and survives /reload.
+ModularShootAPI.registerPlugin(
+    ResourceLocation.parse("examplemod:rapid_affix"),
+    new PluginDefinition(
+        List.of(ResourceLocation.parse("examplemod:barrel")),   // tags (matched by intersection with type tags)
+        0,                                                       // priority
+        ResourceLocation.parse("examplemod:textures/plugin/rapid.png"), // itemIcon
+        TextureScaleMode.AUTO,                                   // textureScale
+        List.of(new PluginModifier(
+            "modularshoot:fire_rate",
+            PluginModifier.Operation.ADD_VALUE, 2.0)),           // modifiers
+        Map.of(),                                                // traits
+        Optional.empty(),                                        // exclusiveGroup
+        Optional.empty(),                                        // bulletStyle
+        Optional.empty(),                                        // textureOverlay
+        Optional.empty(),                                        // gunOutline
+        Map.of(),                                                // extraValues
+        Optional.of("§eRapid Affix"),                            // name
+        Optional.of("Fire rate +2"),                             // brief
+        Optional.empty(),                                        // description
+        Optional.empty(),                                        // color
+        Map.of(),                                                // addsSlots
+        Map.of(),                                                // addsVariants
+        Optional.empty()                                         // visualPriority
+    )
+);
+
+// Dynamic definition provider (computed at query time; fits context-generated plugins):
+ModularShootAPI.registerPluginDefinitionProvider(pluginId -> {
+    if (pluginId.getNamespace().equals("examplemod")
+            && pluginId.getPath().startsWith("loot_affix_")) {
+        return Optional.of(buildLootAffix(pluginId)); // your own generation logic (must be deterministic on both sides)
+    }
+    return Optional.empty(); // unhandled IDs fall through to the next source
+});
+```
+
+### Bullet Sync Extension Channel (new in 0.3.0)
+
+```java
+import org.yanbwe.modularshoot.network.BulletSyncExtraRegistry;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.Map;
+
+// Register on both sides (the index is the wire identity; both sides must use the same order):
+public static final int SPIN_INDEX = BulletSyncExtraRegistry.register(bullet -> {
+    ByteBuffer buf = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN);
+    buf.putFloat(MyMod.getSpinSpeed(bullet)); // your server-side data source; return null/empty = no data for this bullet
+    return buf.array();
+});
+
+// Client consumption (e.g. inside an ON_VISUAL_TICK hook, or via BulletRenderManager.getRenderObject(id).getExtra()):
+Map<Integer, byte[]> parts = BulletSyncExtraRegistry.split(renderObject.getExtra());
+byte[] spin = parts.get(MyMod.SPIN_INDEX);
+if (spin != null) {
+    float speed = ByteBuffer.wrap(spin).order(ByteOrder.LITTLE_ENDIAN).getFloat();
+    // apply to the render object (e.g. drive a custom model rotation)
+}
+```
+
 ### Register a Plugin Validator
 
 ```java
 // Functional interface: validate(Player player, ItemStack gun, ResourceLocation pluginId, RegistryAccess registryAccess)
 ModularShootAPI.registerPluginValidator((player, gun, pluginId, registryAccess) -> {
-    if (pluginId.getPath().contains("rocket")
-            && ModularShootAPI.getGunId(gun).getPath().contains("pistol")) {
+    // Note: getGunId returns Optional since 0.3.0
+    boolean isPistol = ModularShootAPI.getGunId(gun)
+            .map(id -> id.getPath().contains("pistol"))
+            .orElse(false);
+    if (pluginId.getPath().contains("rocket") && isPistol) {
         return ValidationResult.error("Pistols cannot equip rocket ammo");
     }
     return ValidationResult.success();
@@ -284,10 +355,11 @@ import org.yanbwe.modularshoot.ModularShootAPI;
 import org.yanbwe.modularshoot.state.GunState;
 import org.yanbwe.modularshoot.state.PlayerState;
 
-// per-gun state: read/write kill count on the gun
-GunState gunState = ModularShootAPI.getState(gunStack, player);
-int kills = gunState.getInt(ResourceLocation.parse("examplemod:kill_count"));
-gunState.setInt(ResourceLocation.parse("examplemod:kill_count"), kills + 1);
+// per-gun state: read/write kill count on the gun (getState returns Optional since 0.3.0)
+ModularShootAPI.getState(gunStack, player).ifPresent(gunState -> {
+    int kills = gunState.getInt(ResourceLocation.parse("examplemod:kill_count"));
+    gunState.setInt(ResourceLocation.parse("examplemod:kill_count"), kills + 1);
+});
 
 // per-player state: read/write headshot streak on the player
 PlayerState playerState = ModularShootAPI.getPlayerState(player);

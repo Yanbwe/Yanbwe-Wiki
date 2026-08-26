@@ -76,6 +76,8 @@ ModularShoot 通过 10 张动态注册表（DataPackRegistry）存储所有定�
 
 注册表：`modularshoot:plugins`
 
+> **注册方式（0.3.0 起）**：数据包 JSON（`data/<命名空间>/modularshoot/plugins/<id>.json`）或 Java API（`ModularShootAPI.registerPlugin`，优先于数据包同名条目且不受 `/reload` 影响），另支持动态定义提供者（`registerPluginDefinitionProvider`，查询时计算，适合随机战利品/动态词缀）。详见 [API 参考「注册 API」](./API.md#注册-api)。
+
 | 字段 | 类型 | 必需 | 默认值 | 说明 |
 |------|------|------|--------|------|
 | `tags` | 资源路径列表 | 否 | 空列表 | 匹配用标签。与种类 tags 存在交集即可安装。空列表时无法安装（输出 WARN） |

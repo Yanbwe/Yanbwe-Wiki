@@ -25,6 +25,7 @@ ModularShoot is an attribute-driven, modular assembly gun system **framework mod
 | [API Reference](./API.md) | Devs calling framework functions in code | Quick-reference tables for all ModularShootAPI public methods |
 | [Registry Reference](./Registry.md) | Devs understanding definition fields | All 10 dynamic registries and field details for each definition type |
 | [Datapack Registration](./DataPack.md) | Devs using JSON to register content | Datapack JSON file paths, fields, and format reference |
+| [Configuration](./Configuration.md) | Players & server owners tuning client/server behaviour | Every option in the client and common config files |
 | [Command Reference](./CommandReference.md) | Devs using debug commands | `/modularshoot` subcommand quick reference |
 | [Examples](./Examples.md) | Devs wanting to see code directly | All Java API and JSON examples in one place |
 
@@ -33,7 +34,7 @@ ModularShoot is an attribute-driven, modular assembly gun system **framework mod
 | Registry ID | Purpose | Registration Method |
 |-------------|---------|-------------------|
 | `modularshoot:guns` | Gun definitions | Java API / Datapack JSON |
-| `modularshoot:plugins` | Plugin definitions | Datapack JSON |
+| `modularshoot:plugins` | Plugin definitions | Java API / Datapack JSON |
 | `modularshoot:plugin_types` | Plugin type (category) definitions | Datapack JSON |
 | `modularshoot:traits` | Boolean trait definitions | Datapack JSON |
 | `modularshoot:states` | Persistent state definitions | Datapack JSON |
@@ -66,6 +67,10 @@ The framework pre-registers 10 numeric attributes (`modularshoot` namespace):
 
 > **0.1.3 new feature**: Gun/plugin definitions gained the `extra_values` namespaced numeric extension field (keys must be fully namespaced); `ModularShootAPI.getExtraValueSums` / `getExtraValue` provide one-stop queries for "gun definition base values + accumulated values of installed plugins".
 
+> **0.3.0 new features**: plugins can now be registered via the Java API and dynamic definition providers (`registerPlugin` / `registerPluginDefinitionProvider`, enabling programmatic plugins such as random loot affixes); a new bullet sync extension channel (`BulletSyncExtraRegistry`) lets mods attach custom data to every bullet and read it on the client; the bullet-sync distance bands / update frequency / full-sync interval are now tunable in `modularshoot-common.toml` (see [Configuration](./Configuration.md)).
+>
+> ⚠️ **0.3.0 breaking changes**: network protocol bumped to 4 (not interoperable with older versions — both sides must update together for multiplayer); `getGunId` / `getState` now return `Optional`; the plugin install pre-event constructor changed (adds the selected slot type and a custom cancellation reason).
+
 ## Key Events Overview
 
 | Event | Fires When | Cancellable |
@@ -74,7 +79,7 @@ The framework pre-registers 10 numeric attributes (`modularshoot` namespace):
 | `PostShootEvent` | After all pellets are registered (carries every bullet of the shot via `getBullets()`) | No |
 | `GunRightClickEvent` | Right-click gun outside GUI | Yes |
 | `ActionEvent` | Action key pressed (default R) | Yes |
-| `PrePluginInstallEvent` | After install validation passes | Yes |
+| `PrePluginInstallEvent` | After install validation passes (carries the framework-selected slot type via `getSelectedTypeId()`; cancel with a custom reason via `cancel(Component)`) | Yes |
 | `PostPluginInstallEvent` | After plugin written to component | No |
 | `PrePluginUninstallEvent` | Before plugin removal | Yes |
 | `PostPluginUninstallEvent` | After plugin removed | No |

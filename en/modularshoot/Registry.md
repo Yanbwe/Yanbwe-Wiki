@@ -60,6 +60,8 @@ Registry: `modularshoot:guns`
 
 Registry: `modularshoot:plugins`
 
+> **Registration (since 0.3.0)**: datapack JSON (`data/<namespace>/modularshoot/plugins/<id>.json`) or the Java API (`ModularShootAPI.registerPlugin`, which takes priority over a same-id datapack entry and survives `/reload`), plus a dynamic definition provider (`registerPluginDefinitionProvider`, computed at query time — fits random loot / dynamic affixes). See [API Reference → Registration API](./API.md#registration-api).
+
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
 | `tags` | List of resource paths | No | Empty list | Matching tags. Install requires intersection with a type's tags. Empty list prevents installation (logs WARN) |
