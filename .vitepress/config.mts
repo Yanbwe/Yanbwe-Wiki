@@ -13,7 +13,8 @@ export default defineConfig({
       { text: '灵动提示框', link: '/colorTooltips/', activeMatch: '/colorTooltips' },
       { text: '别样的伤害跳字', link: '/stylizeddamage/', activeMatch: '/stylizeddamage' },
       { text: '模块化射击', link: '/modularshoot/', activeMatch: '/modularshoot' },
-      { text: '模块化射击弹药', link: '/modularshootammo/', activeMatch: '/modularshootammo' }
+      { text: '模块化射击弹药', link: '/modularshootammo/', activeMatch: '/modularshootammo' },
+      { text: '一人一枪一辈子', link: '/onegunlifetime/', activeMatch: '/onegunlifetime' }
     ],
 
     sidebar: [
@@ -108,6 +109,15 @@ export default defineConfig({
           { text: '命令参考', link: '/modularshootammo/CommandReference' },
           { text: '客户端配置', link: '/modularshootammo/Configuration' }
         ]
+      },
+      {
+        text: '一人一枪一辈子',
+        collapsed: false,
+        items: [
+          { text: '首页', link: '/onegunlifetime/' },
+          { text: '玩法指南', link: '/onegunlifetime/GameplayGuide' },
+          { text: '命令参考', link: '/onegunlifetime/CommandReference' }
+        ]
       }
     ],
 
@@ -186,7 +196,8 @@ export default defineConfig({
           { text: 'ColorTooltips', link: '/en/colorTooltips/', activeMatch: '/en/colorTooltips' },
           { text: 'StylizedDamage', link: '/en/stylizeddamage/', activeMatch: '/en/stylizeddamage' },
           { text: 'ModularShoot', link: '/en/modularshoot/', activeMatch: '/en/modularshoot' },
-          { text: 'ModularShootAmmo', link: '/en/modularshootammo/', activeMatch: '/en/modularshootammo' }
+          { text: 'ModularShootAmmo', link: '/en/modularshootammo/', activeMatch: '/en/modularshootammo' },
+          { text: 'OneGunLifetime', link: '/en/onegunlifetime/', activeMatch: '/en/onegunlifetime' }
         ],
 
         sidebar: [
@@ -280,6 +291,15 @@ export default defineConfig({
               { text: 'API Reference', link: '/en/modularshootammo/API' },
               { text: 'Command Reference', link: '/en/modularshootammo/CommandReference' },
               { text: 'Client Configuration', link: '/en/modularshootammo/Configuration' }
+            ]
+          },
+          {
+            text: 'OneGunLifetime',
+            collapsed: false,
+            items: [
+              { text: 'Home', link: '/en/onegunlifetime/' },
+              { text: 'Gameplay Guide', link: '/en/onegunlifetime/GameplayGuide' },
+              { text: 'Command Reference', link: '/en/onegunlifetime/CommandReference' }
             ]
           }
         ],
