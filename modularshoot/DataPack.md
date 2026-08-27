@@ -23,6 +23,7 @@
 | `shoot_texture` | 资源路径字符串 | 否 | 无 | 射击纹理路径。不指定时射击期间始终使用基础纹理 |
 | `shoot_texture_mode` | 字符串 | 否 | `"per_shot"` | 射击纹理切换模式。`"per_shot"`（每次射击切纹理）/ `"while_firing"`（按住射击期间持续显示）。仅在指定了 `shoot_texture` 时生效 |
 | `texture_scale` | 字符串 | 否 | `"auto"` | 渲染几何是否随纹理分辨率缩放。`"auto"`（16 像素 = 1 格，32×32 纹理渲染为 2 倍大，宽高分别缩放不变形，厚度固定 1/16 格）/ `"fixed"`（固定 16×16 单位网格，大纹理仅表现为更精细） |
+| `attribute_mount` | 字符串 | 否 | `"item"` | 属性挂载点声明：`"item"`（默认，物品侧，框架照常写入主手属性修饰符组件）/ `"player"`（玩家侧，框架不为该枪写入物品属性修饰符组件，属性挂载责任转移给声明方，如将修饰符挂在玩家实体上）。省略等价于 `"item"` |
 | `stats` | 属性ID→浮点数对象 | 否 | `{}` | 属性基础值。键为属性 ID：裸键（无冒号）自动补 `modularshoot` 命名空间（如 `"hit_damage"` ≡ `"modularshoot:hit_damage"`），显式 `minecraft:` 前缀同样归一为 `modularshoot`，其他显式命名空间原样保留。不出现的属性使用元数据表默认值 |
 | `traits` | 特性ID→布尔值对象 | 否 | `{}` | 枪械固有特性覆盖。无特性时留空对象 `{}` |
 | `variants` | 变体ID→浮点数对象 | 否 | `{}` | 变体池基础权重：变体 ID → 权重。如 `"variants": { "modularshoot:example_fireball": 0.5, "modularshoot:example_heavy_blade": 1.5 }`。每发射击实时组装池，与插件的 `adds_variants` 同变体求和，并经贡献者权重修饰符调整后加权随机选举（详见「变体 JSON」） |

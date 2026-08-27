@@ -71,6 +71,8 @@ The framework pre-registers 10 numeric attributes (`modularshoot` namespace):
 >
 > ⚠️ **0.3.0 breaking changes**: network protocol bumped to 4 (not interoperable with older versions — both sides must update together for multiplayer); `getGunId` / `getState` now return `Optional`; the plugin install pre-event constructor changed (adds the selected slot type and a custom cancellation reason).
 
+> **New feature (unreleased)**: gun definitions now support the `attribute_mount` declaration (`item` / `player`); player-side guns no longer carry the item attribute modifier component. The framework adds `getAttributeMount` and `registerPlayerAttributeSourceProvider`; player-side tooltips read final values from the attribute holder, falling back to definition base values with a "based on holder" note when no holder can be resolved.
+
 ## Key Events Overview
 
 | Event | Fires When | Cancellable |

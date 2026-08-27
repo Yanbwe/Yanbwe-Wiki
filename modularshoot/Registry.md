@@ -31,6 +31,7 @@ ModularShoot 通过 10 张动态注册表（DataPackRegistry）存储所有定�
 | `shootTexture` | 可选资源路径 | 否 | 无（始终使用基础纹理） | 射击时切换的纹理路径 |
 | `shootTextureMode` | 枚举 | 否 | `PER_SHOT` | 射击纹理切换模式。仅在指定了 `shootTexture` 时生效 |
 | `textureScale` | 枚举 | 否 | `AUTO` | 渲染几何是否随纹理分辨率缩放。`AUTO`（16 像素 = 1 格，32×32 纹理渲染为 2 倍大）/ `FIXED`（固定 16×16 单位网格）。基础纹理与射击纹理分别按各自尺寸缩放 |
+| `attributeMount` | 枚举 | 否 | `ITEM` | 属性挂载点（JSON 键 `attribute_mount`）：`ITEM`（默认，物品侧，框架照常写入主手属性修饰符组件）/ `PLAYER`（玩家侧，框架不向物品写入属性修饰符组件，挂载责任转移给声明方，如将修饰符挂在玩家实体上） |
 | `stats` | 属性ID→浮点数映射 | 否 | 空映射 | 属性基础值。键为 attribute_meta 已登记条目的逻辑 id；裸键自动补 `modularshoot` 命名空间（如 `hit_damage` ≡ `modularshoot:hit_damage`），显式 `minecraft:` 前缀同样归一为 `modularshoot`，其他显式命名空间原样保留。未声明的属性使用元数据表的默认值。**支持任意已登记条目**（不限于框架预置的 10 个）：数据包新增 attribute_meta 条目后，`stats` 自动支持该键 |
 | `traits` | 特性ID→布尔值映射 | 否 | 空映射 | 枪械固有特性覆盖。枪械声明的特性始终覆盖所有插件 |
 | `variants` | 变体ID→浮点数映射 | 否 | 空映射 | 变体池基础权重：变体 ID → 基础权重。每发射击实时组装变体池，与插件 `addsVariants` 同变体求和，并经贡献者权重修饰符调整后加权随机选举（详见「变体定义（VariantDefinition）」） |

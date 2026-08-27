@@ -73,6 +73,8 @@ ModularShoot 是一个基于属性驱动、模块化组装的枪械系统**框�
 >
 > ⚠️ **0.3.0 破坏性变更**：网络协议升至 4（与旧版不互通，联机需两端同时升级）；`getGunId` / `getState` 改为返回 `Optional`；插件安装前事件构造变化（新增选中槽位种类与自定义取消原因）。
 
+> **新特性（未发布）**：枪械定义支持声明属性挂载点 `attribute_mount`（`item` / `player`）；玩家侧枪械不再携带物品属性修饰符组件。框架新增 `getAttributeMount` 与 `registerPlayerAttributeSourceProvider`，玩家侧提示框可从属性持有者读取最终值，无法解析持有者时降级显示基础值并提示“以持有者为准”。
+
 ## 关键事件一览
 
 | 事件 | 触发时机 | 可取消 |

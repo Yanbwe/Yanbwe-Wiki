@@ -79,6 +79,7 @@ ModularShootAPI 所有公开静态方法速查。方法按功能分组。
 |---------|---------|--------|------|
 | `registerGun(ResourceLocation gunId, GunDefinition definition)` | `gunId` — 枪械定义 ID（如 `modularshoot:sniper_rifle`）；`definition` — 枪械定义对象 | `void` | 通过 Java API 注册一把枪械。调用后自动标记该 ID 为 API 注册，后续数据包 JSON 同名注册会被拒绝 |
 | `registerGunDefinitionProvider(GunDefinitionProvider provider)` | `provider` — 动态枪械定义提供者（函数式接口：`ResourceLocation → Optional<GunDefinition>`；返回空表示不处理该 ID） | `void` | 注册动态枪械定义提供者。`getGun` 查询顺序：Java API 注册 → 提供者（按注册顺序，首个非空结果胜出）→ 数据包注册表。支持 per-player / 运行时生成的动态定义（如“玩家即枪”类玩法，ID 可编码上下文如 `player:<uuid>`），框架内所有定义查询点零改动受益；未注册提供者时行为不变 |
+| `registerPlayerAttributeSourceProvider(PlayerAttributeSourceProvider provider)` | `provider` — 玩家属性来源提供者（函数式接口：`(ItemStack stack, Player viewer) → Optional<PlayerAttributeValueReader>`；返回空表示不处理该枪） | `void` | 注册玩家侧枪械的提示框属性来源解析器。返回的 `PlayerAttributeValueReader` 按逻辑属性 ID 读取玩家侧最终值（可基于同步数据或实体实现）；多个提供者按注册顺序取第一个非空结果。未注册提供者时，玩家侧枪械提示框降级显示定义基础值并提示“以持有者为准” |
 | `registerPlugin(ResourceLocation pluginId, PluginDefinition definition)` | `pluginId` — 插件定义 ID（如 `mypack:rapid_affix`）；`definition` — 插件定义对象 | `void` | **（0.3.0 新增）** 通过 Java API 注册一个插件。语义与 `registerGun` 一致：自动标记 ID 为 API 注册、优先于数据包同名条目、不受 `/reload` 影响。适合程序化插件（随机战利品、动态词缀等） |
 | `registerPluginDefinitionProvider(PluginDefinitionProvider provider)` | `provider` — 动态插件定义提供者（函数式接口：`ResourceLocation → Optional<PluginDefinition>`；返回空表示不处理该 ID） | `void` | **（0.3.0 新增）** 注册动态插件定义提供者。`getPlugin` 查询顺序：Java API 注册 → 提供者 → 数据包注册表。提供者定义的 ID 不被枚举接口列出（查询时计算）。双端各自运行同一提供者，定义须两端可确定性生成 |
 | `registerShooter(ResourceLocation shooterId, ShooterDefinition definition)` | `shooterId` — 发射者定义 ID（如 `modularshoot:bone_shooter`）；`definition` — 发射者定义对象 | `void` | 通过 Java API 注册一个发射者定义（独立发射配置模板，`modularshoot:shooters` 注册表）。语义与 `registerGun` 一致：自动标记 ID 为 API 注册并优先于数据包同名条目，且不受 `/reload` 影响 |
@@ -170,6 +171,7 @@ if (spin != null) {
 | 方法签名 | 参数说明 | 返回值 | 说明 |
 |---------|---------|--------|------|
 | `getGunDefinition(RegistryAccess registryAccess, ResourceLocation gunId)` | `registryAccess` — 运行时注册表视图；`gunId` — 枪械定义 ID | `Optional<GunDefinition>` | 查询枪械定义 |
+| `getAttributeMount(ItemStack gun, RegistryAccess access)` | `gun` — 枪械物品堆叠；`access` — 运行时注册表视图 | `Optional<AttributeMount>` | 查询枪械堆叠声明的属性挂载点（`ITEM` / `PLAYER`）。非枪械或定义缺失时返回 `Optional.empty()`；`PLAYER` 表示框架不管理该枪物品侧属性修饰符组件，挂载责任转移给声明方 |
 | `getPluginDefinition(RegistryAccess registryAccess, ResourceLocation pluginId)` | `registryAccess` — 运行时注册表视图；`pluginId` — 插件定义 ID | `Optional<PluginDefinition>` | 查询插件定义 |
 | `getPluginTypeDefinition(RegistryAccess registryAccess, ResourceLocation pluginTypeId)` | `registryAccess` — 运行时注册表视图；`pluginTypeId` — 插件种类 ID | `Optional<PluginTypeDefinition>` | 查询插件种类定义 |
 | `getShooterDefinition(RegistryAccess registryAccess, ResourceLocation shooterId)` | `registryAccess` — 运行时注册表视图；`shooterId` — 发射者定义 ID | `Optional<ShooterDefinition>` | 查询发射者定义（独立发射配置模板）。Java API 注册的条目优先于数据包同名条目 |
