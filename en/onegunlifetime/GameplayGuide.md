@@ -30,6 +30,7 @@ Because modifiers are mounted on the player entity, **the bonuses work no matter
 - When another ModularShoot gun enters the inventory:
   - If no projection gun exists yet: the slot is replaced with your projection gun.
   - If a projection gun already exists: the foreign gun is voided.
+- Attempting to fire a foreign gun immediately aborts the shot, and the gun is assimilated on the next tick — a foreign gun can never be fired.
 - Plugins on an assimilated gun are merged into the projection gun when possible; plugins that cannot fit (capacity, exclusivity, etc.) are returned to the inventory or dropped at your feet.
 - Creative mode is subject to the same rules.
 
