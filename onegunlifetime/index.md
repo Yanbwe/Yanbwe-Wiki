@@ -29,3 +29,4 @@ OneGunLifetime 是 [ModularShoot（模块化射击）](../modularshoot/) 的附�
 |------|---------|------|
 | [玩法指南](./GameplayGuide.md) | 想了解完整机制的玩家 | 绑定、投影枪、属性常驻、同化、补回、容器守卫、纪念品 |
 | [命令参考](./CommandReference.md) | 想使用命令的玩家/管理员 | `/onegun` 全部子命令与示例 |
+| [API 参考](./API.md) | 模组开发者 | `OneGunLifetimeAPI` —— 编程式绑定/解绑、属性特性、插件装卸、数值面板 |

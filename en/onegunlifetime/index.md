@@ -29,3 +29,4 @@ OneGunLifetime is an addon mod for [ModularShoot](../modularshoot/) running on N
 |------|----------|----------|
 | [Gameplay Guide](./GameplayGuide.md) | Players who want the full mechanics | Binding, projection guns, player-mounted stats, assimilation, recovery, container guard, memorials |
 | [Command Reference](./CommandReference.md) | Players and admins | All `/onegun` subcommands and examples |
+| [API Reference](./API.md) | Mod developers | `OneGunLifetimeAPI` — programmatic bind/unbind, stats, traits, plugins, effective values |

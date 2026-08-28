@@ -116,7 +116,8 @@ export default defineConfig({
         items: [
           { text: '首页', link: '/onegunlifetime/' },
           { text: '玩法指南', link: '/onegunlifetime/GameplayGuide' },
-          { text: '命令参考', link: '/onegunlifetime/CommandReference' }
+          { text: '命令参考', link: '/onegunlifetime/CommandReference' },
+          { text: 'API 参考', link: '/onegunlifetime/API' }
         ]
       }
     ],
@@ -299,7 +300,8 @@ export default defineConfig({
             items: [
               { text: 'Home', link: '/en/onegunlifetime/' },
               { text: 'Gameplay Guide', link: '/en/onegunlifetime/GameplayGuide' },
-              { text: 'Command Reference', link: '/en/onegunlifetime/CommandReference' }
+              { text: 'Command Reference', link: '/en/onegunlifetime/CommandReference' },
+              { text: 'API Reference', link: '/en/onegunlifetime/API' }
             ]
           }
         ],
