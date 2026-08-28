@@ -38,7 +38,7 @@ Because modifiers are mounted on the player entity, **the bonuses work no matter
 
 - **Dropping**: the drop is cancelled and a new projection gun is restored immediately — you effectively cannot throw it away.
 - **Destruction recovery**: if the gun is destroyed by lava, cactus, etc., the next scan will rebuild it when your inventory has no projection gun.
-- **Admin clear commands**: `/clear` and similar commands suppress the immediate recovery once; later natural destruction is still recovered.
+- **Admin clear**: the `/clear` command suppresses the recovery in the next scan once; later natural destruction is still recovered.
 - **Death drops**: they follow vanilla rules and are not treated as active drops. If another player picks up the gun, the rules below apply.
 
 ## Container Guard
