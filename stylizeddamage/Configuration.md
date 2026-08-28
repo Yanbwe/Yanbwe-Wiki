@@ -177,12 +177,19 @@ config/stylizeddamage/common.json
 
 将大数值自动缩进显示，例如 `1200 → 1.2k`、`1500000 → 1.5M`，使大数字更易读。
 
+缩进阶梯由 `steps` 列表定义（按阈值升序）：伤害值达到某个阶梯的 `threshold` 后，显示值 = 伤害值 ÷ 该阶梯 `threshold`，并拼接该阶梯的 `suffix`。支持等比阶梯，也支持不规则阶梯（如中文的 万/亿 10000 进制）。
+
 ```json
 "numberAbbreviation": {
     "enabled": false,
     "threshold": 1000.0,
-    "suffixes": ["k", "M", "B", "T"],
-    "decimalPlaces": 1
+    "decimalPlaces": 1,
+    "steps": [
+        { "threshold": 1000.0,    "suffix": "k" },
+        { "threshold": 1000000.0, "suffix": "M" },
+        { "threshold": 1.0E9,     "suffix": "B" },
+        { "threshold": 1.0E12,    "suffix": "T" }
+    ]
 }
 ```
 
@@ -190,10 +197,13 @@ config/stylizeddamage/common.json
 |--------|------|--------|------|
 | `enabled` | 布尔值 | `false` | 是否启用数字缩进（默认关闭） |
 | `threshold` | 浮点数 | `1000.0` | 低于此值的伤害不缩进 |
-| `suffixes` | 字符串数组 | `["k","M","B","T"]` | 每 1000 倍递增的后缀，按升序排列 |
+| `steps` | 阶梯条目数组 | k/M/B/T（1000 倍递增） | 缩进阶梯，按 `threshold` 升序；每条目含 `threshold`（除数阈值）与 `suffix`（后缀） |
 | `decimalPlaces` | 整数 | `1` | 缩进后保留的小数位数（如 `1.2k`、`1.23k`） |
 
 - 整数结果不显示小数（`2000 → 2k`），非整数按 `decimalPlaces` 保留小数
+- 伤害值超出最大阶梯时钳制到最大阶梯继续除算（如阶梯到 `亿` 为止，`2e9 → 20亿`）
+- `threshold <= 0` 或后缀为空的条目会被忽略；`steps` 为空或全部非法时回退默认 k/M/B/T 阶梯
+- 旧版本的 `suffixes` 字符串数组写法仍可识别，会自动按 1000 倍递增迁移为 `steps`，旧配置文件无需手动修改
 - 同时作用于浮动跳字与总伤害面板（totalDamage）
 
 ### 距离缩放

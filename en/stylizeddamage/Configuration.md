@@ -99,12 +99,19 @@ Controls damage number opacity based on the **damage source**.
 
 Abbreviates large damage values, e.g. `1200 → 1.2k`, `1500000 → 1.5M`.
 
+The ladder is defined by the `steps` list (ascending by threshold): once a damage value reaches a step's `threshold`, the displayed value is the damage divided by that `threshold`, followed by the step's `suffix`. Both uniform and irregular ladders are supported (e.g. Chinese 万/亿 per 10000×).
+
 ```json
 "numberAbbreviation": {
     "enabled": false,
     "threshold": 1000.0,
-    "suffixes": ["k", "M", "B", "T"],
-    "decimalPlaces": 1
+    "decimalPlaces": 1,
+    "steps": [
+        { "threshold": 1000.0,    "suffix": "k" },
+        { "threshold": 1000000.0, "suffix": "M" },
+        { "threshold": 1.0E9,     "suffix": "B" },
+        { "threshold": 1.0E12,    "suffix": "T" }
+    ]
 }
 ```
 
@@ -112,10 +119,13 @@ Abbreviates large damage values, e.g. `1200 → 1.2k`, `1500000 → 1.5M`.
 |--------|------|---------|-------------|
 | `enabled` | boolean | `false` | Enable abbreviation (disabled by default) |
 | `threshold` | float | `1000.0` | Values below this are never abbreviated |
-| `suffixes` | string array | `["k","M","B","T"]` | Suffixes per 1000× step, ascending |
+| `steps` | step array | k/M/B/T (per 1000×) | Abbreviation ladder, ascending by `threshold`; each entry has `threshold` (division base) and `suffix` |
 | `decimalPlaces` | int | `1` | Decimal places kept after abbreviation (e.g. `1.2k`, `1.23k`) |
 
 - Integer results drop decimals (`2000 → 2k`); non-integers keep `decimalPlaces` digits
+- Damage beyond the top step is clamped to it (e.g. a ladder ending at `亿` turns `2e9 → 20亿`)
+- Entries with `threshold <= 0` or a blank suffix are ignored; an empty or fully invalid `steps` falls back to the default k/M/B/T ladder
+- The legacy `suffixes` string array is still recognized and automatically migrated to `steps` at 1000× intervals — old config files need no manual changes
 - Applies to both floating numbers and the total-damage panel
 
 ## Distance Scale
