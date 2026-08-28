@@ -13,7 +13,7 @@
 | `getOwnerOf(ItemStack gunStack)` | `gunStack` — any item stack | `Optional<UUID>` | If the stack is a player's projection gun, returns its owner UUID; empty otherwise |
 | `getPlugins(Player player)` | `player` — target player | `List<PluginInstance>` | The current ordered plugin list; empty when unbound |
 | `getGunState(Player player)` | `player` — target player | `Optional<CompoundTag>` | Runtime gun state NBT; empty when unbound |
-| `getEffectiveValues(ServerPlayer player)` | `player` — target player | `Map<ResourceLocation, Double>` | **Final values** of every player-applicable logical attribute (base + overrides + traits + plugin bonuses); empty when unbound. Pure computation with no entity access — cache the result for frequent calls |
+| `getEffectiveValues(ServerPlayer player)` | `player` — target player | `Map<ResourceLocation, Double>` | **Final values** of every player-applicable logical attribute (base + overrides + traits + plugin bonuses); empty when unbound. The map iterates in `attribute_meta` registry order. Pure computation with no entity access — cache the result for frequent calls |
 
 ## Lifecycle
 
@@ -40,8 +40,8 @@ Validation included: attribute ids must exist in the `modularshoot:attribute_met
 | Signature | Parameters | Returns | Description |
 |---------|---------|--------|------|
 | `addPlugin(ServerPlayer player, ResourceLocation pluginId)` | `pluginId` — plugin definition id | `PluginChangeResult` | Installs a plugin by id onto the player's projection gun, reusing the full ModularShoot install validation (slot type, capacity, lock). The installed copy is written back to its slot; rejection details in `rejectionReason()`. **Returns `NO_PROJECTION` instead of silently creating a gun when the player has no projection gun** |
-| `removePlugin(ServerPlayer player, UUID pluginInstanceUuid)` | `pluginInstanceUuid` — plugin instance UUID | `PluginChangeResult` | Removes one installed plugin by instance UUID (no force, no item return); rejection details (locked / UUID not found / ...) in `rejectionReason()` |
-| `setGunState(ServerPlayer player, CompoundTag state)` | `state` — new gun state NBT | `void` | Replaces the runtime gun state. Throws `IllegalStateException` when unbound |
+| `removePlugin(ServerPlayer player, UUID pluginInstanceUuid)` | `pluginInstanceUuid` — plugin instance UUID | `PluginChangeResult` | Removes one installed plugin by instance UUID (no force); the removed plugin item is returned to the player's inventory (dropped at their feet when full). Rejections carry the structured `uninstallReason()` (locked / UUID not found / ...) |
+| `setGunState(ServerPlayer player, CompoundTag state)` | `state` — new gun state NBT | `MutationResult` | Replaces the runtime gun state. Returns `NOT_BOUND` when unbound |
 
 ## Result Types
 
@@ -68,7 +68,8 @@ Validation included: attribute ids must exist in the `modularshoot:attribute_met
 | Member | Description |
 |------|------|
 | `status()` | `SUCCESS` / `NOT_BOUND` / `NO_PROJECTION` (no projection gun in inventory) / `UNKNOWN_PLUGIN` (plugin id not registered) / `NOT_INSTALLED` (rejected by the framework) |
-| `rejectionReason()` | Localizable rejection reason (framework install error or uninstall reason); non-null only for `NOT_INSTALLED` |
+| `uninstallReason()` | Structured uninstall rejection reason (`UninstallResult.Reason` enum: locked, UUID not found, ...); non-null only when an uninstall was rejected by the framework |
+| `rejectionReason()` | Localizable install rejection reason (framework install error message); non-null only when an install was rejected by the framework |
 | `success()` | Convenience check: `status == SUCCESS` |
 
 ## Usage Example

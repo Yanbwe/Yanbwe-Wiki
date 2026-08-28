@@ -13,7 +13,7 @@
 | `getOwnerOf(ItemStack gunStack)` | `gunStack` — 任意物品堆 | `Optional<UUID>` | 若该物品堆是某玩家的投影枪，返回其主人 UUID；非投影枪返回空 |
 | `getPlugins(Player player)` | `player` — 目标玩家 | `List<PluginInstance>` | 当前插件列表（有序），未绑定返回空列表 |
 | `getGunState(Player player)` | `player` — 目标玩家 | `Optional<CompoundTag>` | 运行时枪状态 NBT，未绑定返回空 |
-| `getEffectiveValues(ServerPlayer player)` | `player` — 目标玩家 | `Map<ResourceLocation, Double>` | 全部玩家可用逻辑属性的**最终数值**（基础值 + 覆写 + 特性 + 插件加成），未绑定返回空 Map。纯计算无实体访问，频繁调用请缓存结果 |
+| `getEffectiveValues(ServerPlayer player)` | `player` — 目标玩家 | `Map<ResourceLocation, Double>` | 全部玩家可用逻辑属性的**最终数值**（基础值 + 覆写 + 特性 + 插件加成），未绑定返回空 Map。Map 按 `attribute_meta` 注册表顺序迭代。纯计算无实体访问，频繁调用请缓存结果 |
 
 ## 生命周期
 
@@ -40,8 +40,8 @@
 | 方法签名 | 参数说明 | 返回值 | 说明 |
 |---------|---------|--------|------|
 | `addPlugin(ServerPlayer player, ResourceLocation pluginId)` | `pluginId` — 插件定义 id | `PluginChangeResult` | 按插件 id 将插件安装到玩家投影枪上，复用框架完整安装校验（槽位类型、容量、锁定）。安装副本写回原槽位；失败原因见 `rejectionReason()`。**背包无投影枪时返回 `NO_PROJECTION` 而不是静默发新枪** |
-| `removePlugin(ServerPlayer player, UUID pluginInstanceUuid)` | `pluginInstanceUuid` — 插件实例 UUID | `PluginChangeResult` | 按实例 UUID 从投影枪拆卸插件（不强制解锁、不返还物品），失败原因（锁定/UUID 未找到等）见 `rejectionReason()` |
-| `setGunState(ServerPlayer player, CompoundTag state)` | `state` — 新枪状态 NBT | `void` | 替换运行时枪状态。未绑定时抛 `IllegalStateException` |
+| `removePlugin(ServerPlayer player, UUID pluginInstanceUuid)` | `pluginInstanceUuid` — 插件实例 UUID | `PluginChangeResult` | 按实例 UUID 从投影枪拆卸插件（不强制解锁），拆下的插件物品返还玩家背包（满则掉落脚下）。拒绝时结果携带结构化的 `uninstallReason()`（锁定 / UUID 未找到等） |
+| `setGunState(ServerPlayer player, CompoundTag state)` | `state` — 新枪状态 NBT | `MutationResult` | 替换运行时枪状态。未绑定返回 `NOT_BOUND` |
 
 ## 结果类型
 
@@ -68,7 +68,8 @@
 | 成员 | 说明 |
 |------|------|
 | `status()` | `SUCCESS` / `NOT_BOUND` / `NO_PROJECTION`（背包无投影枪）/ `UNKNOWN_PLUGIN`（插件 id 未注册）/ `NOT_INSTALLED`（框架拒绝） |
-| `rejectionReason()` | 可本地化的拒绝原因（框架安装错误信息或拆卸原因），仅 `NOT_INSTALLED` 时非空 |
+| `uninstallReason()` | 结构化拆卸拒绝原因（`UninstallResult.Reason` 枚举：锁定、UUID 未找到等），仅拆卸被框架拒绝时非空 |
+| `rejectionReason()` | 可本地化的安装拒绝原因（框架安装错误信息），仅安装被框架拒绝时非空 |
 | `success()` | 便捷判断：`status == SUCCESS` |
 
 ## 使用示例
