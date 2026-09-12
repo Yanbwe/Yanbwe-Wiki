@@ -28,9 +28,23 @@ Currently, the author is unable to reproduce the issue. If you can identify whic
 
 ## FTB Quests / FTB Library (Item Border Rendering Compatibility)
 
-RarityCore provides rendering compatibility for the FTB mod family (FTB Quests and its dependency FTB Library):
+RarityCore provides rendering compatibility for the FTB mod family (FTB Quests and its dependency FTB Library). Supported in 1.20.1; in 1.21.1 since 1211.14.6:
 
 - Item icons in the quest interface — task icons, reward icons, quest map, emergency items, reward notifications, and completion toasts — will now display rarity borders correctly
 - Item name colors and rarity info (level, stars) in item tooltips also work in FTB interfaces
 - Border display follows the global "Item Border Rendering" toggle and per-level style configuration, consistent with other interfaces
+- This integration can be disabled via `enableFtbLibraryAdapter` in `client.json` (available in 1.21.1 and later versions only)
 - When FTB Library is not installed, this compatibility is automatically disabled with no impact on the game
+
+## Multiplayer Version Requirement (1.20.1)
+
+**Since 1201.14.2, the 1.20.1 build uses network protocol version `1.2.0`.**
+
+Earlier builds stringified numeric and boolean values in `equals` conditions when syncing NBT matching rules to the client, which made scalar conditions fail silently on the client. The symptom was: **rules work right after entering a world, then stop working after leaving and re-entering or restarting the client**, and start working again after entering edit mode (which re-reads the rules from disk). Since 1201.14.2 the sync packet preserves the original value types (and still tolerates the old stringified format), so this is fixed.
+
+Because the packet semantics changed, **both the server and the client need RarityCore 1201.14.2 or later**:
+
+- Older client: the connection is rejected (protocol version mismatch)
+- Older server: even an updated client receives rules in the old text form
+
+> 1.21.1 and 26.x are unaffected: their protocol version did not change, so both sides do not have to be updated together.

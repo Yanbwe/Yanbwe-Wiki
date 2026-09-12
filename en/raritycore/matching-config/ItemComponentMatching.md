@@ -104,6 +104,33 @@ Checks if the item component value equals the specified value, applicable to num
 }
 ```
 
+#### Writing numeric and boolean values
+
+Resolved item data can be several Java types: legacy NBT numeric tags are normalized to numbers (e.g. `1` becomes `1.0`), while boolean components are `true`/`false`. `equals` therefore matches leniently:
+
+| Value you write | What it matches | Notes |
+|-----------------|-----------------|-------|
+| `1` or `true` | numeric `1`, `1.0`, boolean `true` | Booleans and numeric 1/0 are interchangeable |
+| `0` or `false` | numeric `0`, `0.0`, boolean `false` | Same as above |
+| `5` | numeric `5`, `5.0`, etc. | Numbers always compare numerically (0.001 tolerance) |
+| `"apple"` | string `"apple"` | Strings compare by exact content |
+| `5` | string `"5"` | **No match**: a numeric value only compares against numbers, never against text |
+
+In other words, **write scalar data as numbers**: even when the flag shows as `1b` in game or is backed by a boolean component, both `"value": 1` and `"value": true` will match.
+
+**Example: match items whose HideFlags is 1**
+
+```json
+{
+  "path": "HideFlags",
+  "type": "equals",
+  "value": 1,
+  "description": "Flags are usually stored as 1b; 1 and true both work"
+}
+```
+
+> **Version note**: 1211.14.7 (1.21.1) and 2601.14.1 / 2602.14.1 (26.x) fixed numeric/boolean conditions failing to match flags, which previously compared as text where `1.0` and `true` could never be equal. On these versions you can rely on the table above.
+
 ### 3. Range Check (range)
 
 Checks if a numeric value is within the specified range.

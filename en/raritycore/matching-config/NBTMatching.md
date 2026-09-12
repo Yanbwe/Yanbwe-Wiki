@@ -105,6 +105,40 @@ Checks whether the NBT value equals the specified value, applicable to numbers, 
 }
 ```
 
+#### Writing numeric and boolean values
+
+Minecraft NBT has no boolean type: vanilla and most mods store flags as byte tags (ByteTag), shown in game as `1b` and `0b`. `equals` therefore treats numbers and booleans leniently:
+
+| Value you write | NBT it matches | Notes |
+|-----------------|----------------|-------|
+| `1` or `true` | `1b`, `1`, `1.0` | Booleans and numbers are interchangeable (0/1) |
+| `0` or `false` | `0b`, `0`, `0.0` | Same as above |
+| `5` | `5`, `5b`, `5.0` | Numbers compare numerically regardless of tag kind |
+| `"apple"` | `"apple"` | Strings compare by exact content |
+| `5` | `"5"` (string tag) | **No match**: a numeric value only compares against numeric tags, so it cannot accidentally match text |
+
+**Example: match a diamond sword that has any enchantment**
+
+```json
+{
+  "path": "Enchantments",
+  "type": "exists"
+}
+```
+
+**Example: match items whose HideFlags is 1 (flags are usually stored as `1b`)**
+
+```json
+{
+  "path": "HideFlags",
+  "type": "equals",
+  "value": 1,
+  "description": "true works as well and is equivalent"
+}
+```
+
+> **Version note**: 1201.14.2 fixed numeric/boolean conditions silently failing after being synced to the client. For multiplayer, make sure both client and server run 1201.14.2 or later.
+
 ### 3. Range Check (range)
 
 Checks whether a numeric value is within the specified range.
