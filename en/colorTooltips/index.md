@@ -36,3 +36,4 @@ See the [Config Guide](/en/colorTooltips/ConfigGuide) for details.
 - Compatible with SearchCarefully
 - Compatible with Apotheosis
 - Not compatible with mods that modify tooltip styles, but compatible with mods that add content to tooltips
+- On JEI recipe pages, **text-only** tooltips drawn by the recipe itself (such as the Eterna/Quanta/Arcana values on infusion recipes) keep the vanilla style instead of this mod's colored style and animations. Item tooltips are unaffected
