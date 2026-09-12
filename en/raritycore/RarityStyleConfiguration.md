@@ -68,9 +68,11 @@ This file manages all rarity visual appearance — colors, borders, tooltips, st
 | `enableTooltip` | Boolean | `true` | Insert rarity info into tooltips (old `enableTooltipInsert`) |
 | `tooltipColorEnabled` | Boolean | `true` | Master switch for tooltip text coloring (old `enableTooltipColor`); combined with the `colored` field via AND |
 
-> Other old `client.json` switches (`itemBorderStyle`, `useTextureBorder`, `enableItemNameColor`, `skipUnconfiguredItems`, `starDisplay`, etc.) are moved under `defaults`. At startup `client.json` retains only `enableCacheSystem` and `enableIronSpellsAdapter` (1.21.1 additionally retains `enableSophisticatedCoreAdapter`).
+> Other old `client.json` switches (`itemBorderStyle`, `useTextureBorder`, `enableItemNameColor`, `skipUnconfiguredItems`, `starDisplay`, etc.) are moved under `defaults`. At startup `client.json` retains only `enableCacheSystem`, `enableIronSpellsAdapter`, and `enableFtbLibraryAdapter` (1.21.1 additionally retains `enableSophisticatedCoreAdapter`).
 >
 > `enableIronSpellsAdapter` (Boolean, default `true`): toggle for the Iron's Spells 'n Spellbooks rarity integration. When enabled, spell scrolls/spell books are dynamically mapped to rarities based on the spell level in their `irons_spellbooks:spell_container`; when disabled, the adapter is disabled entirely and spell scrolls are no longer mapped by spell level, while the static item mapping for Iron's Spells items (fixed config in datapacks) is unaffected and still works. This switch is only available in 1.20.1 / 1.21.1.
+>
+> `enableFtbLibraryAdapter` (Boolean, default `true`): toggle for the FTB Library integration (new in 1211.14.6+). When enabled, task icons, reward icons, and reward table icons in the FTB Quests quest screen render rarity borders; when disabled, FTB interfaces no longer show borders while other interfaces are unaffected. See [Compatibility](./Compatibility.md).
 
 ## defaults: default values and inheritance root
 
