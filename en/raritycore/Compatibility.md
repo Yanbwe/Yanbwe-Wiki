@@ -33,8 +33,22 @@ RarityCore provides rendering compatibility for the FTB mod family (FTB Quests a
 - Item icons in the quest interface — task icons, reward icons, quest map, emergency items, reward notifications, and completion toasts — will now display rarity borders correctly
 - Item name colors and rarity info (level, stars) in item tooltips also work in FTB interfaces
 - Border display follows the global "Item Border Rendering" toggle and per-level style configuration, consistent with other interfaces
-- This integration can be disabled via `enableFtbLibraryAdapter` in `client.json` (available in 1.21.1 and later versions only)
+- 1.20.1 has no dedicated switch for this integration; border rendering simply follows the global "Item Border Rendering" toggle (`defaults.border` in `RarityStyle.json`)
 - When FTB Library is not installed, this compatibility is automatically disabled with no impact on the game
+
+## ColorTooltips
+
+When ColorTooltips is installed alongside this mod, item tooltips and item names are handed over to ColorTooltips entirely, and RarityCore steps back:
+
+- The rarity tooltip line (level name + stars) is no longer inserted by RarityCore; ColorTooltips displays it instead, so the same line is not rendered twice by two pipelines
+- **Item names are no longer recolored by rarity either** (1.21.1 since 1211.14.9), so that ColorTooltips' own name coloring, the formatting codes the name itself carries (such as `§5…§r`), and any custom colors are not overridden
+
+With this combination, an item name that does not follow the rarity color is therefore expected behavior, not a broken toggle:
+
+- To have item names colored by rarity, simply remove ColorTooltips (RarityCore then handles name coloring), or adjust `itemNameColor` in `RarityStyle.json` (per level or under `defaults`, default `true`) to control RarityCore's own name coloring
+- Rarity borders, edit mode, `/raritycore` commands, KubeJS and the API are unaffected
+
+> 1.20.1 has behaved this way since 1201.14.1; before 1211.14.9, 1.21.1 only skipped tooltip line insertion and still rewrote the item name color, which showed up as an item name losing its own formatting codes/colors to the rarity color whenever ColorTooltips was installed.
 
 ## Multiplayer Version Requirement (1.20.1)
 

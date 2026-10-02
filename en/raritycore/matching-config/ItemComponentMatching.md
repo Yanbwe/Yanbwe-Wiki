@@ -77,6 +77,10 @@ For example, when configuration requires fuzzy matching of components A and B:
 
 Exact matching requires that an item, while satisfying all required item components, must NOT have any other item components.
 
+In other words, configuring two rules for the same item with `fuzzy_match: true` and `fuzzy_match: false` produces identical matching results: both check only whether every path listed in `conditions` is satisfied, and neither fails because the item carries components that were not listed. Do not rely on `false` to isolate items that have *only* those components — to narrow a rule, add more `conditions` or adjust `priority` instead.
+
+The reason it is not implemented: exact matching requires walking every component of the item and comparing it against the paths covered by `conditions`, but most items carry components written automatically by vanilla or by mods (durability, enchantments, custom data, and so on) beyond the ones the player cares about. Those components are not part of the player's configuration yet would make "no other components allowed" fail almost every time. If you need that semantics, declare it explicitly in your configuration with `exists` conditions instead.
+
 ## Condition Type Details
 
 ### 1. Existence Check (exists)

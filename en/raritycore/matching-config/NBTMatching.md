@@ -78,6 +78,10 @@ For example, when configuring fuzzy matching for tags A and B:
 
 Exact matching requires items to have exactly the specified NBT tags and **not** allow additional NBT tags.
 
+In other words, configuring two rules for the same item with `fuzzy_match: true` and `fuzzy_match: false` produces identical matching results: both check only whether every path listed in `conditions` is satisfied, and neither fails because the item carries tags that were not listed. Do not rely on `false` to isolate items that have *only* those tags — to narrow a rule, add more `conditions` or adjust `priority` instead.
+
+The reason it is not implemented: exact matching requires walking the item's entire NBT tree and comparing it against the paths covered by `conditions`, but most mods write their own metadata tags (durability, enchantments, custom data, and so on). Those tags are not part of the player's configuration yet would make "no other tags allowed" fail almost every time. If you need that semantics, declare it explicitly in your configuration with `exists` conditions instead.
+
 ## Condition Types Details
 
 ### 1. Existence Check (exists)

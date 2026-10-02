@@ -70,7 +70,13 @@ config/raritycore/RarityStyle.json
 
 > 其余旧 `client.json` 的开关（`itemBorderStyle`、`useTextureBorder`、`enableItemNameColor`、`skipUnconfiguredItems`、`starDisplay` 等）已移入 `defaults` 下，启动时 `client.json` 仅保留 `enableCacheSystem`、`enableIronSpellsAdapter` 与 `enableFtbLibraryAdapter`（1.21.1 另保留 `enableSophisticatedCoreAdapter`）。
 >
-> `enableIronSpellsAdapter`（布尔，默认 `true`）：铁魔法（Iron's Spells 'n Spellbooks）稀有度联动开关。开启时，法术卷轴/法书会按 `irons_spellbooks:spell_container` 中的法术等级动态映射稀有度；关闭后该适配器整体停用，法术卷轴不再按法术等级映射稀有度，但铁魔法物品的静态映射（数据包中的固定配置）不受影响，仍正常生效。此开关仅 1.20.1 / 1.21.1 提供。
+> `enableIronSpellsAdapter`（布尔，默认 `true`）：铁魔法（Iron's Spells 'n Spellbooks）稀有度联动开关。开启时，法术卷轴/法书会按 `irons_spellbooks:spell_container` 中的法术等级动态映射稀有度。
+>
+> ⚠️ **1.20.1（1201.14.4 起）**：该开关是**纯客户端显示开关**，只影响本地显示，不参与稀有度解析——关闭后服务端与客户端仍然一致地按法术等级解析该物品，只是本地不再显示这个派生稀有度（边框、提示、名称颜色），表现与该物品"未配置稀有度"时一致。请特别注意：它**不再**是"关闭后适配器整体停用"，因此不影响依赖稀有度数值的逻辑，其他模组与 KubeJS 通过 API 取得的稀有度也不受影响。
+>
+> 之所以这样定义：该键位于各端独立的 `config/raritycore/client.json`。若解析阶段读取它，多人游戏下服务器与玩家各自的设置会让同一物品算出不同稀有度，且用户无法对齐（1201.14.3 及更早版本即为此行为）。此开关仅 1.20.1 / 1.21.1 提供；1.21.1 的语义仍为"关闭即停用该适配器"。
+>
+> ⚠️ **1.20.1 用户注意（1201.14.3 起修复）**：1201.14.2 及更早版本存在缺陷——V14 迁移逻辑会把 `client.json` 整体重写为"仅含 `enableCacheSystem`"，导致 `enableIronSpellsAdapter` 每次启动都被删除，手动添加该键也会被吞掉，因此开关始终无效。升级到 1201.14.3 后该键会被正常保留与补入，可直接在文件中修改（无需删除配置文件）。
 >
 > `enableFtbLibraryAdapter`（布尔，默认 `true`）：FTB Library 联动开关（1211.14.6+ 新增）。开启时，FTB Quests 任务界面中的任务图标、奖励图标、奖励表图标等会渲染稀有度边框；关闭后 FTB 界面不再显示边框，其他界面不受影响。详见[兼容性问题](./Compatibility.md)。
 
