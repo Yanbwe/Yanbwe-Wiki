@@ -1,10 +1,12 @@
 # SearchCarefully API
 
-**Written for SearchCarefully version X.X.X**
+**Written for SearchCarefully version 1201.10.1**
 
 ## Overview
 
 SearchCarefully provides an API that allows other mods to integrate and customize search behavior.
+
+Block loot tables such as `minecraft:blocks/chest` are ignored by the loot modifier. Only container loot receives search-time NBT, so block items can stack normally.
 
 ## Adding Dependency
 

@@ -15,3 +15,9 @@ This mod addresses that issue by introducing a search time mechanism.
 
 **你可以在页面右上角切换语言！**  
 **You can switch languages in the top right corner of the page!**
+
+## Changelog
+
+### 1201.10.1
+
+- Fixed block drops being treated as container loot. Chests and other block drops no longer receive search-time NBT and can stack normally.

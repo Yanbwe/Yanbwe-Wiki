@@ -6,3 +6,9 @@
 
 **你可以在页面右上角切换语言！**  
 **You can switch languages in the top right corner of the page!**
+
+## 更新记录
+
+### 1201.10.1
+
+- 修复方块掉落物被误识别为容器战利品的问题；箱子等方块掉落不再附带搜索时间 NBT，可正常堆叠。

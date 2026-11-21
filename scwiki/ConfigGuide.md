@@ -90,6 +90,7 @@
 - 说明：
   - 用于匹配路径中间包含这些片段的战利品表
   - 如果你按照示例值写，会匹配：`structures/village/chest`、`modid/special/chests`、`dungeons/treasure_room`
+  - 方块掉落表（如 `minecraft:blocks/chest`）不会被处理，即使路径片段匹配。
 
 ### 热键栏搜索配置
 

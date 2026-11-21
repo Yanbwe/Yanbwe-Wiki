@@ -1,7 +1,8 @@
 # SearchCarefully API 文档
 
-**模组版本**: 1201.3.0  
-**最后更新**: 2026-03-07
+**模组版本**: 1201.10.1
+
+**最后更新**: 2026-11-21
 
 ## 目录
 
@@ -213,7 +214,7 @@ List<String> chestSegments = Config.CHEST_PATH_SEGMENTS.get();
 | `rarity{1-7}BaseTime` | int | 10-140 | 1-1000 | 各稀有度基础时间 |
 | `rarity{1-7}RandomTime` | int | 10 | 0-1000 | 各稀有度随机时间 |
 | `customLootTablePaths` | List\<String\> | [] | -    | 自定义战利品表路径 |
-| `chestPathSegments` | List\<String\> | ["chest", "chests", "block"] | -    | 箱子路径匹配段 |
+| `chestPathSegments` | List\<String\> | ["chest", "chests"] | -    | 箱子路径匹配段 |
 | `enableHotbarSearch` | boolean | false | -    | 是否启用热键栏搜索 |
 
 ## 网络与同步
@@ -247,7 +248,7 @@ NetworkHandler.INSTANCE.send(...);
 **类**: `AddSearchTimeLootModifier`  
 **包路径**: `org.yanbwe.searchcarefully.loot.AddSearchTimeLootModifier`
 
-自动为战利品箱中的物品添加搜索时间。
+自动为战利品箱中的物品添加搜索时间；方块掉落表不会处理，避免方块物品因随机搜索 NBT 无法堆叠。
 
 #### JSON 配置示例
 

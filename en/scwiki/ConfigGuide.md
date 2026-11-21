@@ -88,6 +88,7 @@ The configuration file is located at `.minecraft/config/searchcarefully-common.t
 - Description:
   - Used to match loot tables containing these segments anywhere in the path
   - Example matches: `structures/village/chest`, `modid/special/chests`, `dungeons/treasure_room`
+  - Block loot tables such as `minecraft:blocks/chest` are never processed, even if their path matches.
 
 ### Hotbar Search Configuration
 
